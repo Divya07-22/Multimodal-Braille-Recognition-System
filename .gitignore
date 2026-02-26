@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+venv/
+ENV/
+*.egg-info/
+.eggs/
+
+# Environment - NEVER push passwords
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+logs/
+
+# Database
+*.db
+*.sqlite
+
+# Cache
+.pytest_cache/
+.coverage
+htmlcov/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# ML Models (too large for git)
+*.pt
+*.pth
+*.onnx
+*.pb
+
+# Uploads/outputs
+backend/uploads/
+backend/outputs/
+backend/logs/
+
+# Node
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo

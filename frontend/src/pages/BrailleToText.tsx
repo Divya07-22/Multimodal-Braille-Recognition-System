@@ -1,247 +1,205 @@
-import React, { useState } from 'react'
-import { Copy, Download, Loader, Check, Trash2 } from 'lucide-react'
-import axios from 'axios'
-import toast from 'react-hot-toast'
+import React, { useState, useCallback } from 'react'
+import { motion } from 'framer-motion'
+import { ArrowDownUp, Copy, Volume2, RefreshCw, Sparkles, CheckCircle, Info } from 'lucide-react'
+import { brailleAPI } from '../services/api'
+import { useAuthStore } from '../hooks/useAuth'
 import { useAccessibility } from '../context/AccessibilityContext'
+import toast from 'react-hot-toast'
 
-function BrailleToText() {
+const GRADE_OPTIONS = [
+  { value: 'grade_1', label: 'Grade 1', desc: 'Uncontracted' },
+  { value: 'grade_2', label: 'Grade 2', desc: 'Contracted' },
+]
+
+const SAMPLE_BRAILLE = [
+  '⠓⠑⠇⠇⠕ ⠺⠕⠗⠇⠙',
+  '⠁ ⠃ ⠉ ⠙ ⠑ ⠋ ⠛ ⠓ ⠊ ⠚',
+  '⠃⠗⠁⠊⠇⠇⠑',
+]
+
+export default function BrailleToText() {
   const [brailleInput, setBrailleInput] = useState('')
   const [textOutput, setTextOutput] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [copied, setCopied] = useState(false)
-  const [history, setHistory] = useState<Array<{ braille: string; text: string; date: string }>>([])
+  const [grade, setGrade] = useState('grade_1')
+  const [isConverting, setIsConverting] = useState(false)
+  const [stats, setStats] = useState<{ processing_time_ms: number; confidence_score: number } | null>(null)
+  const { isAuthenticated } = useAuthStore()
   const { settings } = useAccessibility()
 
-  const handleConvert = async () => {
-    if (!brailleInput.trim()) {
-      toast.error('Please enter Braille text')
-      return
-    }
-
-    setLoading(true)
-    try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-      const response = await axios.post(`${API_URL}/api/braille-to-text`, {
-        braille: brailleInput,
-      })
-      setTextOutput(response.data.text)
-
-      // Add to history
-      setHistory([
-        {
-          braille: brailleInput,
-          text: response.data.text,
-          date: new Date().toLocaleTimeString(),
-        },
-        ...history.slice(0, 9),
-      ])
-
-      toast.success('✓ Conversion successful!')
-
-      if (settings.screenReaderEnabled) {
-        const utterance = new SpeechSynthesisUtterance('Braille converted to text')
-        window.speechSynthesis.speak(utterance)
-      }
-    } catch (error) {
-      toast.error('❌ Conversion failed. Check backend connection.')
-      console.error(error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(textOutput)
-    setCopied(true)
-    toast.success('✓ Copied to clipboard!')
-    setTimeout(() => setCopied(false), 2000)
-  }
-
-  const handleDownload = () => {
-    const element = document.createElement('a')
-    const file = new Blob([textOutput], { type: 'text/plain;charset=utf-8' })
-    element.href = URL.createObjectURL(file)
-    element.download = `text-${new Date().getTime()}.txt`
-    document.body.appendChild(element)
-    element.click()
-    document.body.removeChild(element)
-    toast.success('✓ File downloaded!')
-  }
-
-  const handleClear = () => {
-    setBrailleInput('')
+  const handleConvert = useCallback(async () => {
+    if (!brailleInput.trim()) { toast.error('Please enter Braille text'); return }
+    if (!isAuthenticated) { toast.error('Please sign in to use this feature'); return }
+    setIsConverting(true)
     setTextOutput('')
+    setStats(null)
+    try {
+      const { data } = await brailleAPI.brailleToText({ braille_text: brailleInput, grade })
+      setTextOutput(data.output_text)
+      setStats({ processing_time_ms: data.processing_time_ms, confidence_score: data.confidence_score })
+      toast.success(`Decoded in ${data.processing_time_ms}ms!`)
+    } catch { /* handled */ }
+    finally { setIsConverting(false) }
+  }, [brailleInput, grade, isAuthenticated])
+
+  const handleSpeak = () => {
+    if (!textOutput) return
+    const utterance = new SpeechSynthesisUtterance(textOutput)
+    utterance.rate = 0.9
+    speechSynthesis.speak(utterance)
   }
 
-  const handleHistoryClick = (item: any) => {
-    setBrailleInput(item.braille)
-    setTextOutput(item.text)
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(textOutput)
+    toast.success('Copied to clipboard!')
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="mb-8 animate-fade-in">
-        <h1 className={`text-4xl md:text-5xl font-black mb-4 ${settings.highContrast ? 'text-yellow-400' : 'text-white'}`}>
+    <div className="page-container">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
+        <div className="inline-flex items-center gap-2 badge badge-cyan mb-4">
+          <ArrowDownUp size={14} /> Reverse Decoding
+        </div>
+        <h1 className={`page-title ${settings.highContrast ? 'text-yellow-400' : 'gradient-text-cyan'}`}>
           Braille to Text
         </h1>
-        <p className={`text-lg ${settings.highContrast ? 'text-yellow-200' : 'text-white/80'}`}>
-          Convert Braille patterns back into readable English text for translation and reference.
+        <p className={`text-lg max-w-2xl mx-auto ${settings.highContrast ? 'text-yellow-200' : 'text-white/60'}`}>
+          Paste Braille Unicode and decode it back to readable English. Supports Grade 1 and Grade 2.
         </p>
+      </motion.div>
+
+      {/* Grade selector */}
+      <div className="flex gap-3 justify-center mb-6 flex-wrap">
+        {GRADE_OPTIONS.map(opt => (
+          <button
+            key={opt.value}
+            onClick={() => setGrade(opt.value)}
+            className={`px-5 py-2.5 rounded-xl border text-sm font-medium transition-all ${grade === opt.value
+                ? 'border-cyan-500 bg-cyan-500/20 text-cyan-300'
+                : 'border-white/10 bg-white/5 text-white/60 hover:text-white'
+              }`}
+          >
+            <span className="font-bold">{opt.label}</span>
+            <span className="text-xs opacity-70 ml-2">({opt.desc})</span>
+          </button>
+        ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Input Panel */}
-        <div className={`lg:col-span-2 p-8 rounded-2xl ${settings.highContrast ? 'bg-black border-4 border-yellow-400' : 'bg-white/10 backdrop-blur border border-white/20'} animate-fade-in`}>
-          <h2 className={`text-2xl font-bold mb-4 ${settings.highContrast ? 'text-yellow-400' : 'text-white'}`}>
-            Braille Input
-          </h2>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Input */}
+        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15 }} className="glass p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <ArrowDownUp size={18} className="text-cyan-400" />
+              <h2 className={`font-bold ${settings.highContrast ? 'text-yellow-400' : 'text-white'}`}>Braille Input</h2>
+            </div>
+            <button onClick={() => { setBrailleInput(''); setTextOutput(''); setStats(null) }} className="btn-icon">
+              <RefreshCw size={16} />
+            </button>
+          </div>
 
           <textarea
             value={brailleInput}
-            onChange={(e) => setBrailleInput(e.target.value)}
-            placeholder="Paste Braille patterns here... (e.g., ⠓⠑⠇⠇⠕)"
-            className={`w-full h-80 p-4 rounded-lg focus:outline-none focus:ring-2 transition-all resize-none font-mono text-lg leading-loose ${
-              settings.highContrast
-                ? 'bg-black text-yellow-300 border-2 border-yellow-400 focus:ring-yellow-400 placeholder-yellow-600'
-                : 'bg-white/20 text-white border border-white/30 focus:ring-pink-400 placeholder-white/50'
-            }`}
-            aria-label="Braille input area"
+            onChange={e => setBrailleInput(e.target.value)}
+            placeholder="Paste Braille Unicode here (⠓⠑⠇⠇⠕)…&#10;Braille characters are from Unicode block U+2800–U+28FF"
+            className="input-field min-h-[240px] text-2xl"
+            style={{ letterSpacing: '0.2em', lineHeight: '2' }}
+            aria-label="Braille input"
           />
 
-          <div className="mt-6 space-y-3">
-            <button
-              onClick={handleConvert}
-              disabled={loading || !brailleInput.trim()}
-              className={`w-full py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition-all text-lg ${
-                loading || !brailleInput.trim() ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105 hover:shadow-lg'
-              } ${
-                settings.highContrast
-                  ? 'bg-yellow-400 text-black hover:bg-yellow-300'
-                  : 'bg-gradient-to-r from-pink-500 to-purple-600 text-white'
-              }`}
-              aria-label={loading ? 'Converting...' : 'Convert to Text'}
-            >
-              {loading ? (
-                <>
-                  <Loader className="animate-spin" size={20} /> Converting...
-                </>
-              ) : (
-                <>
-                  <Check size={20} /> Convert to Text
-                </>
-              )}
-            </button>
-
-            <button
-              onClick={handleClear}
-              disabled={!brailleInput && !textOutput}
-              className={`w-full py-3 rounded-lg font-bold transition-all flex items-center justify-center gap-2 ${
-                !brailleInput && !textOutput ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105 hover:shadow-lg'
-              } ${
-                settings.highContrast
-                  ? 'bg-yellow-400 text-black hover:bg-yellow-300'
-                  : 'bg-red-500/20 text-red-300 hover:bg-red-500/30'
-              }`}
-              aria-label="Clear all"
-            >
-              <Trash2 size={20} /> Clear
-            </button>
-          </div>
-
-          {brailleInput && (
-            <div className={`mt-4 p-3 rounded-lg text-sm font-medium ${settings.highContrast ? 'bg-yellow-400/20 text-yellow-300 border-2 border-yellow-400' : 'bg-blue-500/20 text-blue-200 border border-blue-400/30'}`}>
-              📝 {brailleInput.length} characters entered
-            </div>
-          )}
-        </div>
-
-        {/* Output Panel */}
-        <div className={`p-8 rounded-2xl h-fit ${settings.highContrast ? 'bg-black border-4 border-yellow-400' : 'bg-white/10 backdrop-blur border border-white/20'} animate-fade-in`} style={{ animationDelay: '0.1s' }}>
-          <h2 className={`text-2xl font-bold mb-4 ${settings.highContrast ? 'text-yellow-400' : 'text-white'}`}>
-            Text Output
-          </h2>
-
-          <div className={`w-full h-80 p-4 rounded-lg overflow-y-auto ${
-            settings.highContrast
-              ? 'bg-black text-yellow-300 border-2 border-yellow-400'
-              : 'bg-white/20 text-white border border-white/30'
-          }`}
-          role="region"
-          aria-label="Text output"
-          aria-live="polite">
-            {textOutput || <span className={settings.highContrast ? 'text-yellow-600' : 'text-white/40'}>Text output will appear here...</span>}
-          </div>
-
-          <div className="mt-4 flex gap-2">
-            <button
-              onClick={handleCopy}
-              disabled={!textOutput}
-              className={`flex-1 py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-50 ${
-                settings.highContrast
-                  ? 'bg-yellow-400 text-black hover:bg-yellow-300'
-                  : 'bg-white/20 text-white hover:bg-white/30'
-              }`}
-              aria-label="Copy to clipboard"
-            >
-              {copied ? <Check size={20} /> : <Copy size={20} />}
-              {copied ? 'Copied!' : 'Copy'}
-            </button>
-
-            <button
-              onClick={handleDownload}
-              disabled={!textOutput}
-              className={`flex-1 py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-50 ${
-                settings.highContrast
-                  ? 'bg-yellow-400 text-black hover:bg-yellow-300'
-                  : 'bg-white/20 text-white hover:bg-white/30'
-              }`}
-              aria-label="Download as file"
-            >
-              <Download size={20} /> Download
-            </button>
-          </div>
-
-          {textOutput && (
-            <div className={`mt-4 p-3 rounded-lg text-sm font-medium ${settings.highContrast ? 'bg-yellow-400/20 text-yellow-300 border-2 border-yellow-400' : 'bg-green-500/20 text-green-200 border border-green-400/30'}`}>
-              ✓ {textOutput.length} characters converted
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* History Section */}
-      {history.length > 0 && (
-        <div className={`mt-12 p-8 rounded-2xl ${settings.highContrast ? 'bg-black border-4 border-yellow-400' : 'bg-white/10 backdrop-blur border border-white/20'}`}>
-          <h3 className={`text-2xl font-bold mb-6 ${settings.highContrast ? 'text-yellow-400' : 'text-white'}`}>
-            Recent Conversions
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {history.map((item, idx) => (
+          <div className="mt-3 flex flex-wrap gap-2">
+            <p className="text-xs text-white/40 w-full mb-1">Sample Braille:</p>
+            {SAMPLE_BRAILLE.map((s, i) => (
               <button
-                key={idx}
-                onClick={() => handleHistoryClick(item)}
-                className={`p-4 rounded-lg text-left transition-all hover:scale-105 ${
-                  settings.highContrast
-                    ? 'bg-yellow-400/10 border-2 border-yellow-400 hover:bg-yellow-400/20'
-                    : 'bg-white/10 border border-white/20 hover:bg-white/20'
-                }`}
+                key={i}
+                onClick={() => setBrailleInput(s)}
+                className="text-sm px-3 py-1.5 rounded-lg border border-white/10 text-violet-300 hover:border-violet-500/50 transition-all"
+                style={{ letterSpacing: '0.1em' }}
               >
-                <p className={`text-sm font-semibold mb-2 ${settings.highContrast ? 'text-yellow-300' : 'text-white/70'}`}>
-                  {item.date}
-                </p>
-                <p className={`text-sm mb-2 line-clamp-1 font-mono ${settings.highContrast ? 'text-yellow-200' : 'text-white'}`}>
-                  {item.braille}
-                </p>
-                <p className={`text-xs ${settings.highContrast ? 'text-yellow-400' : 'text-pink-400'}`}>
-                  → {item.text.substring(0, 30)}...
-                </p>
+                {s}
               </button>
             ))}
           </div>
+
+          <motion.button
+            onClick={handleConvert}
+            disabled={isConverting || !brailleInput.trim()}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className={`btn-primary w-full mt-4 justify-center ${(isConverting || !brailleInput.trim()) ? 'opacity-50 cursor-not-allowed' : ''}`}
+            style={{ background: 'linear-gradient(135deg, #06b6d4 0%, #8b5cf6 100%)' }}
+          >
+            {isConverting ? (
+              <><div className="spinner !w-4 !h-4 !border-2 !border-t-cyan-400" /> Decoding…</>
+            ) : (
+              <><Sparkles size={18} /> Decode to Text</>
+            )}
+          </motion.button>
+        </motion.div>
+
+        {/* Output */}
+        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }} className="glass p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <CheckCircle size={18} className={textOutput ? 'text-emerald-400' : 'text-white/30'} />
+              <h2 className={`font-bold ${settings.highContrast ? 'text-yellow-400' : 'text-white'}`}>Text Output</h2>
+              {textOutput && <span className="badge badge-cyan text-xs">Decoded</span>}
+            </div>
+            <div className="flex gap-2">
+              <button onClick={handleSpeak} disabled={!textOutput} className="btn-icon" title="Read aloud">
+                <Volume2 size={16} />
+              </button>
+              <button onClick={handleCopy} disabled={!textOutput} className="btn-icon" title="Copy">
+                <Copy size={16} />
+              </button>
+            </div>
+          </div>
+
+          {textOutput ? (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              <div className={`min-h-[200px] p-5 rounded-xl border text-lg leading-relaxed font-medium ${settings.highContrast
+                  ? 'border-yellow-400 bg-black text-yellow-400'
+                  : 'border-white/10 bg-white/5 text-white'
+                }`}>
+                {textOutput}
+              </div>
+              {stats && (
+                <div className="grid grid-cols-2 gap-3 mt-4">
+                  <div className="text-center p-3 rounded-lg bg-white/5 border border-white/10">
+                    <div className="text-lg font-bold text-cyan-400">{stats.processing_time_ms}ms</div>
+                    <div className="text-xs text-white/40">Decode Time</div>
+                  </div>
+                  <div className="text-center p-3 rounded-lg bg-white/5 border border-white/10">
+                    <div className="text-lg font-bold text-violet-400">{(stats.confidence_score * 100).toFixed(1)}%</div>
+                    <div className="text-xs text-white/40">Confidence</div>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          ) : (
+            <div className="min-h-[240px] flex flex-col items-center justify-center text-center">
+              <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
+                <ArrowDownUp size={28} className="text-white/20" />
+              </div>
+              <p className="text-white/40 text-sm">Enter Braille characters and click Decode</p>
+            </div>
+          )}
+        </motion.div>
+      </div>
+
+      {/* Info box */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="mt-8 glass p-5 flex items-start gap-4">
+        <div className="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+          <Info size={20} className="text-cyan-400" />
         </div>
-      )}
+        <div>
+          <h3 className="font-bold text-white mb-1">About Braille Unicode</h3>
+          <p className="text-white/50 text-sm leading-relaxed">
+            Braille characters occupy Unicode codepoints <strong className="text-cyan-300">U+2800</strong> to <strong className="text-cyan-300">U+28FF</strong>.
+            Each character represents a Braille cell of up to 6 dots arranged in a 2×3 grid.
+            Grade 1 maps individual characters; Grade 2 uses contractions for efficiency.
+          </p>
+        </div>
+      </motion.div>
     </div>
   )
 }
-
-export default BrailleToText

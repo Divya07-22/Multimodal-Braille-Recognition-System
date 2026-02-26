@@ -1,0 +1,180 @@
+version: "3.9"
+
+services:
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: braille_api
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      MYSQL_HOST: mysql
+      REDIS_HOST: redis
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      DATABASE_URL: mysql+aiomysql://braille_user:divdev123@mysql:3306/braille_db
+      REDIS_URL: redis://redis:6379/0
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - uploads_data:/app/uploads
+      - outputs_data:/app/outputs
+      - model_weights:/app/app/models/weights
+      - logs_data:/app/logs
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - braille_net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: braille_worker
+    restart: unless-stopped
+    command: celery -A app.worker.celery_app worker --loglevel=info --concurrency=4
+    env_file:
+      - .env
+    environment:
+      MYSQL_HOST: mysql
+      REDIS_HOST: redis
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      DATABASE_URL: mysql+aiomysql://braille_user:divdev123@mysql:3306/braille_db
+      REDIS_URL: redis://redis:6379/0
+    volumes:
+      - .:/app
+      - uploads_data:/app/uploads
+      - outputs_data:/app/outputs
+      - model_weights:/app/app/models/weights
+      - logs_data:/app/logs
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - braille_net
+
+  beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: braille_beat
+    restart: unless-stopped
+    command: celery -A app.worker.celery_app beat --loglevel=info
+    env_file:
+      - .env
+    environment:
+      MYSQL_HOST: mysql
+      REDIS_HOST: redis
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      DATABASE_URL: mysql+aiomysql://braille_user:divdev123@mysql:3306/braille_db
+      REDIS_URL: redis://redis:6379/0
+    volumes:
+      - .:/app
+      - logs_data:/app/logs
+    depends_on:
+      - redis
+    networks:
+      - braille_net
+
+  flower:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: braille_flower
+    restart: unless-stopped
+    command: celery -A app.worker.celery_app flower --port=5555
+    env_file:
+      - .env
+    environment:
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+    ports:
+      - "5555:5555"
+    depends_on:
+      - redis
+      - worker
+    networks:
+      - braille_net
+
+  mysql:
+    image: mysql:8.2
+    container_name: braille_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: braille_db
+      MYSQL_USER: braille_user
+      MYSQL_PASSWORD: divdev123
+      MYSQL_ROOT_PASSWORD: divdev123
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - braille_net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "braille_user", "-pdivdev123"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  redis:
+    image: redis:7-alpine
+    container_name: braille_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - braille_net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  nginx:
+    image: nginx:alpine
+    container_name: braille_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - uploads_data:/app/uploads:ro
+      - outputs_data:/app/outputs:ro
+    depends_on:
+      - api
+    networks:
+      - braille_net
+
+volumes:
+  mysql_data:
+  redis_data:
+  uploads_data:
+  outputs_data:
+  model_weights:
+  logs_data:
+
+networks:
+  braille_net:
+    driver: bridge

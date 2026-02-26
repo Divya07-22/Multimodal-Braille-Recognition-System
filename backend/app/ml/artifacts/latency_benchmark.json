@@ -1,0 +1,51 @@
+{
+  "benchmark_config": {
+    "warmup_runs": 10,
+    "benchmark_runs": 100,
+    "image_size": 640,
+    "cell_size": 32,
+    "device": "cpu"
+  },
+  "detector": {
+    "pytorch": {
+      "model_name": "detector_best.pt",
+      "backend": "pytorch",
+      "mean_ms": 0.0,
+      "median_ms": 0.0,
+      "p99_ms": 0.0,
+      "throughput_fps": 0.0
+    },
+    "quantized": {
+      "model_name": "detector_quantized.pt",
+      "backend": "pytorch_quantized",
+      "mean_ms": 0.0,
+      "median_ms": 0.0,
+      "p99_ms": 0.0,
+      "throughput_fps": 0.0
+    },
+    "onnx": {
+      "model_name": "detector.onnx",
+      "backend": "onnx_runtime",
+      "mean_ms": 0.0,
+      "median_ms": 0.0,
+      "p99_ms": 0.0,
+      "throughput_fps": 0.0
+    }
+  },
+  "classifier": {
+    "pytorch": {},
+    "quantized": {},
+    "onnx": {}
+  },
+  "speedups": {
+    "detector_quantized_vs_pytorch": 0.0,
+    "detector_onnx_vs_pytorch": 0.0,
+    "classifier_quantized_vs_pytorch": 0.0,
+    "classifier_onnx_vs_pytorch": 0.0
+  },
+  "summary": {
+    "best_detector_backend": "onnx",
+    "best_classifier_backend": "onnx",
+    "recommendation": "Use onnx for both detector and classifier in production."
+  }
+}

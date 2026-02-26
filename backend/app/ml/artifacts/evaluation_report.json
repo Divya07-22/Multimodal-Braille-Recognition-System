@@ -1,0 +1,35 @@
+{
+  "evaluation_config": {
+    "dataset": "test_set",
+    "num_samples": 0,
+    "image_size": 640,
+    "cell_size": 32,
+    "detector_threshold": 0.5,
+    "classifier_threshold": 0.7
+  },
+  "detector_metrics": {
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1_score": 0.0,
+    "average_iou": 0.0,
+    "false_positive_rate": 0.0,
+    "false_negative_rate": 0.0
+  },
+  "classifier_metrics": {
+    "accuracy": 0.0,
+    "top5_accuracy": 0.0,
+    "macro_f1": 0.0,
+    "confusion_matrix": []
+  },
+  "end_to_end_metrics": {
+    "character_error_rate": 0.0,
+    "word_error_rate": 0.0,
+    "exact_match_accuracy": 0.0,
+    "bleu_score": 0.0
+  },
+  "baseline_comparison": {
+    "tesseract_cer": 0.0,
+    "our_model_cer": 0.0,
+    "improvement_percent": 0.0
+  }
+}

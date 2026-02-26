@@ -1,0 +1,1 @@
+"""Inference pipeline for Braille recognition."""

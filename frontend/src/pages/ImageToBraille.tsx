@@ -1,377 +1,262 @@
-import React, { useState, useRef } from 'react'
-import { Upload, Camera, Copy, Download, Loader, Trash2, Check, X as XIcon } from 'lucide-react'
-import axios from 'axios'
-import toast from 'react-hot-toast'
+import React, { useState, useCallback, useRef } from 'react'
+import { motion } from 'framer-motion'
+import { Image, Upload, Scan, Camera, X, CheckCircle, AlertCircle, Download, Zap } from 'lucide-react'
+import { ocrAPI, exportAPI } from '../services/api'
+import { useAuthStore } from '../hooks/useAuth'
 import { useAccessibility } from '../context/AccessibilityContext'
+import toast from 'react-hot-toast'
 
-function ImageToBraille() {
-  const [imagePreview, setImagePreview] = useState<string | null>(null)
-  const [brailleOutput, setBrailleOutput] = useState('')
-  const [textOutput, setTextOutput] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [processType, setProcessType] = useState<'braille' | 'text'>('braille')
-  const [copied, setCopied] = useState(false)
+const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/bmp', 'image/tiff', 'application/pdf']
+const MAX_SIZE = 10 * 1024 * 1024 // 10MB
+
+export default function ImageToBraille() {
+  const [file, setFile] = useState<File | null>(null)
+  const [preview, setPreview] = useState<string | null>(null)
+  const [isDragOver, setIsDragOver] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [result, setResult] = useState<{ extracted_text: string; output_braille: string; job_id: number; ocr_confidence: number; total_processing_ms: number } | null>(null)
+  const [grade, setGrade] = useState('grade_1')
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [showCamera, setShowCamera] = useState(false)
+  const cameraInputRef = useRef<HTMLInputElement>(null)
+  const { isAuthenticated } = useAuthStore()
   const { settings } = useAccessibility()
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+  const handleFile = useCallback((f: File) => {
+    if (!ACCEPTED_TYPES.includes(f.type)) { toast.error(`Unsupported file type: ${f.type}`); return }
+    if (f.size > MAX_SIZE) { toast.error('File too large. Maximum 10MB allowed.'); return }
+    setFile(f)
+    setResult(null)
+    if (f.type.startsWith('image/')) {
+      const url = URL.createObjectURL(f)
+      setPreview(url)
+    } else { setPreview(null) }
+  }, [])
 
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error('File too large! Maximum 10MB')
-      return
-    }
+  const onDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragOver(false)
+    const dropped = e.dataTransfer.files[0]
+    if (dropped) handleFile(dropped)
+  }, [handleFile])
 
-    const reader = new FileReader()
-    reader.onload = (event) => {
-      const result = event.target?.result as string
-      setImagePreview(result)
-      setBrailleOutput('')
-      setTextOutput('')
-      toast.success('✓ Image loaded!')
-    }
-    reader.readAsDataURL(file)
-  }
-
-  const handleCameraCapture = async () => {
-    if (!videoRef.current || !canvasRef.current) return
-
-    const context = canvasRef.current.getContext('2d')
-    if (!context) return
-
-    context.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height)
-    const imageData = canvasRef.current.toDataURL('image/png')
-    setImagePreview(imageData)
-    setBrailleOutput('')
-    setTextOutput('')
-
-    // Stop camera
-    const stream = videoRef.current.srcObject as MediaStream
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop())
-    }
-    setShowCamera(false)
-
-    toast.success('✓ Image captured!')
-  }
-
-  const startCamera = async () => {
+  const handleProcess = async () => {
+    if (!file) { toast.error('Please upload an image first'); return }
+    if (!isAuthenticated) { toast.error('Please sign in to process images'); return }
+    setIsProcessing(true)
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: 'environment',
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        }
-      })
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
-        setShowCamera(true)
-      }
-    } catch (error) {
-      toast.error('❌ Camera access denied or not available')
-      console.error(error)
-    }
+      const { data } = await ocrAPI.uploadAndConvert(file, grade)
+      setResult(data)
+      toast.success(`Processed in ${data.total_processing_ms?.toFixed(0)}ms!`)
+    } catch { /* handled */ }
+    finally { setIsProcessing(false) }
   }
 
-  const stopCamera = () => {
-    if (videoRef.current && videoRef.current.srcObject) {
-      const stream = videoRef.current.srcObject as MediaStream
-      stream.getTracks().forEach(track => track.stop())
-      setShowCamera(false)
-    }
-  }
-
-  const handleConvert = async () => {
-    if (!imagePreview) {
-      toast.error('Please upload or capture an image')
-      return
-    }
-
-    setLoading(true)
+  const handleExport = async (format: string) => {
+    if (!result?.job_id) return
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-      const response = await axios.post(`${API_URL}/api/image-to-braille`, {
-        image: imagePreview,
-        process_type: processType,
-      })
-
-      if (processType === 'braille') {
-        setBrailleOutput(response.data.braille)
-        toast.success('✓ Conversion successful!')
-      } else {
-        setTextOutput(response.data.text)
-        toast.success('✓ Text extracted successfully!')
+      const { data } = await exportAPI.exportJob(result.job_id, [format])
+      const exportInfo = data.exports[0]
+      if (exportInfo?.filename) {
+        const blobRes = await exportAPI.downloadFile(exportInfo.filename)
+        const url = URL.createObjectURL(blobRes.data)
+        const a = document.createElement('a')
+        a.href = url; a.download = exportInfo.filename; a.click()
+        URL.revokeObjectURL(url)
+        toast.success(`Downloaded ${format.toUpperCase()}!`)
       }
-
-      if (settings.screenReaderEnabled) {
-        const utterance = new SpeechSynthesisUtterance('Image processed successfully')
-        window.speechSynthesis.speak(utterance)
-      }
-    } catch (error) {
-      toast.error('❌ Conversion failed. Check backend connection.')
-      console.error(error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text)
-    setCopied(true)
-    toast.success('✓ Copied to clipboard!')
-    setTimeout(() => setCopied(false), 2000)
-  }
-
-  const handleDownload = (text: string, filename: string) => {
-    const element = document.createElement('a')
-    const file = new Blob([text], { type: 'text/plain;charset=utf-8' })
-    element.href = URL.createObjectURL(file)
-    element.download = filename
-    document.body.appendChild(element)
-    element.click()
-    document.body.removeChild(element)
-    toast.success('✓ File downloaded!')
-  }
-
-  const handleClearImage = () => {
-    setImagePreview(null)
-    setBrailleOutput('')
-    setTextOutput('')
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''
-    }
+    } catch { /* handled */ }
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="mb-8 animate-fade-in">
-        <h1 className={`text-4xl md:text-5xl font-black mb-4 ${settings.highContrast ? 'text-yellow-400' : 'text-white'}`}>
+    <div className="page-container">
+      {/* Header */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
+        <div className="inline-flex items-center gap-2 badge badge-pink mb-4">
+          <Scan size={14} /> AI Vision Processing
+        </div>
+        <h1 className={`page-title ${settings.highContrast ? 'text-yellow-400' : 'gradient-text'}`}>
           Image to Braille
         </h1>
-        <p className={`text-lg ${settings.highContrast ? 'text-yellow-200' : 'text-white/80'}`}>
-          Upload or capture an image to extract text and convert it to Braille using advanced OCR.
+        <p className={`text-lg max-w-2xl mx-auto ${settings.highContrast ? 'text-yellow-200' : 'text-white/60'}`}>
+          Upload any image or PDF. Our AI extracts text via OCR and converts it to Braille instantly.
         </p>
-      </div>
+      </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Upload Panel */}
-        <div className={`p-8 rounded-2xl h-fit ${settings.highContrast ? 'bg-black border-4 border-yellow-400' : 'bg-white/10 backdrop-blur border border-white/20'} animate-fade-in`}>
-          <h2 className={`text-2xl font-bold mb-6 ${settings.highContrast ? 'text-yellow-400' : 'text-white'}`}>
-            Upload Image
-          </h2>
-
-          {!showCamera ? (
-            <>
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all ${
-                  settings.highContrast
-                    ? 'border-yellow-400 hover:bg-yellow-400/10'
-                    : 'border-white/30 hover:border-white/50 hover:bg-white/10'
-                }`}
-              >
-                <Upload size={32} className={`${settings.highContrast ? 'text-yellow-400' : 'text-white/70'} mx-auto mb-2`} />
-                <p className={`font-semibold ${settings.highContrast ? 'text-yellow-300' : 'text-white'}`}>
-                  Click to upload
-                </p>
-                <p className={`text-sm ${settings.highContrast ? 'text-yellow-200' : 'text-white/50'}`}>
-                  PNG, JPG, PDF (max 10MB)
-                </p>
-              </div>
-
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*,.pdf"
-                onChange={handleFileUpload}
-                className="hidden"
-                aria-label="Upload image file"
-              />
-
-              <button
-                onClick={startCamera}
-                className={`w-full mt-4 py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition-all hover:scale-105 ${
-                  settings.highContrast
-                    ? 'bg-yellow-400 text-black hover:bg-yellow-300'
-                    : 'bg-white/20 text-white hover:bg-white/30'
-                }`}
-                aria-label="Start camera"
-              >
-                <Camera size={20} /> Take Photo
-              </button>
-            </>
-          ) : (
-            <>
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                className={`w-full rounded-lg mb-4 ${settings.highContrast ? 'border-4 border-yellow-400' : 'border-2 border-white/20'}`}
-              />
-              <div className="flex gap-2">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Left - Upload */}
+        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15 }} className="space-y-4">
+          {/* Grade selector */}
+          <div className="glass p-4">
+            <p className="text-sm font-medium text-white/70 mb-3">Braille Grade</p>
+            <div className="flex gap-2">
+              {['grade_1', 'grade_2'].map(g => (
                 <button
-                  onClick={handleCameraCapture}
-                  className={`flex-1 py-3 rounded-lg font-bold transition-all flex items-center justify-center gap-2 ${
-                    settings.highContrast
-                      ? 'bg-yellow-400 text-black hover:bg-yellow-300'
-                      : 'bg-green-500/80 text-white hover:bg-green-600'
-                  }`}
-                  aria-label="Capture photo"
+                  key={g}
+                  onClick={() => setGrade(g)}
+                  className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-all ${grade === g
+                      ? 'border-violet-500 bg-violet-500/20 text-violet-300'
+                      : 'border-white/10 bg-white/5 text-white/50 hover:text-white'
+                    }`}
+                >{g === 'grade_1' ? 'Grade 1 (Uncontracted)' : 'Grade 2 (Contracted)'}</button>
+              ))}
+            </div>
+          </div>
+
+          {/* Drop zone */}
+          <div
+            className={`drop-zone ${isDragOver ? 'drag-over' : ''}`}
+            onDrop={onDrop}
+            onDragOver={e => { e.preventDefault(); setIsDragOver(true) }}
+            onDragLeave={() => setIsDragOver(false)}
+            onClick={() => fileInputRef.current?.click()}
+            role="button"
+            tabIndex={0}
+            onKeyDown={e => e.key === 'Enter' && fileInputRef.current?.click()}
+            aria-label="Upload file drop zone"
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              accept={ACCEPTED_TYPES.join(',')}
+              onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])}
+              aria-hidden="true"
+            />
+            <input
+              ref={cameraInputRef}
+              type="file"
+              className="hidden"
+              accept="image/*"
+              capture="environment"
+              onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])}
+              aria-hidden="true"
+            />
+
+            <div className="space-y-4">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500/20 to-pink-500/20 flex items-center justify-center mx-auto border border-violet-500/30">
+                <Upload size={28} className="text-violet-400" />
+              </div>
+              <div>
+                <p className="text-white font-semibold mb-1">Drop your file here</p>
+                <p className="text-white/40 text-sm">PNG, JPG, WEBP, PDF · Max 10MB</p>
+              </div>
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={e => { e.stopPropagation(); fileInputRef.current?.click() }}
+                  className="btn-secondary !py-2 !px-4 !text-sm"
                 >
-                  <Check size={20} /> Capture
+                  <Image size={16} /> Browse Files
                 </button>
                 <button
-                  onClick={stopCamera}
-                  className={`flex-1 py-3 rounded-lg font-bold transition-all flex items-center justify-center gap-2 ${
-                    settings.highContrast
-                      ? 'bg-yellow-400 text-black hover:bg-yellow-300'
-                      : 'bg-red-500/80 text-white hover:bg-red-600'
-                  }`}
-                  aria-label="Cancel camera"
+                  onClick={e => { e.stopPropagation(); cameraInputRef.current?.click() }}
+                  className="btn-secondary !py-2 !px-4 !text-sm"
                 >
-                  <XIcon size={20} /> Cancel
+                  <Camera size={16} /> Use Camera
                 </button>
               </div>
-            </>
+            </div>
+          </div>
+
+          {/* Preview */}
+          {file && (
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="glass p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <CheckCircle size={16} className="text-emerald-400" />
+                  <span className="text-sm font-medium text-white truncate max-w-[200px]">{file.name}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-white/40">{(file.size / 1024).toFixed(1)} KB</span>
+                  <button onClick={() => { setFile(null); setPreview(null); setResult(null) }} className="btn-icon !p-1">
+                    <X size={14} />
+                  </button>
+                </div>
+              </div>
+              {preview && (
+                <img src={preview} alt="Preview" className="w-full max-h-48 object-contain rounded-lg bg-black/30" />
+              )}
+            </motion.div>
           )}
 
-          <canvas ref={canvasRef} className="hidden" width={1280} height={720} />
-        </div>
+          {/* Process button */}
+          <motion.button
+            onClick={handleProcess}
+            disabled={!file || isProcessing}
+            whileHover={{ scale: file && !isProcessing ? 1.02 : 1 }}
+            whileTap={{ scale: file && !isProcessing ? 0.98 : 1 }}
+            className={`btn-primary w-full justify-center ${(!file || isProcessing) ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            {isProcessing ? (
+              <><div className="spinner !w-4 !h-4 !border-2" /> Processing with AI…</>
+            ) : (
+              <><Zap size={18} /> Extract & Convert to Braille</>
+            )}
+          </motion.button>
+        </motion.div>
 
-        {/* Preview Panel */}
-        <div className={`p-8 rounded-2xl h-fit ${settings.highContrast ? 'bg-black border-4 border-yellow-400' : 'bg-white/10 backdrop-blur border border-white/20'} animate-fade-in`} style={{ animationDelay: '0.1s' }}>
-          <h2 className={`text-2xl font-bold mb-4 ${settings.highContrast ? 'text-yellow-400' : 'text-white'}`}>
-            Preview
-          </h2>
-
-          {imagePreview ? (
+        {/* Right - Results */}
+        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }} className="space-y-4">
+          {result ? (
             <>
-              <img
-                src={imagePreview}
-                alt="Preview"
-                className={`w-full rounded-lg mb-6 max-h-64 object-cover ${settings.highContrast ? 'border-4 border-yellow-400' : 'border-2 border-white/20'}`}
-              />
-              <div className="mb-6">
-                <label className={`text-sm font-semibold block mb-3 ${settings.highContrast ? 'text-yellow-300' : 'text-white/70'}`}>
-                  Process as:
-                </label>
-                <select
-                  value={processType}
-                  onChange={(e) => setProcessType(e.target.value as 'braille' | 'text')}
-                  className={`w-full px-4 py-2 rounded-lg font-medium transition-all ${
-                    settings.highContrast
-                      ? 'bg-yellow-400 text-black border-2 border-yellow-300 focus:ring-2 focus:ring-yellow-500'
-                      : 'bg-white/20 text-white border border-white/30 focus:ring-2 focus:ring-pink-400'
-                  }`}
-                  aria-label="Select processing type"
-                >
-                  <option value="braille">Convert to Braille</option>
-                  <option value="text">Extract Text Only</option>
-                </select>
+              {/* Stats */}
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { label: 'OCR Confidence', value: `${(result.ocr_confidence * 100).toFixed(1)}%`, color: 'text-emerald-400' },
+                  { label: 'Processing Time', value: `${result.total_processing_ms?.toFixed(0)}ms`, color: 'text-cyan-400' },
+                ].map(s => (
+                  <div key={s.label} className="glass p-4 text-center">
+                    <div className={`text-2xl font-black ${s.color}`}>{s.value}</div>
+                    <div className="text-xs text-white/40 mt-1">{s.label}</div>
+                  </div>
+                ))}
               </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={handleConvert}
-                  disabled={loading}
-                  className={`flex-1 py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-50 ${
-                    settings.highContrast
-                      ? 'bg-yellow-400 text-black hover:bg-yellow-300'
-                      : 'bg-gradient-to-r from-pink-500 to-purple-600 text-white hover:shadow-lg'
-                  }`}
-                  aria-label="Process image"
-                >
-                  {loading ? (
-                    <>
-                      <Loader className="animate-spin" size={20} /> Processing...
-                    </>
-                  ) : (
-                    <>
-                      <Check size={20} /> Process
-                    </>
-                  )}
-                </button>
-                <button
-                  onClick={handleClearImage}
-                  className={`py-3 px-4 rounded-lg font-bold transition-all ${
-                    settings.highContrast
-                      ? 'bg-yellow-400 text-black hover:bg-yellow-300'
-                      : 'bg-red-500/20 text-red-300 hover:bg-red-500/30'
-                  }`}
-                  aria-label="Clear image"
-                >
-                  <Trash2 size={20} />
-                </button>
+
+              {/* Extracted text */}
+              <div className="glass p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <CheckCircle size={16} className="text-emerald-400" />
+                  <h3 className="font-bold text-white text-sm">Extracted Text (OCR)</h3>
+                </div>
+                <p className="text-white/70 text-sm leading-relaxed bg-white/5 p-3 rounded-lg">
+                  {result.extracted_text}
+                </p>
+              </div>
+
+              {/* Braille output */}
+              <div className="glass p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-bold text-white text-sm">Braille Output</h3>
+                  <button
+                    onClick={() => { navigator.clipboard.writeText(result.output_braille); toast.success('Copied!') }}
+                    className="btn-icon !p-1.5 text-xs"
+                  >Copy</button>
+                </div>
+                <div className="braille-output text-xl">{result.output_braille}</div>
+              </div>
+
+              {/* Exports */}
+              <div className="glass p-4">
+                <p className="text-sm font-medium text-white/70 mb-3">Export</p>
+                <div className="flex gap-2 flex-wrap">
+                  {['brf', 'pdf', 'txt'].map(fmt => (
+                    <button key={fmt} onClick={() => handleExport(fmt)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 text-white/70 text-xs hover:border-violet-500/50 hover:text-white transition-all">
+                      <Download size={12} /> {fmt.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
               </div>
             </>
           ) : (
-            <div className={`text-center py-16 ${settings.highContrast ? 'text-yellow-400' : 'text-white/40'}`}>
-              <Upload size={48} className="mx-auto mb-4 opacity-50" />
-              <p>No image selected</p>
+            <div className="glass p-12 text-center">
+              <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4">
+                <Scan size={36} className="text-white/20" />
+              </div>
+              <h3 className="text-white font-bold mb-2">No Results Yet</h3>
+              <p className="text-white/40 text-sm">Upload an image and click process to see OCR results and Braille conversion</p>
             </div>
           )}
-        </div>
-
-        {/* Output Panel */}
-        <div className={`p-8 rounded-2xl h-fit ${settings.highContrast ? 'bg-black border-4 border-yellow-400' : 'bg-white/10 backdrop-blur border border-white/20'} animate-fade-in`} style={{ animationDelay: '0.2s' }}>
-          <h2 className={`text-2xl font-bold mb-4 ${settings.highContrast ? 'text-yellow-400' : 'text-white'}`}>
-            {processType === 'braille' ? 'Braille Output' : 'Text Output'}
-          </h2>
-
-          <div className={`w-full h-80 p-4 rounded-lg overflow-y-auto font-mono text-sm leading-relaxed ${
-            settings.highContrast
-              ? 'bg-black text-yellow-300 border-2 border-yellow-400'
-              : 'bg-white/20 text-white border border-white/30'
-          }`}
-          role="region"
-          aria-label="Processing output"
-          aria-live="polite">
-            {processType === 'braille' ? (
-              brailleOutput || <span className={settings.highContrast ? 'text-yellow-600' : 'text-white/40'}>Output will appear here...</span>
-            ) : (
-              textOutput || <span className={settings.highContrast ? 'text-yellow-600' : 'text-white/40'}>Output will appear here...</span>
-            )}
-          </div>
-
-          <div className="mt-4 flex gap-2">
-            <button
-              onClick={() => handleCopy(processType === 'braille' ? brailleOutput : textOutput)}
-              disabled={!brailleOutput && !textOutput}
-              className={`flex-1 py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-50 text-sm ${
-                settings.highContrast
-                  ? 'bg-yellow-400 text-black hover:bg-yellow-300'
-                  : 'bg-white/20 text-white hover:bg-white/30'
-              }`}
-              aria-label="Copy output"
-            >
-              {copied ? <Check size={18} /> : <Copy size={18} />}
-              {copied ? 'Copied' : 'Copy'}
-            </button>
-
-            <button
-              onClick={() => handleDownload(
-                processType === 'braille' ? brailleOutput : textOutput,
-                `output-${new Date().getTime()}.txt`
-              )}
-              disabled={!brailleOutput && !textOutput}
-              className={`flex-1 py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-50 text-sm ${
-                settings.highContrast
-                  ? 'bg-yellow-400 text-black hover:bg-yellow-300'
-                  : 'bg-white/20 text-white hover:bg-white/30'
-              }`}
-              aria-label="Download output"
-            >
-              <Download size={18} /> Download
-            </button>
-          </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   )
 }
-
-export default ImageToBraille

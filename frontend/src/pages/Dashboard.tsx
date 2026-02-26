@@ -1,429 +1,213 @@
-import React, { useState, useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
+import { motion } from 'framer-motion'
+import { Link } from 'react-router-dom'
 import {
-  BarChart3, TrendingUp, Users, Zap, Calendar, Download, Activity,
-  ArrowUp, ArrowDown, Globe, Clock, CheckCircle, AlertCircle
+  BarChart2, BookOpen, Image, ArrowDownUp, Clock, TrendingUp,
+  Zap, CheckCircle, Star, Download, RefreshCw
 } from 'lucide-react'
+import { useAuthStore } from '../hooks/useAuth'
+import { usersAPI, brailleAPI } from '../services/api'
 import { useAccessibility } from '../context/AccessibilityContext'
 
+interface ConversionJob {
+  id: number
+  job_type: string
+  status: string
+  braille_grade: string
+  input_text?: string
+  processing_time_ms?: number
+  character_count?: number
+  created_at: string
+}
+
 interface Stats {
-  totalConversions: number
-  totalCharacters: number
-  averageSpeed: number
-  uptime: number
+  total_conversions: number
+  text_to_braille: number
+  image_to_braille: number
+  braille_to_text: number
+  total_characters: number
+  avg_processing_ms: number
 }
 
-interface DailyStats {
-  date: string
-  conversions: number
-  users: number
+const JOB_TYPE_LABEL: Record<string, string> = {
+  text_to_braille: 'Text → Braille',
+  image_to_braille: 'Image → Braille',
+  braille_to_text: 'Braille → Text',
+  pdf_to_braille: 'PDF → Braille',
 }
 
-function Dashboard() {
+export default function Dashboard() {
+  const { user } = useAuthStore()
   const { settings } = useAccessibility()
-  const [stats, setStats] = useState<Stats>({
-    totalConversions: 1250,
-    totalCharacters: 524360,
-    averageSpeed: 125,
-    uptime: 99.8,
-  })
-
-  const [loading, setLoading] = useState(false)
-  const [selectedPeriod, setSelectedPeriod] = useState('week')
+  const [stats, setStats] = useState<Stats | null>(null)
+  const [history, setHistory] = useState<ConversionJob[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    setLoading(true)
-    const timer = setTimeout(() => setLoading(false), 1000)
-    return () => clearTimeout(timer)
-  }, [selectedPeriod])
+    const load = async () => {
+      setIsLoading(true)
+      try {
+        const [statsRes, historyRes] = await Promise.all([
+          usersAPI.getStats(),
+          brailleAPI.getHistory(0, 8),
+        ])
+        setStats(statsRes.data)
+        setHistory(historyRes.data.items || historyRes.data || [])
+      } catch { /* handled by interceptor */ }
+      finally { setIsLoading(false) }
+    }
+    load()
+  }, [])
 
-  const conversionTypes = [
-    { name: 'Text to Braille', count: 650, percentage: 52, trend: 8, color: 'from-blue-500 to-cyan-500' },
-    { name: 'Image to Braille', count: 420, percentage: 34, trend: 5, color: 'from-green-500 to-emerald-500' },
-    { name: 'Braille to Text', count: 180, percentage: 14, trend: -2, color: 'from-yellow-500 to-orange-500' },
+  const statCards = [
+    { label: 'Total Conversions', value: stats?.total_conversions ?? '—', icon: Zap, color: 'text-violet-400', bg: 'bg-violet-500/10 border-violet-500/20' },
+    { label: 'Text → Braille', value: stats?.text_to_braille ?? '—', icon: BookOpen, color: 'text-pink-400', bg: 'bg-pink-500/10 border-pink-500/20' },
+    { label: 'Image → Braille', value: stats?.image_to_braille ?? '—', icon: Image, color: 'text-cyan-400', bg: 'bg-cyan-500/10 border-cyan-500/20' },
+    { label: 'Avg Speed', value: stats ? `${stats.avg_processing_ms?.toFixed(0)}ms` : '—', icon: TrendingUp, color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
   ]
 
-  const recentActivity = [
-    { type: 'Text to Braille', user: 'Anonymous', time: '2 minutes ago', status: 'success', chars: 145 },
-    { type: 'Image to Braille', user: 'Anonymous', time: '5 minutes ago', status: 'success', chars: 289 },
-    { type: 'Text to Braille', user: 'Anonymous', time: '12 minutes ago', status: 'success', chars: 92 },
-    { type: 'Braille to Text', user: 'Anonymous', time: '20 minutes ago', status: 'success', chars: 156 },
-    { type: 'Text to Braille', user: 'Anonymous', time: '35 minutes ago', status: 'success', chars: 214 },
-    { type: 'Image to Braille', user: 'Anonymous', time: '45 minutes ago', status: 'success', chars: 378 },
-  ]
-
-  const systemServices = [
-    { name: 'Database', status: 'operational', uptime: '99.9%', responseTime: '45ms' },
-    { name: 'API Server', status: 'operational', uptime: '99.8%', responseTime: '125ms' },
-    { name: 'Braille Engine', status: 'operational', uptime: '100%', responseTime: '98ms' },
-    { name: 'Storage Service', status: 'operational', uptime: '99.7%', responseTime: '52ms' },
-  ]
-
-  const dailyStats: DailyStats[] = [
-    { date: 'Monday', conversions: 245, users: 423 },
-    { date: 'Tuesday', conversions: 312, users: 567 },
-    { date: 'Wednesday', conversions: 289, users: 502 },
-    { date: 'Thursday', conversions: 404, users: 678 },
-    { date: 'Friday', conversions: 356, users: 612 },
-    { date: 'Saturday', conversions: 198, users: 345 },
-    { date: 'Sunday', conversions: 146, users: 267 },
-  ]
-
-  const topCountries = [
-    { country: 'United States', count: 425, flag: '🇺🇸' },
-    { country: 'United Kingdom', count: 312, flag: '🇬🇧' },
-    { country: 'Canada', count: 278, flag: '🇨🇦' },
-    { country: 'Australia', count: 156, flag: '🇦🇺' },
+  const quickActions = [
+    { to: '/text-to-braille', label: 'Convert Text', desc: 'Grade 1 & 2 Braille', icon: BookOpen, color: 'from-violet-500 to-pink-500' },
+    { to: '/image-to-braille', label: 'Process Image', desc: 'OCR + Braille', icon: Image, color: 'from-pink-500 to-orange-500' },
+    { to: '/braille-to-text', label: 'Decode Braille', desc: 'Unicode to text', icon: ArrowDownUp, color: 'from-cyan-500 to-violet-500' },
   ]
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div className="page-container">
       {/* Header */}
-      <div className="mb-8 animate-fade-in">
-        <h1 className={`text-4xl md:text-5xl font-black mb-4 ${
-          settings.highContrast ? 'text-yellow-400' : 'text-white'
-        }`}>
-          Dashboard
-        </h1>
-        <p className={`text-lg ${settings.highContrast ? 'text-yellow-200' : 'text-white/80'}`}>
-          Real-time statistics and usage analytics for the Braille Conversion Tool.
-        </p>
-      </div>
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <div className="flex items-start justify-between flex-wrap gap-4">
+          <div>
+            <div className="inline-flex items-center gap-2 badge badge-violet mb-3">
+              <Star size={12} /> Welcome back
+            </div>
+            <h1 className={`text-3xl font-black ${settings.highContrast ? 'text-yellow-400' : 'gradient-text'}`}>
+              {user?.full_name || user?.username || 'User'}
+            </h1>
+            <p className={`mt-1 ${settings.highContrast ? 'text-yellow-200' : 'text-white/50'}`}>
+              Here's your conversion activity at a glance
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="pulse-dot" />
+            <span className="text-xs text-emerald-400 font-medium">API Online</span>
+          </div>
+        </div>
+      </motion.div>
 
-      {/* Period Selector */}
-      <div className="mb-8 flex gap-2 animate-fade-in">
-        {['day', 'week', 'month', 'year'].map((period) => (
-          <button
-            key={period}
-            onClick={() => setSelectedPeriod(period)}
-            className={`px-4 py-2 rounded-lg font-semibold transition-all capitalize ${
-              selectedPeriod === period
-                ? settings.highContrast
-                  ? 'bg-yellow-400 text-black'
-                  : 'bg-white/20 text-white'
-                : settings.highContrast
-                  ? 'bg-yellow-400/10 text-yellow-300 hover:bg-yellow-400/20'
-                  : 'bg-white/10 text-white/70 hover:bg-white/20'
-            }`}
+      {/* Stats grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {statCards.map((s, i) => (
+          <motion.div
+            key={s.label}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.08 }}
+            className={`glass p-5 border ${s.bg}`}
           >
-            Last {period}
-          </button>
+            {isLoading ? (
+              <div className="space-y-2">
+                <div className="shimmer h-6 w-16 rounded" />
+                <div className="shimmer h-3 w-24 rounded" />
+              </div>
+            ) : (
+              <>
+                <div className={`text-2xl font-black mb-1 ${s.color}`}>{s.value}</div>
+                <div className={`text-xs font-medium flex items-center gap-1.5 ${settings.highContrast ? 'text-yellow-200' : 'text-white/50'}`}>
+                  <s.icon size={12} /> {s.label}
+                </div>
+              </>
+            )}
+          </motion.div>
         ))}
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {[
-          {
-            icon: BarChart3,
-            label: 'Total Conversions',
-            value: stats.totalConversions.toLocaleString(),
-            change: '+12.5%',
-            color: 'from-blue-500 to-cyan-500',
-          },
-          {
-            icon: TrendingUp,
-            label: 'Characters Processed',
-            value: `${(stats.totalCharacters / 1000).toFixed(1)}K`,
-            change: '+8.2%',
-            color: 'from-green-500 to-emerald-500',
-          },
-          {
-            icon: Zap,
-            label: 'Avg Speed',
-            value: `${stats.averageSpeed}ms`,
-            change: '-5.1%',
-            color: 'from-yellow-500 to-orange-500',
-          },
-          {
-            icon: Users,
-            label: 'Active Users',
-            value: '2,345',
-            change: '+23.4%',
-            color: 'from-purple-500 to-pink-500',
-          },
-        ].map((stat, idx) => {
-          const Icon = stat.icon
-          const isPositive = stat.change.includes('+')
-          return (
-            <div
-              key={idx}
-              className={`p-6 rounded-2xl transition-all hover:scale-105 animate-fade-in ${
-                settings.highContrast
-                  ? 'bg-black border-4 border-yellow-400'
-                  : 'bg-white/10 backdrop-blur border border-white/20 hover:bg-white/20'
-              }`}
-              style={{ animationDelay: `${idx * 0.1}s` }}
+      {/* Quick actions */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mb-8">
+        <h2 className={`text-lg font-bold mb-4 ${settings.highContrast ? 'text-yellow-400' : 'text-white'}`}>Quick Actions</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {quickActions.map(a => (
+            <Link
+              key={a.to}
+              to={a.to}
+              className="glass glass-hover p-5 flex items-center gap-4 group"
             >
-              <div className="flex items-start justify-between mb-4">
-                <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${stat.color} flex items-center justify-center`}>
-                  <Icon size={24} className="text-white" />
-                </div>
-                <div className={`flex items-center gap-1 text-sm font-bold ${
-                  isPositive
-                    ? 'text-green-400'
-                    : 'text-red-400'
-                }`}>
-                  {isPositive ? <ArrowUp size={16} /> : <ArrowDown size={16} />}
-                  {stat.change}
-                </div>
+              <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${a.color} flex items-center justify-center shadow-lg flex-shrink-0 group-hover:scale-110 transition-transform`}>
+                <a.icon size={22} className="text-white" />
               </div>
-              <p className={`text-sm font-semibold mb-2 ${
-                settings.highContrast ? 'text-yellow-300' : 'text-white/70'
-              }`}>
-                {stat.label}
-              </p>
-              <p className={`text-3xl font-black ${
-                settings.highContrast ? 'text-yellow-400' : 'text-white'
-              }`}>
-                {stat.value}
-              </p>
-            </div>
-          )
-        })}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-        {/* Conversion Types */}
-        <div className={`lg:col-span-2 p-8 rounded-2xl animate-fade-in ${
-          settings.highContrast ? 'bg-black border-4 border-yellow-400' : 'bg-white/10 backdrop-blur border border-white/20'
-        }`}>
-          <h2 className={`text-2xl font-bold mb-6 ${settings.highContrast ? 'text-yellow-400' : 'text-white'}`}>
-            Conversion Types Distribution
-          </h2>
-
-          <div className="space-y-6">
-            {conversionTypes.map((type, idx) => (
-              <div key={idx} className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p className={`font-semibold ${settings.highContrast ? 'text-yellow-300' : 'text-white'}`}>
-                      {type.name}
-                    </p>
-                    <p className={`text-xs ${settings.highContrast ? 'text-yellow-200' : 'text-white/60'}`}>
-                      {type.count} conversions
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className={`text-sm font-bold ${settings.highContrast ? 'text-yellow-400' : 'text-pink-400'}`}>
-                      {type.percentage}%
-                    </p>
-                    <p className={`text-xs ${type.trend > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                      {type.trend > 0 ? '+' : ''}{type.trend}% trend
-                    </p>
-                  </div>
-                </div>
-                <div className={`w-full h-4 rounded-full overflow-hidden ${
-                  settings.highContrast ? 'bg-yellow-400/20 border-2 border-yellow-400' : 'bg-white/10 border border-white/20'
-                }`}>
-                  <div
-                    className={`h-full bg-gradient-to-r ${type.color} transition-all duration-500`}
-                    style={{ width: `${type.percentage}%` }}
-                  />
-                </div>
+              <div>
+                <div className={`font-bold text-sm ${settings.highContrast ? 'text-yellow-400' : 'text-white'}`}>{a.label}</div>
+                <div className={`text-xs ${settings.highContrast ? 'text-yellow-200' : 'text-white/50'}`}>{a.desc}</div>
               </div>
-            ))}
-          </div>
-
-          <div className={`mt-8 p-4 rounded-lg ${
-            settings.highContrast ? 'bg-yellow-400/10 border-2 border-yellow-400' : 'bg-blue-500/10 border border-blue-400/30'
-          }`}>
-            <p className={`text-sm ${settings.highContrast ? 'text-yellow-300' : 'text-blue-200'}`}>
-              📊 Total conversions in selected period: <span className="font-bold">{stats.totalConversions}</span>
-            </p>
-          </div>
+            </Link>
+          ))}
         </div>
+      </motion.div>
 
-        {/* Top Countries */}
-        <div className={`p-8 rounded-2xl h-fit animate-fade-in ${
-          settings.highContrast ? 'bg-black border-4 border-yellow-400' : 'bg-white/10 backdrop-blur border border-white/20'
-        }`} style={{ animationDelay: '0.2s' }}>
-          <h2 className={`text-2xl font-bold mb-6 ${settings.highContrast ? 'text-yellow-400' : 'text-white'}`}>
-            Top Countries
-          </h2>
-
-          <div className="space-y-4">
-            {topCountries.map((item, idx) => (
-              <div key={idx} className={`p-3 rounded-lg ${
-                settings.highContrast ? 'bg-yellow-400/10 border-2 border-yellow-400' : 'bg-white/10 border border-white/20'
-              }`}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl">{item.flag}</span>
-                    <span className={`font-semibold text-sm ${
-                      settings.highContrast ? 'text-yellow-300' : 'text-white'
-                    }`}>
-                      {item.country}
-                    </span>
-                  </div>
-                  <span className={`font-bold text-sm ${
-                    settings.highContrast ? 'text-yellow-400' : 'text-pink-400'
-                  }`}>
-                    {item.count}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Recent Activity */}
-      <div className={`p-8 rounded-2xl animate-fade-in mb-8 ${
-        settings.highContrast ? 'bg-black border-4 border-yellow-400' : 'bg-white/10 backdrop-blur border border-white/20'
-      }`} style={{ animationDelay: '0.3s' }}>
-        <div className="flex justify-between items-center mb-6">
-          <h2 className={`text-2xl font-bold ${settings.highContrast ? 'text-yellow-400' : 'text-white'}`}>
-            Recent Activity
-          </h2>
-          <button className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition-all ${
-            settings.highContrast
-              ? 'bg-yellow-400 text-black hover:bg-yellow-300'
-              : 'bg-white/20 text-white hover:bg-white/30'
-          }`}>
-            <Download size={18} /> Export
+      {/* Recent history */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className={`text-lg font-bold ${settings.highContrast ? 'text-yellow-400' : 'text-white'}`}>Recent Conversions</h2>
+          <button onClick={() => window.location.reload()} className="btn-icon !p-2">
+            <RefreshCw size={14} />
           </button>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className={`border-b ${settings.highContrast ? 'border-yellow-400' : 'border-white/20'}`}>
-                <th className={`text-left py-3 px-4 font-semibold ${
-                  settings.highContrast ? 'text-yellow-300' : 'text-white/70'
-                }`}>
-                  Type
-                </th>
-                <th className={`text-left py-3 px-4 font-semibold ${
-                  settings.highContrast ? 'text-yellow-300' : 'text-white/70'
-                }`}>
-                  User
-                </th>
-                <th className={`text-left py-3 px-4 font-semibold ${
-                  settings.highContrast ? 'text-yellow-300' : 'text-white/70'
-                }`}>
-                  Characters
-                </th>
-                <th className={`text-left py-3 px-4 font-semibold ${
-                  settings.highContrast ? 'text-yellow-300' : 'text-white/70'
-                }`}>
-                  Time
-                </th>
-                <th className={`text-left py-3 px-4 font-semibold ${
-                  settings.highContrast ? 'text-yellow-300' : 'text-white/70'
-                }`}>
-                  Status
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentActivity.map((activity, idx) => (
-                <tr
-                  key={idx}
-                  className={`border-b ${
-                    settings.highContrast
-                      ? 'border-yellow-400/30 hover:bg-yellow-400/10'
-                      : 'border-white/10 hover:bg-white/10'
-                  } transition-colors`}
-                >
-                  <td className={`py-3 px-4 ${settings.highContrast ? 'text-yellow-200' : 'text-white'}`}>
-                    {activity.type}
-                  </td>
-                  <td className={`py-3 px-4 ${settings.highContrast ? 'text-yellow-200' : 'text-white/80'}`}>
-                    {activity.user}
-                  </td>
-                  <td className={`py-3 px-4 ${settings.highContrast ? 'text-yellow-200' : 'text-white/80'}`}>
-                    {activity.chars}
-                  </td>
-                  <td className={`py-3 px-4 flex items-center gap-2 ${
-                    settings.highContrast ? 'text-yellow-200' : 'text-white/80'
-                  }`}>
-                    <Calendar size={14} /> {activity.time}
-                  </td>
-                  <td className={`py-3 px-4`}>
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      activity.status === 'success'
-                        ? settings.highContrast
-                          ? 'bg-green-400/30 text-green-300'
-                          : 'bg-green-500/20 text-green-300'
-                        : settings.highContrast
-                          ? 'bg-red-400/30 text-red-300'
-                          : 'bg-red-500/20 text-red-300'
-                    }`}>
-                      {activity.status === 'success' ? '✓ Success' : '✗ Failed'}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* System Status */}
-      <div className={`p-8 rounded-2xl animate-fade-in ${
-        settings.highContrast ? 'bg-black border-4 border-yellow-400' : 'bg-white/10 backdrop-blur border border-white/20'
-      }`} style={{ animationDelay: '0.4s' }}>
-        <h2 className={`text-2xl font-bold mb-6 ${settings.highContrast ? 'text-yellow-400' : 'text-white'}`}>
-          System Services Status
-        </h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {systemServices.map((service, idx) => (
-            <div
-              key={idx}
-              className={`p-4 rounded-lg border transition-all ${
-                service.status === 'operational'
-                  ? settings.highContrast
-                    ? 'border-green-400 bg-green-400/10'
-                    : 'border-green-400/30 bg-green-500/10'
-                  : settings.highContrast
-                    ? 'border-red-400 bg-red-400/10'
-                    : 'border-red-400/30 bg-red-500/10'
-              }`}
-            >
-              <div className="flex items-center gap-2 mb-3">
-                <div className={`w-3 h-3 rounded-full animate-pulse ${
-                  service.status === 'operational' ? 'bg-green-500' : 'bg-red-500'
-                }`} />
-                <p className={`font-semibold text-sm ${
-                  settings.highContrast ? 'text-yellow-300' : 'text-white'
-                }`}>
-                  {service.name}
-                </p>
-              </div>
-              <p className={`text-xs mb-2 ${
-                settings.highContrast ? 'text-yellow-200' : 'text-white/70'
-              }`}>
-                {service.status === 'operational' ? '✓ Operational' : '✗ Offline'}
-              </p>
-              <div className="space-y-1">
-                <p className={`text-xs ${
-                  settings.highContrast ? 'text-yellow-200' : 'text-white/60'
-                }`}>
-                  Uptime: {service.uptime}
-                </p>
-                <p className={`text-xs ${
-                  settings.highContrast ? 'text-yellow-200' : 'text-white/60'
-                }`}>
-                  Response: {service.responseTime}
-                </p>
-              </div>
+        <div className="glass overflow-hidden">
+          {isLoading ? (
+            <div className="p-6 space-y-3">
+              {[1, 2, 3].map(i => <div key={i} className="shimmer h-14 rounded-xl" />)}
             </div>
-          ))}
+          ) : history.length > 0 ? (
+            <div className="divide-y divide-white/5">
+              {history.map((job, i) => (
+                <motion.div
+                  key={job.id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  className="flex items-center gap-4 px-5 py-4 hover:bg-white/5 transition-colors"
+                >
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${job.status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
+                    }`}>
+                    {job.status === 'completed' ? <CheckCircle size={16} /> : <Clock size={16} />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className={`text-sm font-semibold ${settings.highContrast ? 'text-yellow-400' : 'text-white'}`}>
+                      {JOB_TYPE_LABEL[job.job_type] || job.job_type}
+                    </div>
+                    <div className="text-xs text-white/40 truncate">
+                      {job.input_text?.slice(0, 50) || 'Image/PDF upload'}
+                      {(job.input_text?.length || 0) > 50 ? '…' : ''}
+                    </div>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <div className="badge badge-violet text-xs">{job.braille_grade?.replace('_', ' ')}</div>
+                    <div className="text-xs text-white/30 mt-1">
+                      {new Date(job.created_at).toLocaleDateString()}
+                    </div>
+                  </div>
+                  {job.processing_time_ms && (
+                    <div className="text-xs text-cyan-400 flex-shrink-0 hidden sm:block">
+                      {job.processing_time_ms.toFixed(0)}ms
+                    </div>
+                  )}
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <div className="p-12 text-center">
+              <BarChart2 size={40} className="text-white/20 mx-auto mb-3" />
+              <p className={`text-sm ${settings.highContrast ? 'text-yellow-200' : 'text-white/40'}`}>
+                No conversions yet. Try converting some text!
+              </p>
+              <Link to="/text-to-braille" className="btn-primary inline-flex mt-4 !py-2 !px-4 !text-sm">
+                Start Converting
+              </Link>
+            </div>
+          )}
         </div>
-      </div>
-
-      {/* Last Updated */}
-      <div className={`mt-8 p-4 rounded-lg text-center animate-fade-in ${
-        settings.highContrast ? 'bg-yellow-400/10 border-2 border-yellow-400' : 'bg-white/10 border border-white/20'
-      }`} style={{ animationDelay: '0.5s' }}>
-        <p className={`text-sm ${settings.highContrast ? 'text-yellow-300' : 'text-white/70'}`}>
-          <Activity className="inline w-4 h-4 animate-pulse mr-2" />
-          Last updated: {new Date().toLocaleTimeString()} • Live data feed active
-        </p>
-      </div>
+      </motion.div>
     </div>
   )
 }
-
-export default Dashboard
