@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react'
+import React, { type ReactNode } from 'react'
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
@@ -23,11 +23,8 @@ class ErrorBoundary extends React.Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo)
-    this.setState(prev => ({
-      ...prev,
-      errorInfo
-    }))
+    console.error('ErrorBoundary caught:', error, errorInfo)
+    this.setState(prev => ({ ...prev, errorInfo }))
   }
 
   handleReset = () => {
@@ -37,62 +34,79 @@ class ErrorBoundary extends React.Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 px-4">
-          <div className="text-center max-w-2xl">
-            <div className="mb-6 text-red-400">
-              <AlertTriangle className="w-20 h-20 mx-auto mb-4" />
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minHeight: '100vh',
+            padding: '1rem',
+            background: 'linear-gradient(135deg, #0a1a2e 0%, #16213e 100%)',
+          }}
+        >
+          <div style={{ textAlign: 'center', maxWidth: '32rem', width: '100%' }}>
+            {/* Icon */}
+            <div
+              style={{
+                width: '6rem',
+                height: '6rem',
+                borderRadius: '1.5rem',
+                background: 'rgba(239,68,68,0.1)',
+                border: '1px solid rgba(239,68,68,0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 1.5rem',
+              }}
+            >
+              <AlertTriangle size={40} color="#f87171" />
             </div>
 
-            <h1 className="text-4xl md:text-5xl font-black text-white mb-3">
-              Oops! Something Went Wrong
+            <h1 style={{ fontSize: '2rem', fontWeight: 900, color: '#fff', marginBottom: '0.75rem' }}>
+              Something Broke
             </h1>
-
-            <p className="text-white/80 text-lg mb-6">
-              We're sorry for the inconvenience. An unexpected error has occurred.
+            <p style={{ color: 'rgba(255,255,255,0.5)', marginBottom: '2rem' }}>
+              An unexpected error occurred. Don't worry — your data is safe.
             </p>
 
-            {/* Error Details */}
-            <div className="bg-white/10 backdrop-blur border border-white/20 rounded-lg p-6 mb-6 text-left max-h-64 overflow-y-auto">
-              <h3 className="text-white font-bold mb-3">Error Details:</h3>
-              <p className="text-red-300 font-mono text-sm mb-3">
-                {this.state.error?.message || 'Unknown error'}
+            {/* Error details */}
+            <div
+              className="glass"
+              style={{ padding: '1rem', marginBottom: '1.5rem', textAlign: 'left', maxHeight: '10rem', overflowY: 'auto' }}
+            >
+              <p style={{ color: '#fca5a5', fontFamily: 'monospace', fontSize: '0.875rem' }}>
+                {this.state.error?.message}
               </p>
               {this.state.errorInfo && (
-                <details className="text-white/70 text-xs">
-                  <summary className="cursor-pointer hover:text-white mb-2">
-                    Stack Trace
+                <details style={{ marginTop: '0.5rem' }}>
+                  <summary
+                    style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem', cursor: 'pointer' }}
+                  >
+                    Stack trace
                   </summary>
-                  <pre className="whitespace-pre-wrap break-words bg-black/50 p-3 rounded mt-2">
+                  <pre
+                    style={{
+                      color: 'rgba(255,255,255,0.3)',
+                      fontSize: '0.75rem',
+                      marginTop: '0.5rem',
+                      whiteSpace: 'pre-wrap',
+                      wordBreak: 'break-all',
+                    }}
+                  >
                     {this.state.errorInfo.componentStack}
                   </pre>
                 </details>
               )}
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button
-                onClick={this.handleReset}
-                className="px-8 py-4 bg-white text-purple-600 rounded-lg font-bold hover:bg-white/90 transition-all flex items-center justify-center gap-2"
-              >
-                <RefreshCw size={20} /> Try Again
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
+              <button onClick={this.handleReset} className="btn btn-primary">
+                <RefreshCw size={18} /> Try Again
               </button>
-
-              <Link
-                to="/"
-                className="px-8 py-4 border-2 border-white text-white rounded-lg font-bold hover:bg-white hover:text-purple-600 transition-all flex items-center justify-center gap-2"
-              >
-                <Home size={20} /> Go Home
+              <Link to="/" className="btn btn-secondary">
+                <Home size={18} /> Go Home
               </Link>
             </div>
-
-            {/* Support */}
-            <p className="text-white/60 text-sm mt-8">
-              If this problem persists, please{' '}
-              <a href="mailto:support@braille.com" className="text-pink-400 hover:underline">
-                contact our support team
-              </a>
-            </p>
           </div>
         </div>
       )

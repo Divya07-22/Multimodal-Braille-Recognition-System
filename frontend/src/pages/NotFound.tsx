@@ -1,141 +1,155 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
-import { Home, ArrowLeft, AlertTriangle, ChevronRight } from 'lucide-react'
-import { useAccessibility } from '../context/AccessibilityContext'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
+import { Home, ArrowLeft, Zap } from 'lucide-react'
+import { useAccessibility } from '../context/useAccessibility'
 
-function NotFound() {
+const brailleChars = ['⠼', '⠙', '⠓', '⠲', '⠃', '⠗', '⠀', '⠊', '⠇']
+
+const quickLinks = [
+  { to: '/text-to-braille', label: 'Text to Braille' },
+  { to: '/image-to-braille', label: 'Image to Braille' },
+  { to: '/braille-to-text', label: 'Braille to Text' },
+  { to: '/dashboard', label: 'Dashboard' },
+]
+
+export default function NotFound() {
   const { settings } = useAccessibility()
+  const navigate = useNavigate()
+  const [countdown, setCountdown] = useState(10)
 
-  const suggestions = [
-    { title: 'Home', path: '/', icon: '🏠' },
-    { title: 'Text to Braille', path: '/text-to-braille', icon: '📝' },
-    { title: 'Image to Braille', path: '/image-to-braille', icon: '📷' },
-    { title: 'Braille to Text', path: '/braille-to-text', icon: '🔄' },
-  ]
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(timer)
+          navigate('/')
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [navigate])
 
   return (
-    <div className={`min-h-screen flex items-center justify-center px-4 py-12 ${
-      settings.highContrast ? 'bg-black' : 'bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700'
-    }`}>
-      <div className="w-full max-w-4xl animate-fade-in">
-        <div className="text-center mb-12">
-          <div className={`mb-6 ${settings.highContrast ? 'text-yellow-400' : 'text-white'}`}>
-            <AlertTriangle size={80} className="mx-auto mb-4 animate-bounce" />
-          </div>
+    <div className="min-h-screen flex items-center justify-center px-4 py-20 relative overflow-hidden">
+      {!settings.highContrast && (
+        <>
+          <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-violet-600/15 rounded-full blur-[100px] pointer-events-none" />
+          <div className="absolute bottom-1/4 right-1/4 w-72 h-72 bg-pink-600/15 rounded-full blur-[100px] pointer-events-none" />
+        </>
+      )}
 
-          <h1 className={`text-7xl md:text-8xl font-black mb-4 ${
-            settings.highContrast ? 'text-yellow-400' : 'text-white'
+      <div className="relative z-10 max-w-2xl mx-auto text-center">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1 }}
+          className="flex justify-center gap-3 mb-8"
+        >
+          {brailleChars.map((c, i) => (
+            <motion.span
+              key={i}
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 0.15, y: 0 }}
+              transition={{ delay: i * 0.08, duration: 0.5 }}
+              className={`text-5xl select-none ${settings.highContrast ? 'text-yellow-400' : 'text-violet-300'}`}
+            >
+              {c}
+            </motion.span>
+          ))}
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6, type: 'spring', bounce: 0.4 }}
+          className="mb-6"
+        >
+          <div className={`text-[10rem] font-black leading-none ${
+            settings.highContrast
+              ? 'text-yellow-400'
+              : 'bg-gradient-to-br from-violet-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent'
           }`}>
             404
-          </h1>
+          </div>
+        </motion.div>
 
-          <p className={`text-3xl md:text-4xl font-bold mb-4 ${
-            settings.highContrast ? 'text-yellow-300' : 'text-white'
-          }`}>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <h1 className={`text-3xl font-black mb-3 ${settings.highContrast ? 'text-yellow-400' : 'text-white'}`}>
             Page Not Found
+          </h1>
+          <p className={`text-lg mb-2 ${settings.highContrast ? 'text-yellow-200' : 'text-white/60'}`}>
+            Oops! This page doesn't exist or has been moved.
           </p>
-
-          <p className={`text-lg mb-8 max-w-2xl mx-auto ${
-            settings.highContrast ? 'text-yellow-200' : 'text-white/80'
-          }`}>
-            Oops! The page you're looking for doesn't exist. It might have been moved, deleted, or perhaps you mistyped the URL. Don't worry, we'll help you get back on track!
+          <p className={`text-sm mb-10 ${settings.highContrast ? 'text-yellow-300' : 'text-white/30'}`}>
+            Redirecting to home in{' '}
+            <span className={`font-black text-base ${settings.highContrast ? 'text-yellow-400' : 'text-violet-400'}`}>
+              {countdown}s
+            </span>
           </p>
-        </div>
+        </motion.div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="flex flex-wrap gap-4 justify-center mb-12"
+        >
           <Link
             to="/"
-            className={`px-8 py-4 rounded-lg font-bold text-lg transition-all hover:scale-105 flex items-center justify-center gap-2 ${
+            className={`group flex items-center gap-2 px-6 py-3.5 rounded-2xl font-bold transition-all ${
               settings.highContrast
                 ? 'bg-yellow-400 text-black hover:bg-yellow-300'
-                : 'bg-gradient-to-r from-pink-500 to-purple-600 text-white hover:shadow-2xl'
+                : 'bg-gradient-to-r from-violet-500 to-pink-500 text-white hover:shadow-xl hover:shadow-violet-500/30 hover:scale-105'
             }`}
           >
-            <Home size={20} /> Go Home
+            <Home size={16} /> Go Home
           </Link>
-
           <button
-            onClick={() => window.history.back()}
-            className={`px-8 py-4 rounded-lg font-bold text-lg transition-all border-2 ${
+            onClick={() => navigate(-1)}
+            className={`flex items-center gap-2 px-6 py-3.5 rounded-2xl font-bold border transition-all ${
               settings.highContrast
-                ? 'border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-black'
-                : 'border-white text-white hover:bg-white hover:text-purple-600'
+                ? 'border-yellow-400 text-yellow-400 hover:bg-yellow-400/20'
+                : 'border-white/15 text-white/70 hover:text-white hover:bg-white/10'
             }`}
           >
-            <ArrowLeft className="inline mr-2" size={20} /> Go Back
+            <ArrowLeft size={16} /> Go Back
           </button>
-        </div>
+        </motion.div>
 
-        {/* Suggested Links */}
-        <div className={`p-8 rounded-2xl mb-8 ${
-          settings.highContrast
-            ? 'bg-black border-4 border-yellow-400'
-            : 'bg-white/10 backdrop-blur border border-white/20'
-        }`}>
-          <h2 className={`text-2xl font-bold mb-6 ${
-            settings.highContrast ? 'text-yellow-400' : 'text-white'
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+        >
+          <p className={`text-xs font-bold uppercase tracking-widest mb-4 ${
+            settings.highContrast ? 'text-yellow-400' : 'text-white/30'
           }`}>
-            Here are some helpful links to get you started:
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {suggestions.map((suggestion, idx) => (
+            Quick Links
+          </p>
+          <div className="flex flex-wrap justify-center gap-2">
+            {quickLinks.map(({ to, label }) => (
               <Link
-                key={idx}
-                to={suggestion.path}
-                className={`p-4 rounded-lg transition-all hover:scale-105 flex items-center justify-between group ${
+                key={to}
+                to={to}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold border transition-all ${
                   settings.highContrast
-                    ? 'bg-yellow-400/10 border-2 border-yellow-400 hover:bg-yellow-400/20'
-                    : 'bg-white/10 border border-white/20 hover:bg-white/20'
+                    ? 'border-yellow-400 text-yellow-400 hover:bg-yellow-400/20'
+                    : 'border-white/10 text-white/40 hover:text-white hover:bg-white/10 hover:border-white/20'
                 }`}
               >
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">{suggestion.icon}</span>
-                  <span className={`font-semibold ${
-                    settings.highContrast ? 'text-yellow-300' : 'text-white'
-                  }`}>
-                    {suggestion.title}
-                  </span>
-                </div>
-                <ChevronRight className={`group-hover:translate-x-2 transition-transform ${
-                  settings.highContrast ? 'text-yellow-400' : 'text-white/60'
-                }`} size={20} />
+                <Zap size={12} /> {label}
               </Link>
             ))}
           </div>
-        </div>
-
-        {/* Support Box */}
-        <div className={`p-6 rounded-lg text-center ${
-          settings.highContrast
-            ? 'bg-yellow-400/10 border-2 border-yellow-400'
-            : 'bg-blue-500/10 border border-blue-400/30'
-        }`}>
-          <p className={`text-sm mb-4 ${
-            settings.highContrast ? 'text-yellow-300' : 'text-blue-200'
-          }`}>
-            Still having trouble? We're here to help!
-          </p>
-          <a
-            href="mailto:support@braille.com"
-            className={`font-bold hover:underline ${
-              settings.highContrast ? 'text-yellow-400' : 'text-blue-300'
-            }`}
-          >
-            Contact our support team →
-          </a>
-        </div>
-
-        {/* Decorative Elements */}
-        <div className="mt-12 text-center">
-          <p className={`text-sm ${settings.highContrast ? 'text-yellow-200' : 'text-white/50'}`}>
-            Error Code: 404 Not Found | Status: Lost in Translation
-          </p>
-        </div>
+        </motion.div>
       </div>
     </div>
   )
 }
-
-export default NotFound

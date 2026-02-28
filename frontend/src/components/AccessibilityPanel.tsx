@@ -1,232 +1,252 @@
-import React, { useState } from 'react'
-import { X, RotateCcw, Volume2, Eye, Zap } from 'lucide-react'
-import { useAccessibility } from '../context/AccessibilityContext'
+
+import { motion, AnimatePresence } from 'framer-motion'
+import { X, RotateCcw, Volume2, Eye, Zap, Keyboard, Sun } from 'lucide-react'
+import { useAccessibility } from '../context/useAccessibility'
 
 interface AccessibilityPanelProps {
   isOpen: boolean
   onClose: () => void
 }
 
-function AccessibilityPanel({ isOpen, onClose }: AccessibilityPanelProps) {
-  const { settings, toggleHighContrast, setFontSize, toggleScreenReader, toggleKeyboardNavigation, resetSettings } = useAccessibility()
-  const [expandedSection, setExpandedSection] = useState<string | null>('visual')
-
-  if (!isOpen) return null
-
-  const sections = [
-    {
-      id: 'visual',
-      title: '👁️ Visual',
-      icon: Eye,
-      items: [
-        {
-          label: 'High Contrast Mode',
-          value: settings.highContrast,
-          onChange: toggleHighContrast,
-          description: 'Increases contrast for better visibility'
-        }
-      ]
-    },
-    {
-      id: 'text',
-      title: '📝 Text',
-      icon: Zap,
-      items: [
-        {
-          label: 'Font Size',
-          type: 'slider',
-          min: 80,
-          max: 150,
-          value: settings.fontSize,
-          onChange: (value: number) => setFontSize(value),
-          description: 'Adjust text size for easier reading'
-        }
-      ]
-    },
-    {
-      id: 'audio',
-      title: '🔊 Audio',
-      icon: Volume2,
-      items: [
-        {
-          label: 'Screen Reader',
-          value: settings.screenReaderEnabled,
-          onChange: toggleScreenReader,
-          description: 'Enables audio feedback for navigation'
-        }
-      ]
-    }
-  ]
+export default function AccessibilityPanel({
+  isOpen,
+  onClose,
+}: AccessibilityPanelProps) {
+  const {
+    settings,
+    toggleHighContrast,
+    setFontSize,
+    toggleScreenReader,
+    toggleKeyboardNavigation,
+    toggleReducedMotion,
+    resetSettings,
+  } = useAccessibility()
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-40" onClick={onClose}>
-      <div
-        className={`fixed right-0 top-0 h-full w-full max-w-md ${
-          settings.highContrast
-            ? 'bg-black border-l-4 border-yellow-400'
-            : 'bg-gradient-to-br from-purple-900/95 to-indigo-900/95 backdrop-blur border-l border-white/20'
-        } p-6 overflow-y-auto animate-slide-in-up`}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <h2 className={`text-2xl font-bold ${
-            settings.highContrast ? 'text-yellow-400' : 'text-white'
-          }`}>
-            ♿ Accessibility
-          </h2>
-          <button
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             onClick={onClose}
-            className={`p-2 rounded-lg transition-all ${
-              settings.highContrast
-                ? 'bg-yellow-400 text-black hover:bg-yellow-300'
-                : 'bg-white/20 text-white hover:bg-white/30'
-            }`}
-            aria-label="Close panel"
+            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
+          />
+
+          {/* Panel */}
+          <motion.div
+            initial={{ opacity: 0, x: 320 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 320 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            className="fixed right-0 top-0 bottom-0 z-50 w-80 bg-gray-900 border-l border-white/10 shadow-2xl overflow-y-auto"
           >
-            <X size={24} />
-          </button>
-        </div>
-
-        {/* Info */}
-        <p className={`text-sm mb-6 ${
-          settings.highContrast ? 'text-yellow-200' : 'text-white/70'
-        }`}>
-          Customize the interface to suit your needs
-        </p>
-
-        {/* Sections */}
-        <div className="space-y-4 mb-6">
-          {sections.map((section) => {
-            const Icon = section.icon
-            return (
-              <div key={section.id}>
-                <button
-                  onClick={() => setExpandedSection(
-                    expandedSection === section.id ? null : section.id
-                  )}
-                  className={`w-full flex items-center justify-between p-4 rounded-lg transition-all ${
-                    settings.highContrast
-                      ? 'bg-yellow-400/10 border-2 border-yellow-400 hover:bg-yellow-400/20'
-                      : 'bg-white/10 border border-white/20 hover:bg-white/20'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <Icon className={settings.highContrast ? 'text-yellow-400' : 'text-white'} size={20} />
-                    <span className={`font-bold ${
-                      settings.highContrast ? 'text-yellow-300' : 'text-white'
-                    }`}>
-                      {section.title}
-                    </span>
-                  </div>
-                  <span className={settings.highContrast ? 'text-yellow-400' : 'text-white/60'}>
-                    {expandedSection === section.id ? '−' : '+'}
-                  </span>
-                </button>
-
-                {expandedSection === section.id && (
-                  <div className="mt-3 ml-4 space-y-3 animate-fade-in">
-                    {section.items.map((item, idx) => (
-                      <div key={idx}>
-                        <div className="flex items-center justify-between mb-2">
-                          <label className={`text-sm font-semibold cursor-pointer ${
-                            settings.highContrast ? 'text-yellow-300' : 'text-white'
-                          }`}>
-                            {item.label}
-                          </label>
-                          {item.type === 'toggle' && (
-                            <button
-                              onClick={() => item.onChange()}
-                              className={`px-3 py-1 rounded text-xs font-bold transition-all ${
-                                item.value
-                                  ? settings.highContrast
-                                    ? 'bg-yellow-400 text-black'
-                                    : 'bg-green-500/80 text-white'
-                                  : settings.highContrast
-                                    ? 'bg-yellow-400/20 text-yellow-300'
-                                    : 'bg-white/10 text-white'
-                              }`}
-                            >
-                              {item.value ? '✓ On' : '○ Off'}
-                            </button>
-                          )}
-                        </div>
-
-                        {item.type === 'slider' && (
-                          <div className="space-y-2">
-                            <input
-                              type="range"
-                              min={item.min}
-                              max={item.max}
-                              value={item.value}
-                              onChange={(e) => item.onChange(Number(e.target.value))}
-                              className="w-full h-2 bg-white/30 rounded-lg appearance-none cursor-pointer"
-                              aria-label={item.label}
-                            />
-                            <div className={`flex justify-between text-xs ${
-                              settings.highContrast ? 'text-yellow-200' : 'text-white/60'
-                            }`}>
-                              <span>{item.min}%</span>
-                              <span className="font-bold">{item.value}%</span>
-                              <span>{item.max}%</span>
-                            </div>
-                          </div>
-                        )}
-
-                        {!item.type && (
-                          <button
-                            onClick={() => item.onChange()}
-                            className={`w-full px-3 py-2 rounded text-sm font-bold transition-all ${
-                              item.value
-                                ? settings.highContrast
-                                  ? 'bg-yellow-400 text-black'
-                                  : 'bg-green-500/80 text-white'
-                                : settings.highContrast
-                                  ? 'bg-yellow-400/20 text-yellow-300 hover:bg-yellow-400/30'
-                                  : 'bg-white/10 text-white hover:bg-white/20'
-                            }`}
-                          >
-                            {item.value ? '✓ Enabled' : '○ Disabled'}
-                          </button>
-                        )}
-
-                        {item.description && (
-                          <p className={`text-xs mt-1 ${
-                            settings.highContrast ? 'text-yellow-200' : 'text-white/60'
-                          }`}>
-                            {item.description}
-                          </p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-white/10">
+              <div>
+                <h2 className="text-white font-bold text-lg">Accessibility</h2>
+                <p className="text-gray-400 text-sm mt-0.5">
+                  Customize your experience
+                </p>
               </div>
-            )
-          })}
-        </div>
+              <button
+                onClick={onClose}
+                className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+                aria-label="Close accessibility panel"
+              >
+                <X size={20} />
+              </button>
+            </div>
 
-        {/* Reset Button */}
-        <button
-          onClick={resetSettings}
-          className={`w-full py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition-all ${
-            settings.highContrast
-              ? 'bg-yellow-400 text-black hover:bg-yellow-300'
-              : 'bg-red-500/20 text-red-300 hover:bg-red-500/30'
-          }`}
-        >
-          <RotateCcw size={18} /> Reset to Defaults
-        </button>
+            {/* Settings */}
+            <div className="p-6 space-y-6">
+              {/* High Contrast */}
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 p-2 rounded-lg bg-yellow-500/20">
+                    <Sun size={16} className="text-yellow-400" />
+                  </div>
+                  <div>
+                    <p className="text-white text-sm font-medium">
+                      High Contrast
+                    </p>
+                    <p className="text-gray-400 text-xs mt-0.5">
+                      Increase visual contrast
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={toggleHighContrast}
+                  className={`relative w-11 h-6 rounded-full transition-colors duration-200 flex-shrink-0 ${
+                    settings.highContrast ? 'bg-purple-600' : 'bg-gray-600'
+                  }`}
+                  role="switch"
+                  aria-checked={settings.highContrast}
+                >
+                  <span
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${
+                      settings.highContrast ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
 
-        {/* Footer */}
-        <p className={`text-xs mt-6 text-center ${
-          settings.highContrast ? 'text-yellow-200' : 'text-white/60'
-        }`}>
-          Your accessibility settings are saved locally
-        </p>
-      </div>
-    </div>
+              {/* Font Size */}
+              <div>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="p-2 rounded-lg bg-blue-500/20">
+                    <Eye size={16} className="text-blue-400" />
+                  </div>
+                  <div>
+                    <p className="text-white text-sm font-medium">Font Size</p>
+                    <p className="text-gray-400 text-xs mt-0.5">
+                      {settings.fontSize}% of default
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setFontSize(settings.fontSize - 10)}
+                    disabled={settings.fontSize <= 80}
+                    className="px-3 py-1.5 rounded-lg bg-gray-700 hover:bg-gray-600 text-white text-sm font-bold disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    A&minus;
+                  </button>
+                  <input
+                    type="range"
+                    min={80}
+                    max={150}
+                    step={10}
+                    value={settings.fontSize}
+                    onChange={(e) => setFontSize(Number(e.target.value))}
+                    className="flex-1 accent-purple-500"
+                    aria-label="Font size"
+                  />
+                  <button
+                    onClick={() => setFontSize(settings.fontSize + 10)}
+                    disabled={settings.fontSize >= 150}
+                    className="px-3 py-1.5 rounded-lg bg-gray-700 hover:bg-gray-600 text-white text-sm font-bold disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    A+
+                  </button>
+                </div>
+              </div>
+
+              {/* Screen Reader */}
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 p-2 rounded-lg bg-green-500/20">
+                    <Volume2 size={16} className="text-green-400" />
+                  </div>
+                  <div>
+                    <p className="text-white text-sm font-medium">
+                      Screen Reader Hints
+                    </p>
+                    <p className="text-gray-400 text-xs mt-0.5">
+                      Enhanced ARIA labels
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={toggleScreenReader}
+                  className={`relative w-11 h-6 rounded-full transition-colors duration-200 flex-shrink-0 ${
+                    settings.screenReaderEnabled ? 'bg-purple-600' : 'bg-gray-600'
+                  }`}
+                  role="switch"
+                  aria-checked={settings.screenReaderEnabled}
+                >
+                  <span
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${
+                      settings.screenReaderEnabled
+                        ? 'translate-x-5'
+                        : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Keyboard Navigation */}
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 p-2 rounded-lg bg-orange-500/20">
+                    <Keyboard size={16} className="text-orange-400" />
+                  </div>
+                  <div>
+                    <p className="text-white text-sm font-medium">
+                      Keyboard Navigation
+                    </p>
+                    <p className="text-gray-400 text-xs mt-0.5">
+                      Show focus indicators
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={toggleKeyboardNavigation}
+                  className={`relative w-11 h-6 rounded-full transition-colors duration-200 flex-shrink-0 ${
+                    settings.keyboardNavigationEnabled
+                      ? 'bg-purple-600'
+                      : 'bg-gray-600'
+                  }`}
+                  role="switch"
+                  aria-checked={settings.keyboardNavigationEnabled}
+                >
+                  <span
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${
+                      settings.keyboardNavigationEnabled
+                        ? 'translate-x-5'
+                        : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Reduced Motion */}
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 p-2 rounded-lg bg-red-500/20">
+                    <Zap size={16} className="text-red-400" />
+                  </div>
+                  <div>
+                    <p className="text-white text-sm font-medium">
+                      Reduced Motion
+                    </p>
+                    <p className="text-gray-400 text-xs mt-0.5">
+                      Minimize animations
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={toggleReducedMotion}
+                  className={`relative w-11 h-6 rounded-full transition-colors duration-200 flex-shrink-0 ${
+                    settings.reducedMotion ? 'bg-purple-600' : 'bg-gray-600'
+                  }`}
+                  role="switch"
+                  aria-checked={settings.reducedMotion}
+                >
+                  <span
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${
+                      settings.reducedMotion ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* Reset */}
+            <div className="p-6 border-t border-white/10">
+              <button
+                onClick={resetSettings}
+                className="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-lg border border-white/20 text-gray-300 hover:text-white hover:bg-white/10 text-sm font-medium transition-colors"
+              >
+                <RotateCcw size={15} />
+                Reset to Defaults
+              </button>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
   )
 }
-
-export default AccessibilityPanel

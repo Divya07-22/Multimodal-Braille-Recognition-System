@@ -1,87 +1,126 @@
-/**
- * Zustand global auth store with localStorage persistence
- */
 import { create } from 'zustand'
-import { authAPI, usersAPI } from '../services/api'
+import { persist } from 'zustand/middleware'
+import api from '../services/api'
 
-export interface User {
-    id: number
-    email: string
-    username: string
-    full_name?: string
-    role: string
-    is_active: boolean
-    is_verified: boolean
-    avatar_url?: string
-    high_contrast: boolean
-    font_size: string
-    created_at: string
+interface User {
+  id: number
+  username: string
+  email: string
+  full_name?: string
+  is_active: boolean
+  created_at: string
 }
 
 interface AuthState {
-    user: User | null
-    isAuthenticated: boolean
-    isLoading: boolean
-    token: string | null
-
-    login: (email: string, password: string) => Promise<void>
-    register: (data: { email: string; username: string; password: string; full_name?: string }) => Promise<void>
-    logout: () => Promise<void>
-    fetchMe: () => Promise<void>
-    updateUser: (updates: Partial<User>) => void
-    initialize: () => Promise<void>
+  user: User | null
+  token: string | null
+  isAuthenticated: boolean
+  isLoading: boolean
+  error: string | null
+  login: (username: string, password: string) => Promise<void>
+  register: (data: RegisterData) => Promise<void>
+  logout: () => Promise<void>
+  fetchProfile: () => Promise<void>
+  clearError: () => void
+  setLoading: (loading: boolean) => void
 }
 
-export const useAuthStore = create<AuthState>((set, get) => ({
-    user: null,
-    isAuthenticated: false,
-    isLoading: true,
-    token: null,
+interface RegisterData {
+  username: string
+  email: string
+  password: string
+  full_name?: string
+}
 
-    initialize: async () => {
-        const token = localStorage.getItem('access_token')
-        if (token) {
-            try {
-                await get().fetchMe()
-            } catch {
-                localStorage.removeItem('access_token')
-                localStorage.removeItem('refresh_token')
-                set({ isAuthenticated: false, user: null, isLoading: false })
-            }
-        } else {
-            set({ isLoading: false })
+type ApiError = { response?: { data?: { detail?: string }; status?: number } }
+
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set, get) => ({
+      user: null,
+      token: null,
+      isAuthenticated: false,
+      isLoading: false,
+      error: null,
+
+      login: async (username, password) => {
+        set({ isLoading: true, error: null })
+        try {
+          const formData = new FormData()
+          formData.append('username', username)
+          formData.append('password', password)
+          const response = await api.post('/auth/login', formData, {
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          })
+          const { access_token } = response.data
+          localStorage.setItem('token', access_token)
+          set({ token: access_token, isAuthenticated: true, isLoading: false })
+          await get().fetchProfile()
+        } catch (err: unknown) {
+          const message =
+            (err as ApiError)?.response?.data?.detail ||
+            'Login failed. Please try again.'
+          set({ error: message, isLoading: false })
+          throw new Error(message)
         }
-    },
+      },
 
-    login: async (email, password) => {
-        const { data } = await authAPI.login({ email, password })
-        localStorage.setItem('access_token', data.access_token)
-        localStorage.setItem('refresh_token', data.refresh_token)
-        set({ token: data.access_token, isAuthenticated: true })
-        await get().fetchMe()
-    },
-
-    register: async (userData) => {
-        await authAPI.register(userData)
-        await get().login(userData.email, userData.password)
-    },
-
-    logout: async () => {
-        try { await authAPI.logout() } catch { /* ignore */ }
-        localStorage.removeItem('access_token')
-        localStorage.removeItem('refresh_token')
-        set({ user: null, isAuthenticated: false, token: null })
-    },
-
-    fetchMe: async () => {
-        const { data } = await authAPI.me()
-        set({ user: data, isAuthenticated: true, isLoading: false })
-    },
-
-    updateUser: (updates) => {
-        const current = get().user
-        if (current) {
-            set({ user: { ...current, ...updates } })
+      register: async (data) => {
+        set({ isLoading: true, error: null })
+        try {
+          await api.post('/auth/register', data)
+          await get().login(data.username, data.password)
+        } catch (err: unknown) {
+          const message =
+            (err as ApiError)?.response?.data?.detail ||
+            'Registration failed. Please try again.'
+          set({ error: message, isLoading: false })
+          throw new Error(message)
         }
-    },
-}))
+      },
+
+      logout: async () => {
+        set({ isLoading: true })
+        try {
+          await api.post('/auth/logout').catch(() => {})
+        } finally {
+          localStorage.removeItem('token')
+          set({
+            user: null,
+            token: null,
+            isAuthenticated: false,
+            isLoading: false,
+            error: null,
+          })
+        }
+      },
+
+      fetchProfile: async () => {
+        try {
+          const response = await api.get('/auth/me')
+          set({ user: response.data, isAuthenticated: true })
+        } catch (err: unknown) {
+          if ((err as ApiError)?.response?.status === 401) {
+            localStorage.removeItem('token')
+            set({ user: null, token: null, isAuthenticated: false })
+          }
+        }
+      },
+
+      clearError: () => set({ error: null }),
+      setLoading: (loading) => set({ isLoading: loading }),
+    }),
+    {
+      name: 'auth-storage',
+      partialize: (state) => ({
+        token: state.token,
+        isAuthenticated: state.isAuthenticated,
+        user: state.user,
+      }),
+    }
+  )
+)
+
+export function useAuth() {
+  return useAuthStore()
+}

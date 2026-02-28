@@ -1,98 +1,106 @@
-import React, { Suspense, useEffect } from 'react'
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import { Toaster } from 'react-hot-toast'
-import Navbar from './components/Navbar'
-import Footer from './components/Footer'
-import Loading from './components/Loading'
-import ErrorBoundary from './components/ErrorBoundary'
+import { useState } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { Accessibility } from "lucide-react";
+import { AccessibilityProvider } from "./context/AccessibilityContext";
+import ErrorBoundary from "./components/ErrorBoundary";
+import Navbar from "./components/Navbar";
+import Sidebar from "./components/Sidebar";
+import Footer from "./components/Footer";
+import AccessibilityPanel from "./components/AccessibilityPanel";
+import Home from "./pages/Home";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Dashboard from "./pages/Dashboard";
+import TextToBraille from "./pages/TextToBraille";
+import BrailleToText from "./pages/BrailleToText";
+import ImageToBraille from "./pages/ImageToBraille";
+import History from "./pages/History";
+import Profile from "./pages/Profile";
+import NotFound from "./pages/NotFound";
+import { useAuth } from "./hooks/useAuth";
+import "./App.css";
 
-// Pages
-import HomePage from './pages/HomePage'
-import TextToBraille from './pages/TextToBraille'
-import ImageToBraille from './pages/ImageToBraille'
-import BrailleToText from './pages/BrailleToText'
-import Dashboard from './pages/Dashboard'
-import NotFound from './pages/NotFound'
-import LoginPage from './pages/Auth/LoginPage'
-import RegisterPage from './pages/Auth/RegisterPage'
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, isLoading } = useAuth();
+  if (isLoading) return <div className="loading-spinner"><div className="spinner"></div></div>;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+};
 
-// Context & Store
-import { AccessibilityProvider } from './context/AccessibilityContext'
-import { useAuthStore } from './hooks/useAuth'
+const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, isLoading } = useAuth();
+  if (isLoading) return <div className="loading-spinner"><div className="spinner"></div></div>;
+  if (isAuthenticated) return <Navigate to="/dashboard" replace />;
+  return <>{children}</>;
+};
 
-// ── Protected Route ───────────────────────────────────────────────────────────
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuthStore()
-  if (isLoading) return <Loading />
-  if (!isAuthenticated) return <Navigate to="/login" replace />
-  return <>{children}</>
-}
+const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [accessibilityOpen, setAccessibilityOpen] = useState(false);
 
-// ── Auth Initializer ──────────────────────────────────────────────────────────
-function AuthInitializer({ children }: { children: React.ReactNode }) {
-  const { initialize } = useAuthStore()
-  useEffect(() => { initialize() }, [])
-  return <>{children}</>
-}
-
-function App() {
   return (
-    <ErrorBoundary>
-      <AccessibilityProvider>
-        <AuthInitializer>
-          <Router>
-            <div className="min-h-screen flex flex-col" style={{ background: 'var(--gradient-hero)', backgroundAttachment: 'fixed' }}>
-              <Navbar />
-              <main className="flex-1 relative overflow-hidden">
-                {/* Background orbs */}
-                <div className="orb orb-1" aria-hidden="true" />
-                <div className="orb orb-2" aria-hidden="true" />
-                <Suspense fallback={<Loading />}>
-                  <Routes>
-                    <Route path="/" element={<HomePage />} />
-                    <Route path="/text-to-braille" element={
-                      <ProtectedRoute><TextToBraille /></ProtectedRoute>
-                    } />
-                    <Route path="/image-to-braille" element={
-                      <ProtectedRoute><ImageToBraille /></ProtectedRoute>
-                    } />
-                    <Route path="/braille-to-text" element={
-                      <ProtectedRoute><BrailleToText /></ProtectedRoute>
-                    } />
-                    <Route path="/dashboard" element={
-                      <ProtectedRoute><Dashboard /></ProtectedRoute>
-                    } />
-                    <Route path="/login" element={<LoginPage />} />
-                    <Route path="/register" element={<RegisterPage />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </Suspense>
-              </main>
-              <Footer />
-            </div>
-            <Toaster
-              position="top-right"
-              reverseOrder={false}
-              toastOptions={{
-                duration: 4000,
-                style: {
-                  background: 'rgba(13, 22, 38, 0.95)',
-                  color: '#f1f5f9',
-                  border: '1px solid rgba(139, 92, 246, 0.3)',
-                  backdropFilter: 'blur(16px)',
-                  borderRadius: '12px',
-                  fontSize: '14px',
-                  fontFamily: 'Inter, sans-serif',
-                },
-                success: { iconTheme: { primary: '#10b981', secondary: '#f1f5f9' } },
-                error: { iconTheme: { primary: '#ef4444', secondary: '#f1f5f9' } },
-              }}
-            />
-          </Router>
-        </AuthInitializer>
-      </AccessibilityProvider>
-    </ErrorBoundary>
-  )
-}
+    <div className="app-container">
+      <Navbar />
+      <div className="main-wrapper">
+        <Sidebar />
+        <main className="page-content">
+          {children}
+        </main>
+      </div>
+      <Footer />
 
-export default App
+      {/* Accessibility toggle button */}
+      <button
+        onClick={() => setAccessibilityOpen(true)}
+        className="fixed bottom-6 right-6 z-40 w-12 h-12 rounded-full bg-purple-600 hover:bg-purple-500 text-white flex items-center justify-center shadow-lg shadow-purple-500/30 transition-all hover:scale-110"
+        aria-label="Open accessibility settings"
+        title="Accessibility Settings"
+      >
+        <Accessibility size={20} />
+      </button>
+
+      <AccessibilityPanel
+        isOpen={accessibilityOpen}
+        onClose={() => setAccessibilityOpen(false)}
+      />
+    </div>
+  );
+};
+
+const AuthLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <div style={{
+    minHeight: '100vh',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: 'linear-gradient(135deg, #0a1a2e 0%, #16213e 100%)'
+  }}>
+    {children}
+  </div>
+);
+
+const AppRoutes: React.FC = () => (
+  <Routes>
+    <Route path="/" element={<MainLayout><Home /></MainLayout>} />
+    <Route path="/login" element={<PublicRoute><AuthLayout><Login /></AuthLayout></PublicRoute>} />
+    <Route path="/register" element={<PublicRoute><AuthLayout><Register /></AuthLayout></PublicRoute>} />
+    <Route path="/dashboard" element={<ProtectedRoute><MainLayout><Dashboard /></MainLayout></ProtectedRoute>} />
+    <Route path="/text-to-braille" element={<ProtectedRoute><MainLayout><TextToBraille /></MainLayout></ProtectedRoute>} />
+    <Route path="/braille-to-text" element={<ProtectedRoute><MainLayout><BrailleToText /></MainLayout></ProtectedRoute>} />
+    <Route path="/image-to-braille" element={<ProtectedRoute><MainLayout><ImageToBraille /></MainLayout></ProtectedRoute>} />
+    <Route path="/history" element={<ProtectedRoute><MainLayout><History /></MainLayout></ProtectedRoute>} />
+    <Route path="/profile" element={<ProtectedRoute><MainLayout><Profile /></MainLayout></ProtectedRoute>} />
+    <Route path="*" element={<NotFound />} />
+  </Routes>
+);
+
+const App: React.FC = () => (
+  <ErrorBoundary>
+    <AccessibilityProvider>
+      <Router>
+        <AppRoutes />
+      </Router>
+    </AccessibilityProvider>
+  </ErrorBoundary>
+);
+
+export default App;

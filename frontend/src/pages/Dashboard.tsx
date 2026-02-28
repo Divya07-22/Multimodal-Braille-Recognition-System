@@ -1,213 +1,249 @@
-import React, { useEffect, useState } from 'react'
+
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import {
-  BarChart2, BookOpen, Image, ArrowDownUp, Clock, TrendingUp,
-  Zap, CheckCircle, Star, Download, RefreshCw
+  BarChart3, BookOpen, Image, ArrowDownUp,
+  Clock, Star, Trash2, ChevronRight, Zap
 } from 'lucide-react'
 import { useAuthStore } from '../hooks/useAuth'
-import { usersAPI, brailleAPI } from '../services/api'
-import { useAccessibility } from '../context/AccessibilityContext'
+import { useHistory } from '../hooks/useHistory'
+import { useAccessibility } from '../context/useAccessibility'
 
-interface ConversionJob {
-  id: number
-  job_type: string
-  status: string
-  braille_grade: string
-  input_text?: string
-  processing_time_ms?: number
-  character_count?: number
-  created_at: string
+const typeConfig: Record<string, { label: string; color: string; icon: typeof BookOpen }> = {
+  text_to_braille: { label: 'Text → Braille', color: 'text-violet-400', icon: BookOpen },
+  image_to_braille: { label: 'Image → Braille', color: 'text-pink-400', icon: Image },
+  braille_to_text: { label: 'Braille → Text', color: 'text-cyan-400', icon: ArrowDownUp },
 }
 
-interface Stats {
-  total_conversions: number
-  text_to_braille: number
-  image_to_braille: number
-  braille_to_text: number
-  total_characters: number
-  avg_processing_ms: number
-}
-
-const JOB_TYPE_LABEL: Record<string, string> = {
-  text_to_braille: 'Text → Braille',
-  image_to_braille: 'Image → Braille',
-  braille_to_text: 'Braille → Text',
-  pdf_to_braille: 'PDF → Braille',
-}
+const quickLinks = [
+  { to: '/text-to-braille', label: 'Text to Braille', icon: BookOpen, gradient: 'from-violet-500 to-purple-600' },
+  { to: '/image-to-braille', label: 'Image to Braille', icon: Image, gradient: 'from-pink-500 to-rose-600' },
+  { to: '/braille-to-text', label: 'Braille to Text', icon: ArrowDownUp, gradient: 'from-cyan-500 to-blue-600' },
+]
 
 export default function Dashboard() {
   const { user } = useAuthStore()
+  const { items, total, isLoading, deleteItem, toggleFavorite } = useHistory()
   const { settings } = useAccessibility()
-  const [stats, setStats] = useState<Stats | null>(null)
-  const [history, setHistory] = useState<ConversionJob[]>([])
-  const [isLoading, setIsLoading] = useState(true)
 
-  useEffect(() => {
-    const load = async () => {
-      setIsLoading(true)
-      try {
-        const [statsRes, historyRes] = await Promise.all([
-          usersAPI.getStats(),
-          brailleAPI.getHistory(0, 8),
-        ])
-        setStats(statsRes.data)
-        setHistory(historyRes.data.items || historyRes.data || [])
-      } catch { /* handled by interceptor */ }
-      finally { setIsLoading(false) }
-    }
-    load()
-  }, [])
-
-  const statCards = [
-    { label: 'Total Conversions', value: stats?.total_conversions ?? '—', icon: Zap, color: 'text-violet-400', bg: 'bg-violet-500/10 border-violet-500/20' },
-    { label: 'Text → Braille', value: stats?.text_to_braille ?? '—', icon: BookOpen, color: 'text-pink-400', bg: 'bg-pink-500/10 border-pink-500/20' },
-    { label: 'Image → Braille', value: stats?.image_to_braille ?? '—', icon: Image, color: 'text-cyan-400', bg: 'bg-cyan-500/10 border-cyan-500/20' },
-    { label: 'Avg Speed', value: stats ? `${stats.avg_processing_ms?.toFixed(0)}ms` : '—', icon: TrendingUp, color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
+  const stats = [
+    { label: 'Total Conversions', value: total, icon: BarChart3, color: 'text-violet-400' },
+    { label: 'This Week', value: items.filter(i => {
+      const d = new Date(i.created_at)
+      const week = new Date(); week.setDate(week.getDate() - 7)
+      return d > week
+    }).length, icon: Clock, color: 'text-pink-400' },
+    { label: 'Favorites', value: items.filter(i => i.is_favorite).length, icon: Star, color: 'text-yellow-400' },
   ]
 
-  const quickActions = [
-    { to: '/text-to-braille', label: 'Convert Text', desc: 'Grade 1 & 2 Braille', icon: BookOpen, color: 'from-violet-500 to-pink-500' },
-    { to: '/image-to-braille', label: 'Process Image', desc: 'OCR + Braille', icon: Image, color: 'from-pink-500 to-orange-500' },
-    { to: '/braille-to-text', label: 'Decode Braille', desc: 'Unicode to text', icon: ArrowDownUp, color: 'from-cyan-500 to-violet-500' },
-  ]
+  const formatDate = (d: string) => new Date(d).toLocaleDateString('en-US', {
+    month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+  })
 
   return (
-    <div className="page-container">
-      {/* Header */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-        <div className="flex items-start justify-between flex-wrap gap-4">
-          <div>
-            <div className="inline-flex items-center gap-2 badge badge-violet mb-3">
-              <Star size={12} /> Welcome back
-            </div>
-            <h1 className={`text-3xl font-black ${settings.highContrast ? 'text-yellow-400' : 'gradient-text'}`}>
-              {user?.full_name || user?.username || 'User'}
-            </h1>
-            <p className={`mt-1 ${settings.highContrast ? 'text-yellow-200' : 'text-white/50'}`}>
-              Here's your conversion activity at a glance
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="pulse-dot" />
-            <span className="text-xs text-emerald-400 font-medium">API Online</span>
-          </div>
-        </div>
-      </motion.div>
+    <div className="min-h-screen py-12 px-4">
+      <div className="max-w-6xl mx-auto">
 
-      {/* Stats grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {statCards.map((s, i) => (
-          <motion.div
-            key={s.label}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.08 }}
-            className={`glass p-5 border ${s.bg}`}
-          >
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-10"
+        >
+          <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold mb-4 ${
+            settings.highContrast
+              ? 'bg-yellow-400 text-black'
+              : 'bg-violet-500/10 border border-violet-500/20 text-violet-400'
+          }`}>
+            <BarChart3 size={14} /> Dashboard
+          </div>
+          <h1 className={`text-4xl md:text-5xl font-black mb-2 ${
+            settings.highContrast ? 'text-yellow-400' : 'text-white'
+          }`}>
+            Welcome back, {user?.full_name || user?.username}!
+          </h1>
+          <p className={settings.highContrast ? 'text-yellow-100' : 'text-white/50'}>
+            Here's your Braille conversion activity
+          </p>
+        </motion.div>
+
+        {/* Stats */}
+        <div className="grid sm:grid-cols-3 gap-4 mb-8">
+          {stats.map((s, i) => {
+            const Icon = s.icon
+            return (
+              <motion.div
+                key={s.label}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                className={`p-6 rounded-2xl border ${
+                  settings.highContrast
+                    ? 'border-yellow-400 bg-yellow-400/5'
+                    : 'border-white/10 bg-white/[0.03]'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <span className={`text-sm font-medium ${settings.highContrast ? 'text-yellow-200' : 'text-white/50'}`}>
+                    {s.label}
+                  </span>
+                  <Icon size={18} className={settings.highContrast ? 'text-yellow-400' : s.color} />
+                </div>
+                <div className={`text-4xl font-black ${settings.highContrast ? 'text-yellow-400' : 'text-white'}`}>
+                  {s.value}
+                </div>
+              </motion.div>
+            )
+          })}
+        </div>
+
+        {/* Quick Links */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="mb-8"
+        >
+          <h2 className={`text-lg font-black mb-4 ${settings.highContrast ? 'text-yellow-400' : 'text-white'}`}>
+            Quick Convert
+          </h2>
+          <div className="grid sm:grid-cols-3 gap-4">
+            {quickLinks.map(({ to, label, icon: Icon, gradient }) => (
+              <Link
+                key={to}
+                to={to}
+                className={`group flex items-center gap-3 p-4 rounded-2xl border transition-all ${
+                  settings.highContrast
+                    ? 'border-yellow-400 hover:bg-yellow-400/10 text-yellow-400'
+                    : 'border-white/10 hover:border-white/20 bg-white/[0.03] hover:bg-white/[0.06] text-white'
+                }`}
+              >
+                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center flex-shrink-0`}>
+                  <Icon size={18} className="text-white" />
+                </div>
+                <span className="font-bold text-sm">{label}</span>
+                <ChevronRight size={14} className="ml-auto opacity-40 group-hover:opacity-100 transition-opacity" />
+              </Link>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Recent History */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h2 className={`text-lg font-black ${settings.highContrast ? 'text-yellow-400' : 'text-white'}`}>
+              Recent Conversions
+            </h2>
+            <Link
+              to="/history"
+              className={`text-sm font-medium transition-all ${
+                settings.highContrast
+                  ? 'text-yellow-400 hover:text-yellow-300'
+                  : 'text-violet-400 hover:text-violet-300'
+              }`}
+            >
+              View All
+            </Link>
+          </div>
+
+          <div className={`rounded-3xl border overflow-hidden ${
+            settings.highContrast ? 'border-yellow-400' : 'border-white/10'
+          }`}>
             {isLoading ? (
-              <div className="space-y-2">
-                <div className="shimmer h-6 w-16 rounded" />
-                <div className="shimmer h-3 w-24 rounded" />
+              <div className="p-12 text-center">
+                <div className="w-8 h-8 mx-auto border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin mb-3" />
+                <p className={settings.highContrast ? 'text-yellow-300' : 'text-white/40'}>Loading history...</p>
+              </div>
+            ) : items.length === 0 ? (
+              <div className="p-12 text-center">
+                <Zap size={36} className={`mx-auto mb-3 ${settings.highContrast ? 'text-yellow-400' : 'text-violet-400/40'}`} />
+                <p className={`font-bold mb-1 ${settings.highContrast ? 'text-yellow-400' : 'text-white'}`}>No conversions yet</p>
+                <p className={`text-sm mb-4 ${settings.highContrast ? 'text-yellow-200' : 'text-white/40'}`}>Start converting to see your history here</p>
+                <Link
+                  to="/text-to-braille"
+                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold ${
+                    settings.highContrast
+                      ? 'bg-yellow-400 text-black'
+                      : 'bg-violet-500/20 text-violet-300 border border-violet-500/30'
+                  }`}
+                >
+                  Start Converting
+                </Link>
               </div>
             ) : (
-              <>
-                <div className={`text-2xl font-black mb-1 ${s.color}`}>{s.value}</div>
-                <div className={`text-xs font-medium flex items-center gap-1.5 ${settings.highContrast ? 'text-yellow-200' : 'text-white/50'}`}>
-                  <s.icon size={12} /> {s.label}
-                </div>
-              </>
+              <div className="divide-y divide-white/5">
+                {items.slice(0, 8).map((item, i) => {
+                  const cfg = typeConfig[item.conversion_type] || typeConfig.text_to_braille
+                  const Icon = cfg.icon
+                  return (
+                    <motion.div
+                      key={item.id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: i * 0.05 }}
+                      className={`flex items-center gap-4 px-5 py-4 transition-all ${
+                        settings.highContrast
+                          ? 'hover:bg-yellow-400/10'
+                          : 'hover:bg-white/5'
+                      }`}
+                    >
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                        settings.highContrast ? 'bg-yellow-400/20' : 'bg-white/5'
+                      }`}>
+                        <Icon size={16} className={settings.highContrast ? 'text-yellow-400' : cfg.color} />
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <div className={`text-xs font-bold mb-0.5 ${settings.highContrast ? 'text-yellow-400' : cfg.color}`}>
+                          {cfg.label}
+                        </div>
+                        <div className={`text-sm truncate ${settings.highContrast ? 'text-yellow-100' : 'text-white/70'}`}>
+                          {item.input_text || '(image input)'}
+                        </div>
+                      </div>
+
+                      <div className={`text-xs flex-shrink-0 ${settings.highContrast ? 'text-yellow-300' : 'text-white/30'}`}>
+                        {formatDate(item.created_at)}
+                      </div>
+
+                      <div className="flex gap-2 flex-shrink-0">
+                        <button
+                          onClick={() => toggleFavorite(item.id)}
+                          className={`p-1.5 rounded-lg transition-all ${
+                            item.is_favorite
+                              ? 'text-yellow-400'
+                              : settings.highContrast
+                                ? 'text-yellow-400/40 hover:text-yellow-400'
+                                : 'text-white/20 hover:text-yellow-400'
+                          }`}
+                          aria-label="Toggle favorite"
+                        >
+                          <Star size={14} className={item.is_favorite ? 'fill-current' : ''} />
+                        </button>
+                        <button
+                          onClick={() => deleteItem(item.id)}
+                          className={`p-1.5 rounded-lg transition-all ${
+                            settings.highContrast
+                              ? 'text-yellow-400/40 hover:text-red-400'
+                              : 'text-white/20 hover:text-red-400'
+                          }`}
+                          aria-label="Delete"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </motion.div>
+                  )
+                })}
+              </div>
             )}
-          </motion.div>
-        ))}
+          </div>
+        </motion.div>
       </div>
-
-      {/* Quick actions */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mb-8">
-        <h2 className={`text-lg font-bold mb-4 ${settings.highContrast ? 'text-yellow-400' : 'text-white'}`}>Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {quickActions.map(a => (
-            <Link
-              key={a.to}
-              to={a.to}
-              className="glass glass-hover p-5 flex items-center gap-4 group"
-            >
-              <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${a.color} flex items-center justify-center shadow-lg flex-shrink-0 group-hover:scale-110 transition-transform`}>
-                <a.icon size={22} className="text-white" />
-              </div>
-              <div>
-                <div className={`font-bold text-sm ${settings.highContrast ? 'text-yellow-400' : 'text-white'}`}>{a.label}</div>
-                <div className={`text-xs ${settings.highContrast ? 'text-yellow-200' : 'text-white/50'}`}>{a.desc}</div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </motion.div>
-
-      {/* Recent history */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className={`text-lg font-bold ${settings.highContrast ? 'text-yellow-400' : 'text-white'}`}>Recent Conversions</h2>
-          <button onClick={() => window.location.reload()} className="btn-icon !p-2">
-            <RefreshCw size={14} />
-          </button>
-        </div>
-
-        <div className="glass overflow-hidden">
-          {isLoading ? (
-            <div className="p-6 space-y-3">
-              {[1, 2, 3].map(i => <div key={i} className="shimmer h-14 rounded-xl" />)}
-            </div>
-          ) : history.length > 0 ? (
-            <div className="divide-y divide-white/5">
-              {history.map((job, i) => (
-                <motion.div
-                  key={job.id}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  className="flex items-center gap-4 px-5 py-4 hover:bg-white/5 transition-colors"
-                >
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${job.status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
-                    }`}>
-                    {job.status === 'completed' ? <CheckCircle size={16} /> : <Clock size={16} />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className={`text-sm font-semibold ${settings.highContrast ? 'text-yellow-400' : 'text-white'}`}>
-                      {JOB_TYPE_LABEL[job.job_type] || job.job_type}
-                    </div>
-                    <div className="text-xs text-white/40 truncate">
-                      {job.input_text?.slice(0, 50) || 'Image/PDF upload'}
-                      {(job.input_text?.length || 0) > 50 ? '…' : ''}
-                    </div>
-                  </div>
-                  <div className="text-right flex-shrink-0">
-                    <div className="badge badge-violet text-xs">{job.braille_grade?.replace('_', ' ')}</div>
-                    <div className="text-xs text-white/30 mt-1">
-                      {new Date(job.created_at).toLocaleDateString()}
-                    </div>
-                  </div>
-                  {job.processing_time_ms && (
-                    <div className="text-xs text-cyan-400 flex-shrink-0 hidden sm:block">
-                      {job.processing_time_ms.toFixed(0)}ms
-                    </div>
-                  )}
-                </motion.div>
-              ))}
-            </div>
-          ) : (
-            <div className="p-12 text-center">
-              <BarChart2 size={40} className="text-white/20 mx-auto mb-3" />
-              <p className={`text-sm ${settings.highContrast ? 'text-yellow-200' : 'text-white/40'}`}>
-                No conversions yet. Try converting some text!
-              </p>
-              <Link to="/text-to-braille" className="btn-primary inline-flex mt-4 !py-2 !px-4 !text-sm">
-                Start Converting
-              </Link>
-            </div>
-          )}
-        </div>
-      </motion.div>
     </div>
   )
 }

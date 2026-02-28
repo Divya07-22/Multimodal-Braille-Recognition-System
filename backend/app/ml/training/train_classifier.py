@@ -122,9 +122,11 @@ def train_classifier(
     batch_size: int = 64,
     lr: float = 1e-3,
     weight_decay: float = 1e-4,
-    num_classes: int = 64,
+    num_classes: int = 256,
     image_size: int = 32,
     num_workers: int = 4,
+    cell_size: int = 32,
+    epochs: int = 20,
 ):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     logger.info(f"Training on device: {device}")

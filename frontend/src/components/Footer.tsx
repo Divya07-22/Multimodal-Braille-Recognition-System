@@ -1,37 +1,29 @@
-import React from 'react'
-import { Github, Linkedin, Mail, Heart, Globe, ExternalLink } from 'lucide-react'
-import { useAccessibility } from '../context/AccessibilityContext'
+
+import { Github, Linkedin, Mail, Heart, Globe, Zap, ArrowUpRight } from 'lucide-react'
+import { useAccessibility } from '../context/useAccessibility'
 import { Link } from 'react-router-dom'
 
 function Footer() {
   const { settings } = useAccessibility()
-
   const currentYear = new Date().getFullYear()
 
-  const links = [
-    { icon: Github, label: 'GitHub', url: 'https://github.com/Divya07-22' },
-    { icon: Linkedin, label: 'LinkedIn', url: 'https://linkedin.com/in/divya' },
-    { icon: Mail, label: 'Email', url: 'mailto:divya@braille.com' },
-    { icon: Globe, label: 'Website', url: 'https://braille.com' },
-  ]
-
   const footerSections = [
-    {
-      title: 'About',
-      items: [
-        { label: 'About Us', href: '#' },
-        { label: 'Our Mission', href: '#' },
-        { label: 'Team', href: '#' },
-        { label: 'Blog', href: '#' },
-      ]
-    },
     {
       title: 'Features',
       items: [
         { label: 'Text to Braille', href: '/text-to-braille' },
-        { label: 'Image Recognition', href: '/image-to-braille' },
-        { label: 'PDF Support', href: '#' },
-        { label: 'Accessibility', href: '#' },
+        { label: 'Image to Braille', href: '/image-to-braille' },
+        { label: 'Braille to Text', href: '/braille-to-text' },
+        { label: 'Dashboard', href: '/dashboard' },
+      ]
+    },
+    {
+      title: 'Resources',
+      items: [
+        { label: 'Documentation', href: '#' },
+        { label: 'API Reference', href: '#' },
+        { label: 'Braille Guide', href: '#' },
+        { label: 'Accessibility Tips', href: '#' },
       ]
     },
     {
@@ -40,50 +32,96 @@ function Footer() {
         { label: 'Privacy Policy', href: '#' },
         { label: 'Terms of Service', href: '#' },
         { label: 'Cookie Policy', href: '#' },
-        { label: 'GDPR Compliance', href: '#' },
+        { label: 'GDPR', href: '#' },
       ]
     },
-    {
-      title: 'Support',
-      items: [
-        { label: 'Help Center', href: '#' },
-        { label: 'Contact Us', href: '#' },
-        { label: 'FAQ', href: '#' },
-        { label: 'Community', href: '#' },
-      ]
-    }
+  ]
+
+  const socials = [
+    { icon: Github, label: 'GitHub', url: 'https://github.com' },
+    { icon: Linkedin, label: 'LinkedIn', url: 'https://linkedin.com' },
+    { icon: Mail, label: 'Email', url: 'mailto:support@brailleai.com' },
+    { icon: Globe, label: 'Website', url: '#' },
   ]
 
   return (
-    <footer className={`${settings.highContrast ? 'bg-black border-t-4 border-yellow-400' : 'bg-white/10 backdrop-blur-md border-t border-white/20'} text-white py-16 mt-16`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-12">
+    <footer className={`relative mt-20 ${
+      settings.highContrast
+        ? 'bg-black border-t-4 border-yellow-400'
+        : 'border-t border-white/10'
+    }`}>
+      {/* Top gradient line */}
+      {!settings.highContrast && (
+        <div className="h-[1px] w-full bg-gradient-to-r from-transparent via-violet-500/50 to-transparent" />
+      )}
+
+      {/* Subtle background */}
+      {!settings.highContrast && (
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[rgba(10,15,30,0.8)] pointer-events-none" />
+      )}
+
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 mb-12">
+
           {/* Brand */}
-          <div>
-            <div className={`w-12 h-12 rounded-lg ${settings.highContrast ? 'bg-yellow-400' : 'bg-gradient-to-br from-pink-500 to-purple-600'} flex items-center justify-center mb-3`}>
-              <span className={`text-xl font-bold ${settings.highContrast ? 'text-black' : 'text-white'}`}>⠃</span>
-            </div>
-            <h3 className={`text-lg font-bold mb-3 ${settings.highContrast ? 'text-yellow-400' : 'text-white'}`}>
-              Braille Tool
-            </h3>
-            <p className={`${settings.highContrast ? 'text-yellow-100' : 'text-white/70'} text-sm leading-relaxed`}>
-              Making accessibility easy for everyone. Convert text to Braille instantly with AI-powered technology.
+          <div className="lg:col-span-2">
+            <Link to="/" className="flex items-center gap-3 mb-5 group w-fit">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-pink-500 flex items-center justify-center shadow-lg group-hover:shadow-violet-500/40 transition-all">
+                <Zap size={20} className="text-white" />
+              </div>
+              <div>
+                <span className={`font-black text-lg ${settings.highContrast ? 'text-yellow-400' : 'gradient-text'}`}>BrailleAI</span>
+                <div className="text-[10px] text-violet-400/70 font-semibold -mt-0.5 tracking-widest uppercase">Conversion Tool</div>
+              </div>
+            </Link>
+
+            <p className={`text-sm leading-relaxed mb-6 max-w-xs ${settings.highContrast ? 'text-yellow-100' : 'text-white/50'}`}>
+              Making Braille accessible to everyone. Powered by AI, built for inclusivity. Free forever.
             </p>
+
+            {/* Social Links */}
+            <div className="flex gap-3">
+              {socials.map(({ icon: Icon, label, url }) => (
+                <a
+                  key={label}
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all hover:scale-110 ${
+                    settings.highContrast
+                      ? 'bg-yellow-400 text-black hover:bg-yellow-300'
+                      : 'bg-white/5 border border-white/10 text-white/50 hover:text-white hover:bg-white/10 hover:border-white/20'
+                  }`}
+                  aria-label={label}
+                >
+                  <Icon size={16} />
+                </a>
+              ))}
+            </div>
           </div>
 
-          {/* Links Sections */}
-          {footerSections.map((section, idx) => (
-            <div key={idx}>
-              <h4 className={`text-sm font-bold mb-4 ${settings.highContrast ? 'text-yellow-400' : 'text-white'}`}>
+          {/* Links */}
+          {footerSections.map((section) => (
+            <div key={section.title}>
+              <h4 className={`text-xs font-bold uppercase tracking-widest mb-4 ${
+                settings.highContrast ? 'text-yellow-400' : 'text-white/40'
+              }`}>
                 {section.title}
               </h4>
-              <ul className={`space-y-2 text-sm ${settings.highContrast ? 'text-yellow-100' : 'text-white/70'}`}>
-                {section.items.map((item, i) => (
-                  <li key={i}>
-                    <a href={item.href} className={`hover:${settings.highContrast ? 'text-yellow-300' : 'text-white'} transition-colors inline-flex items-center gap-1`}>
+              <ul className="space-y-2.5">
+                {section.items.map((item) => (
+                  <li key={item.label}>
+                    <Link
+                      to={item.href}
+                      className={`text-sm flex items-center gap-1 group transition-all ${
+                        settings.highContrast
+                          ? 'text-yellow-200 hover:text-yellow-400'
+                          : 'text-white/50 hover:text-white'
+                      }`}
+                    >
                       {item.label}
-                      <ExternalLink size={12} />
-                    </a>
+                      <ArrowUpRight size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -91,48 +129,26 @@ function Footer() {
           ))}
         </div>
 
-        {/* Social Links */}
-        <div className={`mb-8 pb-8 border-b ${settings.highContrast ? 'border-yellow-400' : 'border-white/20'}`}>
-          <h4 className={`text-sm font-bold mb-4 ${settings.highContrast ? 'text-yellow-400' : 'text-white'}`}>
-            Follow Us
-          </h4>
-          <div className="flex space-x-4">
-            {links.map((link) => {
-              const Icon = link.icon
-              return (
-                <a
-                  key={link.label}
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`p-3 rounded-lg transition-all ${
-                    settings.highContrast 
-                      ? 'bg-yellow-400 text-black hover:bg-yellow-300' 
-                      : 'bg-white/20 text-white hover:bg-white/30'
-                  }`}
-                  aria-label={link.label}
-                  title={link.label}
-                >
-                  <Icon size={20} />
-                </a>
-              )
-            })}
+        {/* Divider */}
+        <div className={`h-px w-full mb-8 ${
+          settings.highContrast ? 'bg-yellow-400' : 'bg-white/10'
+        }`} />
+
+        {/* Bottom */}
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+          <p className={`text-xs flex items-center gap-1.5 ${settings.highContrast ? 'text-yellow-300' : 'text-white/40'}`}>
+            Made with <Heart size={12} className="text-red-400 fill-current" /> for accessibility
+            <span className="hidden sm:inline">· © {currentYear} BrailleAI · All rights reserved</span>
+          </p>
+
+          <div className={`flex items-center gap-4 text-xs ${settings.highContrast ? 'text-yellow-200' : 'text-white/30'}`}>
+            <span>v1.0.0</span>
+            <span>·</span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              All systems operational
+            </span>
           </div>
-        </div>
-
-        {/* Bottom Info */}
-        <div className="flex flex-col md:flex-row justify-between items-center">
-          <p className={`${settings.highContrast ? 'text-yellow-300' : 'text-white/70'} text-sm flex items-center gap-2`}>
-            Made with <Heart size={16} className="text-red-400" /> for accessibility by Divya07-22
-          </p>
-          <p className={`${settings.highContrast ? 'text-yellow-300' : 'text-white/70'} text-sm mt-4 md:mt-0`}>
-            © {currentYear} Automated Braille Conversion Tool. All rights reserved.
-          </p>
-        </div>
-
-        {/* Version Info */}
-        <div className={`mt-6 pt-6 text-center text-xs ${settings.highContrast ? 'text-yellow-200 border-t border-yellow-400' : 'text-white/50 border-t border-white/20'}`}>
-          <p>Version 1.0.0 • Last Updated: {new Date().toLocaleDateString()}</p>
         </div>
       </div>
     </footer>

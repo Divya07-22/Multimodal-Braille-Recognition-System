@@ -1,94 +1,63 @@
-import { useState, useCallback, useEffect, Dispatch, SetStateAction } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
-interface UseLocalStorageOptions {
-  serializer?: (value: any) => string
-  deserializer?: (value: string) => any
-  initializeWithValue?: boolean
-}
-
-export function useLocalStorage<T>(
-  key: string,
-  initialValue: T,
-  options: UseLocalStorageOptions = {}
-): [T, Dispatch<SetStateAction<T>>, { remove: () => void; clear: () => void }] {
-  const {
-    serializer = JSON.stringify,
-    deserializer = JSON.parse,
-    initializeWithValue = true,
-  } = options
-
+export function useLocalStorage<T>(key: string, initialValue: T) {
   const [storedValue, setStoredValue] = useState<T>(() => {
-    if (!initializeWithValue || typeof window === 'undefined') {
-      return initialValue
-    }
-
     try {
       const item = window.localStorage.getItem(key)
-      if (item === null) {
-        return initialValue
-      }
-      return deserializer(item)
-    } catch (error) {
-      console.error(`Error reading localStorage key "${key}":`, error)
+      return item ? (JSON.parse(item) as T) : initialValue
+    } catch {
+      console.warn(`Error reading localStorage key "${key}"`)
       return initialValue
     }
   })
 
-  const setValue: Dispatch<SetStateAction<T>> = useCallback(
-    value => {
+  const setValue = useCallback(
+    (value: T | ((val: T) => T)) => {
       try {
-        const valueToStore = value instanceof Function ? value(storedValue) : value
+        const valueToStore =
+          value instanceof Function ? value(storedValue) : value
         setStoredValue(valueToStore)
-
-        if (typeof window !== 'undefined') {
-          window.localStorage.setItem(key, serializer(valueToStore))
-        }
-      } catch (error) {
-        console.error(`Error setting localStorage key "${key}":`, error)
+        window.localStorage.setItem(key, JSON.stringify(valueToStore))
+      } catch (err) {
+        console.error(`Error saving to localStorage key "${key}":`, err)
       }
     },
-    [key, serializer, storedValue]
+    [key, storedValue]
   )
 
-  const remove = useCallback(() => {
+  const removeValue = useCallback(() => {
     try {
+      window.localStorage.removeItem(key)
       setStoredValue(initialValue)
-      if (typeof window !== 'undefined') {
-        window.localStorage.removeItem(key)
-      }
-    } catch (error) {
-      console.error(`Error removing localStorage key "${key}":`, error)
+    } catch (err) {
+      console.error(`Error removing localStorage key "${key}":`, err)
     }
   }, [key, initialValue])
 
-  const clear = useCallback(() => {
+  const getLatestValue = useCallback((): T => {
     try {
-      setStoredValue(initialValue)
-      if (typeof window !== 'undefined') {
-        window.localStorage.clear()
-      }
-    } catch (error) {
-      console.error('Error clearing localStorage:', error)
+      const item = window.localStorage.getItem(key)
+      return item ? (JSON.parse(item) as T) : initialValue
+    } catch {
+      return initialValue
     }
-  }, [initialValue])
+  }, [key, initialValue])
 
-  // Sync across tabs/windows
   useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === key && e.newValue) {
+    const handler = (e: StorageEvent) => {
+      if (e.key === key && e.newValue !== null) {
         try {
-          setStoredValue(deserializer(e.newValue))
-        } catch (error) {
-          console.error(`Error syncing localStorage key "${key}":`, error)
+          setStoredValue(JSON.parse(e.newValue) as T)
+        } catch {
+          console.warn(`Error parsing storage event for key "${key}"`)
         }
+      } else if (e.key === key && e.newValue === null) {
+        setStoredValue(initialValue)
       }
     }
+    window.addEventListener('storage', handler)
+    return () => window.removeEventListener('storage', handler)
+  }, [key, initialValue])
 
-    window.addEventListener('storage', handleStorageChange)
-    return () => window.removeEventListener('storage', handleStorageChange)
-  }, [key, deserializer])
-
-  return [storedValue, setValue, { remove, clear }]
+  return [storedValue, setValue, removeValue, getLatestValue] as const
 }
-
-export default useLocalStorage

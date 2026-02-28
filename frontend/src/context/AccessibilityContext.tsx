@@ -1,125 +1,90 @@
-import React, { createContext, useState, useContext, useEffect, useCallback } from 'react'
+import { useState, useEffect, type ReactNode } from 'react'
+import {
+  type AccessibilitySettings,
+  AccessibilityContext,
+  defaultSettings,
+} from './AccessibilityContextValue'
 
-interface AccessibilitySettings {
-  highContrast: boolean
-  fontSize: number
-  screenReaderEnabled: boolean
-  keyboardNavigationEnabled: boolean
-  darkMode: boolean
-}
-
-interface AccessibilityContextType {
-  settings: AccessibilitySettings
-  toggleHighContrast: () => void
-  setFontSize: (size: number) => void
-  toggleScreenReader: () => void
-  toggleKeyboardNavigation: () => void
-  toggleDarkMode: () => void
-  resetSettings: () => void
-  importSettings: (settings: AccessibilitySettings) => void
-  exportSettings: () => AccessibilitySettings
-}
-
-const DEFAULT_SETTINGS: AccessibilitySettings = {
-  highContrast: false,
-  fontSize: 100,
-  screenReaderEnabled: false,
-  keyboardNavigationEnabled: false,
-  darkMode: true,
-}
-
-const AccessibilityContext = createContext<AccessibilityContextType | undefined>(undefined)
-
-export function AccessibilityProvider({ children }: { children: React.ReactNode }) {
+export function AccessibilityProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<AccessibilitySettings>(() => {
     try {
-      const saved = localStorage.getItem('accessibilitySettings')
-      return saved ? JSON.parse(saved) : DEFAULT_SETTINGS
+      const stored = localStorage.getItem('accessibility-settings')
+      return stored
+        ? { ...defaultSettings, ...(JSON.parse(stored) as AccessibilitySettings) }
+        : defaultSettings
     } catch {
-      return DEFAULT_SETTINGS
+      return defaultSettings
     }
   })
 
-  // Apply styles to document
   useEffect(() => {
-    const root = document.documentElement
-    root.style.fontSize = `${settings.fontSize}%`
-
-    if (settings.highContrast) {
-      document.body.classList.add('high-contrast')
-      document.body.style.backgroundColor = '#000'
-      document.body.style.color = '#ffff00'
-    } else {
-      document.body.classList.remove('high-contrast')
-    }
-
-    if (!settings.darkMode) {
-      document.body.style.backgroundColor = '#fff'
-      document.body.style.color = '#000'
-    }
-
-    // Save to storage
     try {
-      localStorage.setItem('accessibilitySettings', JSON.stringify(settings))
-    } catch (error) {
-      console.error('Error saving accessibility settings:', error)
+      localStorage.setItem('accessibility-settings', JSON.stringify(settings))
+    } catch {
+      console.warn('Failed to persist accessibility settings')
     }
   }, [settings])
 
-  const toggleHighContrast = useCallback(() => {
-    setSettings(prev => ({ ...prev, highContrast: !prev.highContrast }))
-  }, [])
+  useEffect(() => {
+    document.documentElement.style.fontSize = `${settings.fontSize}%`
+  }, [settings.fontSize])
 
-  const setFontSize = useCallback((size: number) => {
-    setSettings(prev => ({
+  useEffect(() => {
+    if (settings.highContrast) {
+      document.documentElement.classList.add('high-contrast')
+    } else {
+      document.documentElement.classList.remove('high-contrast')
+    }
+  }, [settings.highContrast])
+
+  useEffect(() => {
+    if (settings.reducedMotion) {
+      document.documentElement.classList.add('reduce-motion')
+    } else {
+      document.documentElement.classList.remove('reduce-motion')
+    }
+  }, [settings.reducedMotion])
+
+  useEffect(() => {
+    if (settings.keyboardNavigationEnabled) {
+      document.documentElement.classList.add('keyboard-navigation')
+    } else {
+      document.documentElement.classList.remove('keyboard-navigation')
+    }
+  }, [settings.keyboardNavigationEnabled])
+
+  const toggleHighContrast = () =>
+    setSettings((prev) => ({ ...prev, highContrast: !prev.highContrast }))
+
+  const setFontSize = (size: number) =>
+    setSettings((prev) => ({
       ...prev,
-      fontSize: Math.max(80, Math.min(150, size)),
+      fontSize: Math.min(150, Math.max(80, size)),
     }))
-  }, [])
 
-  const toggleScreenReader = useCallback(() => {
-    setSettings(prev => ({
+  const toggleScreenReader = () =>
+    setSettings((prev) => ({
       ...prev,
       screenReaderEnabled: !prev.screenReaderEnabled,
     }))
 
-    // Announce change
-    if (!settings.screenReaderEnabled) {
-      const utterance = new SpeechSynthesisUtterance('Screen reader enabled')
-      window.speechSynthesis.speak(utterance)
-    }
-  }, [settings.screenReaderEnabled])
-
-  const toggleKeyboardNavigation = useCallback(() => {
-    setSettings(prev => ({
+  const toggleKeyboardNavigation = () =>
+    setSettings((prev) => ({
       ...prev,
       keyboardNavigationEnabled: !prev.keyboardNavigationEnabled,
     }))
-  }, [])
 
-  const toggleDarkMode = useCallback(() => {
-    setSettings(prev => ({
-      ...prev,
-      darkMode: !prev.darkMode,
-    }))
-  }, [])
+  const toggleReducedMotion = () =>
+    setSettings((prev) => ({ ...prev, reducedMotion: !prev.reducedMotion }))
 
-  const resetSettings = useCallback(() => {
-    setSettings(DEFAULT_SETTINGS)
+  const resetSettings = () => {
+    setSettings(defaultSettings)
     try {
-      localStorage.removeItem('accessibilitySettings')
-    } catch (error) {
-      console.error('Error resetting accessibility settings:', error)
+      localStorage.removeItem('accessibility-settings')
+    } catch {
+      console.warn('Failed to remove accessibility settings')
     }
-  }, [])
-
-  const importSettings = useCallback((newSettings: AccessibilitySettings) => {
-    setSettings(newSettings)
-  }, [])
-
-  const exportSettings = useCallback(() => {
-    return { ...settings }
-  }, [settings])
+  }
 
   return (
     <AccessibilityContext.Provider
@@ -129,23 +94,11 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
         setFontSize,
         toggleScreenReader,
         toggleKeyboardNavigation,
-        toggleDarkMode,
+        toggleReducedMotion,
         resetSettings,
-        importSettings,
-        exportSettings,
       }}
     >
       {children}
     </AccessibilityContext.Provider>
   )
 }
-
-export function useAccessibility() {
-  const context = useContext(AccessibilityContext)
-  if (!context) {
-    throw new Error('useAccessibility must be used within AccessibilityProvider')
-  }
-  return context
-}
-
-export default AccessibilityContext

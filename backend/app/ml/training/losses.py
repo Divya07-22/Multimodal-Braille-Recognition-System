@@ -27,21 +27,26 @@ class FocalLoss(nn.Module):
         return focal_loss
 
 
-class LabelSmoothingCrossEntropy(nn.Module):
-    """Label smoothing cross entropy for better generalization."""
-
-    def __init__(self, smoothing: float = 0.1):
+class LabelSmoothingLoss(nn.Module):
+    def __init__(self, num_classes: int = 256, smoothing: float = 0.1):
         super().__init__()
         self.smoothing = smoothing
+        self.num_classes = num_classes
 
-    def forward(self, logits: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
-        n_classes = logits.size(-1)
-        log_probs = F.log_softmax(logits, dim=-1)
-        with torch.no_grad():
-            smooth_targets = torch.full_like(log_probs, self.smoothing / (n_classes - 1))
-            smooth_targets.scatter_(1, targets.unsqueeze(1), 1.0 - self.smoothing)
-        loss = -(smooth_targets * log_probs).sum(dim=-1)
-        return loss.mean()
+    def forward(self, logits, targets):
+        # Guard: clamp targets to valid range
+        targets = targets.clamp(0, self.num_classes - 1)
+
+        smooth_targets = torch.zeros_like(logits).scatter_(
+            1, targets.unsqueeze(1), 1.0 - self.smoothing
+        )
+        smooth_targets += self.smoothing / self.num_classes
+        log_probs = torch.nn.functional.log_softmax(logits, dim=1)
+        return -(smooth_targets * log_probs).sum(dim=1).mean()
+
+
+# Alias for backward compatibility
+LabelSmoothingCrossEntropy = LabelSmoothingLoss
 
 
 class DotDetectionLoss(nn.Module):
