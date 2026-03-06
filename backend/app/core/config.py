@@ -101,10 +101,10 @@ class Settings(BaseSettings):
         os.makedirs(v, exist_ok=True)
         return v
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
-        extra = "allow"
-
+    model_config = {
+        "env_file": ".env",
+        "case_sensitive": True,
+        "extra": "allow"
+    }
 
 settings = Settings()

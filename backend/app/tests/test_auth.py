@@ -2,7 +2,6 @@ import pytest
 from httpx import AsyncClient
 from app.main import app
 
-
 @pytest.mark.asyncio
 async def test_register_and_login():
     async with AsyncClient(app=app, base_url="http://test") as client:
@@ -26,7 +25,6 @@ async def test_register_and_login():
         assert "refresh_token" in data
         assert data["token_type"] == "bearer"
 
-
 @pytest.mark.asyncio
 async def test_login_wrong_password():
     async with AsyncClient(app=app, base_url="http://test") as client:
@@ -35,7 +33,6 @@ async def test_login_wrong_password():
             "password": "WrongPass99",
         })
         assert resp.status_code == 401
-
 
 @pytest.mark.asyncio
 async def test_register_duplicate_email():
@@ -49,7 +46,6 @@ async def test_register_duplicate_email():
         r1 = await client.post("/api/v1/auth/register", json=payload)
         r2 = await client.post("/api/v1/auth/register", json=payload)
         assert r2.status_code == 409
-
 
 @pytest.mark.asyncio
 async def test_refresh_token():
