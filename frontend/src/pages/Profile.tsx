@@ -49,7 +49,8 @@ export default function Profile() {
   const handleSaveProfile = async () => {
     setIsSaving(true)
     try {
-      await api.patch('/auth/me', profileForm)
+      // Correct endpoint: PATCH /users/me (not /auth/me which does not exist)
+      await api.patch('/users/me', profileForm)
       toast.success('Profile updated successfully!')
     } catch (err: unknown) {
       const message =
@@ -152,11 +153,10 @@ export default function Profile() {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium capitalize transition-all ${
-                activeTab === tab
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium capitalize transition-all ${activeTab === tab
                   ? 'bg-purple-600 text-white shadow'
                   : 'text-gray-400 hover:text-white hover:bg-white/5'
-              }`}
+                }`}
             >
               {tab === 'profile' ? <User size={15} /> : <Shield size={15} />}
               {tab}

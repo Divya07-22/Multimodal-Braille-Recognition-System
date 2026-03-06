@@ -92,7 +92,7 @@ class Settings(BaseSettings):
     TESSERACT_PATH: str = "/usr/bin/tesseract"
 
     # CORS
-    ALLOWED_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:8080"]
+    ALLOWED_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:5173", "http://localhost:8080"]
     ALLOWED_HOSTS: List[str] = ["*"]
 
     @field_validator("UPLOAD_DIR", "MODEL_ARTIFACTS_DIR", mode="before")

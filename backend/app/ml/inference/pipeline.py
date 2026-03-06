@@ -19,7 +19,7 @@ from app.core.config import settings
 logger = logging.getLogger(__name__)
 
 
-class BraillePipeline:
+class BrailleInferencePipeline:
     """
     End-to-end Braille recognition pipeline:
     Image -> Preprocess -> Detect Cells -> Classify Cells -> Decode -> NLP Postprocess
@@ -33,7 +33,7 @@ class BraillePipeline:
         self.nlp = NLPPostProcessor()
         logger.info(f"BraillePipeline initialized (ONNX={use_onnx})")
 
-    def run(self, image: np.ndarray) -> Dict[str, Any]:
+    async def run(self, image: np.ndarray) -> Dict[str, Any]:
         t0 = time.time()
 
         # Step 1: Preprocess
@@ -96,15 +96,19 @@ class BraillePipeline:
             "cells": cells_with_position,
         }
 
-    def run_from_path(self, image_path: str) -> Dict[str, Any]:
+    async def run_from_path(self, image_path: str) -> Dict[str, Any]:
         image = cv2.imread(image_path)
         if image is None:
             raise ValueError(f"Cannot read image: {image_path}")
-        return self.run(image)
+        return await self.run(image)
 
-    def run_from_bytes(self, image_bytes: bytes) -> Dict[str, Any]:
+    async def run_from_bytes(self, image_bytes: bytes) -> Dict[str, Any]:
         nparr = np.frombuffer(image_bytes, np.uint8)
         image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
         if image is None:
             raise ValueError("Cannot decode image bytes")
-        return self.run(image)
+        return await self.run(image)
+
+    async def run_from_array(self, arr: np.ndarray) -> Dict[str, Any]:
+        """Run pipeline on a numpy array (e.g. from PIL/cv2 image already loaded)."""
+        return await self.run(arr)

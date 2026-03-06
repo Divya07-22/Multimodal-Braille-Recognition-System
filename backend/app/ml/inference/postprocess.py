@@ -34,6 +34,7 @@ PATTERN_TO_CHAR = {
     0b101101: "x",
     0b111101: "y",
     0b110101: "z",
+    # Punctuation
     0b000100: ",",
     0b000110: ";",
     0b010100: ".",
@@ -41,7 +42,8 @@ PATTERN_TO_CHAR = {
     0b010010: "!",
     0b000010: "'",
     0b001100: "-",
-    0b001110: "/",
+    0b110010: "/",   # Braille pattern for forward-slash (dots 3 4 6)
+    # Digits (used in number mode via letter mapping a-j -> 1-0)
     0b100001: "1",
     0b100011: "2",
     0b101001: "3",
@@ -51,11 +53,11 @@ PATTERN_TO_CHAR = {
     0b111011: "7",
     0b110011: "8",
     0b101010: "9",
-    0b111010: "0",
+    0b011010: "0",   # same as 'j' pattern; resolved by number_mode context
 }
 
-CAPITAL_INDICATOR = 0b000000_000001  # dots 6 only = 0b100000
-NUMBER_INDICATOR = 0b011111          # dots 3456 = number follows
+CAPITAL_INDICATOR = 0b100000   # dot 6 only = capital prefix
+NUMBER_INDICATOR = 0b011111    # dots 3-4-5-6 = number mode prefix
 
 
 class PostProcessor:

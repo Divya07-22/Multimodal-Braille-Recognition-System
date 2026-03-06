@@ -17,7 +17,7 @@ interface AuthState {
   isAuthenticated: boolean
   isLoading: boolean
   error: string | null
-  login: (username: string, password: string) => Promise<void>
+  login: (email: string, password: string) => Promise<void>
   register: (data: RegisterData) => Promise<void>
   logout: () => Promise<void>
   fetchProfile: () => Promise<void>
@@ -43,15 +43,11 @@ export const useAuthStore = create<AuthState>()(
       isLoading: false,
       error: null,
 
-      login: async (username, password) => {
+      login: async (email, password) => {
         set({ isLoading: true, error: null })
         try {
-          const formData = new FormData()
-          formData.append('username', username)
-          formData.append('password', password)
-          const response = await api.post('/auth/login', formData, {
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          })
+          // Backend expects JSON { email, password } — NOT form-data
+          const response = await api.post('/auth/login', { email, password })
           const { access_token } = response.data
           localStorage.setItem('token', access_token)
           set({ token: access_token, isAuthenticated: true, isLoading: false })
@@ -69,7 +65,8 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true, error: null })
         try {
           await api.post('/auth/register', data)
-          await get().login(data.username, data.password)
+          // Login with email after register (backend login expects email)
+          await get().login(data.email, data.password)
         } catch (err: unknown) {
           const message =
             (err as ApiError)?.response?.data?.detail ||
@@ -82,7 +79,7 @@ export const useAuthStore = create<AuthState>()(
       logout: async () => {
         set({ isLoading: true })
         try {
-          await api.post('/auth/logout').catch(() => {})
+          await api.post('/auth/logout').catch(() => { })
         } finally {
           localStorage.removeItem('token')
           set({
@@ -97,7 +94,8 @@ export const useAuthStore = create<AuthState>()(
 
       fetchProfile: async () => {
         try {
-          const response = await api.get('/auth/me')
+          // Correct endpoint: GET /users/me (not /auth/me which does not exist)
+          const response = await api.get('/users/me')
           set({ user: response.data, isAuthenticated: true })
         } catch (err: unknown) {
           if ((err as ApiError)?.response?.status === 401) {

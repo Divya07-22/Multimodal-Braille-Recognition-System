@@ -22,6 +22,29 @@ interface ConversionState {
 
 type ApiError = { response?: { data?: { detail?: string } } }
 
+// ---------------------------------------------------------------------------
+// Text → Braille
+// Backend route: POST /braille/translate  (accepts { braille_text, grade })
+// For text-to-braille we encode client-side using the Unicode braille map and
+// also hit /braille/translate to get a server-side confidence score.
+// ---------------------------------------------------------------------------
+const CHAR_TO_BRAILLE: Record<string, string> = {
+  a: '⠁', b: '⠃', c: '⠉', d: '⠙', e: '⠑',
+  f: '⠋', g: '⠛', h: '⠓', i: '⠊', j: '⠚',
+  k: '⠅', l: '⠇', m: '⠍', n: '⠝', o: '⠕',
+  p: '⠏', q: '⠟', r: '⠗', s: '⠎', t: '⠞',
+  u: '⠥', v: '⠧', w: '⠺', x: '⠭', y: '⠽',
+  z: '⠵', ' ': '⠀',
+}
+
+function textToBrailleUnicode(text: string): string {
+  return text
+    .toLowerCase()
+    .split('')
+    .map((ch) => CHAR_TO_BRAILLE[ch] ?? ch)
+    .join('')
+}
+
 export function useTextToBraille() {
   const [state, setState] = useState<ConversionState>({
     result: null,
@@ -51,21 +74,42 @@ export function useTextToBraille() {
         }))
       }, 150)
       try {
-        const response = await api.post('/convert/text-to-braille', {
-          text: text.trim(),
-          grade: options?.grade || 1,
-          language: options?.language || 'en',
-          include_dots: options?.include_dots ?? true,
+        // Convert locally for instant braille display
+        const brailleUnicode = textToBrailleUnicode(text.trim())
+
+        // Also call the backend braille translate endpoint:
+        // POST /braille/translate expects { braille_text, grade }
+        // Here we pass the converted unicode so the backend can confirm & score it
+        const response = await api.post('/braille/translate', {
+          braille_text: brailleUnicode,
+          grade: options?.grade ?? 1,
         })
+
         clearInterval(progressInterval)
-        setState({
-          result: response.data,
-          isLoading: false,
-          error: null,
-          progress: 100,
-        })
+        const result: ConversionResult = {
+          braille: brailleUnicode,
+          unicode: brailleUnicode,
+          text: text.trim(),
+          confidence: response.data.confidence,
+          word_count: text.trim().split(/\s+/).filter(Boolean).length,
+          character_count: text.trim().length,
+        }
+
+        try {
+          await api.post('/history', {
+            conversion_type: 'text_to_braille',
+            input_text: text.trim(),
+            braille_output: brailleUnicode,
+            output_text: brailleUnicode,
+            processing_time_ms: 0
+          })
+        } catch (e) {
+          console.error('Failed to save history', e)
+        }
+
+        setState({ result, isLoading: false, error: null, progress: 100 })
         toast.success('Conversion successful!')
-        return response.data
+        return result
       } catch (err: unknown) {
         clearInterval(progressInterval)
         const message =
@@ -91,6 +135,10 @@ export function useTextToBraille() {
   return { ...state, convert, reset }
 }
 
+// ---------------------------------------------------------------------------
+// Image → Braille (runs full ML inference pipeline)
+// Flow: POST /upload/image → { document_id } → POST /inference/run → result
+// ---------------------------------------------------------------------------
 export function useImageToBraille() {
   const [state, setState] = useState<ConversionState>({
     result: null,
@@ -116,10 +164,11 @@ export function useImageToBraille() {
         'image/jpg',
         'image/png',
         'image/webp',
-        'image/gif',
+        'image/bmp',
+        'image/tiff',
       ]
       if (!allowedTypes.includes(file.type)) {
-        toast.error('Unsupported file format. Please use JPEG, PNG, WebP or GIF.')
+        toast.error('Unsupported file format. Please use JPEG, PNG, WebP, BMP or TIFF.')
         return
       }
       if (file.size > 10 * 1024 * 1024) {
@@ -128,39 +177,60 @@ export function useImageToBraille() {
       }
 
       setState((prev) => ({ ...prev, isLoading: true, error: null, progress: 0 }))
-      const progressInterval = setInterval(() => {
-        setState((prev) => ({
-          ...prev,
-          progress: Math.min(prev.progress + 5, 80),
-        }))
-      }, 200)
+
       try {
+        // Step 1: Upload the file → POST /upload/image
+        setState((prev) => ({ ...prev, progress: 10 }))
         const formData = new FormData()
         formData.append('file', file)
-        if (options?.grade) formData.append('grade', String(options.grade))
-        if (options?.enhance !== undefined)
-          formData.append('enhance', String(options.enhance))
 
-        const response = await api.post('/convert/image-to-braille', formData, {
+        const uploadResponse = await api.post('/upload/image', formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
           onUploadProgress: (e) => {
             if (e.total) {
-              const percent = Math.round((e.loaded * 50) / e.total)
+              const percent = Math.round((e.loaded * 40) / e.total) + 10
               setState((prev) => ({ ...prev, progress: percent }))
             }
           },
         })
-        clearInterval(progressInterval)
-        setState({
-          result: response.data,
-          isLoading: false,
-          error: null,
-          progress: 100,
+
+        const { document_id } = uploadResponse.data
+        if (!document_id) throw new Error('Upload did not return a document_id')
+
+        setState((prev) => ({ ...prev, progress: 55 }))
+
+        // Step 2: Run ML inference → POST /inference/run
+        const inferenceResponse = await api.post('/inference/run', {
+          document_id,
+          use_onnx: false, // prefer PyTorch; falls back to CV-based detector if no weights
         })
-        toast.success('Image converted successfully!')
-        return response.data
+
+        setState({ result: null, isLoading: false, error: null, progress: 100 })
+
+        const data = inferenceResponse.data
+        const result: ConversionResult = {
+          text: data.recognized_text,
+          confidence: data.confidence_score,
+          processing_time: data.processing_time_ms,
+          character_count: (data.recognized_text ?? '').length,
+          word_count: (data.recognized_text ?? '').split(/\s+/).filter(Boolean).length,
+        }
+
+        try {
+          await api.post('/history', {
+            conversion_type: 'image_to_braille',
+            document_id: document_id,
+            output_text: data.recognized_text,
+            processing_time_ms: data.processing_time_ms || 0
+          })
+        } catch (e) {
+          console.error('Failed to save history', e)
+        }
+
+        setState({ result, isLoading: false, error: null, progress: 100 })
+        toast.success('Image processed successfully!')
+        return result
       } catch (err: unknown) {
-        clearInterval(progressInterval)
         const message =
           (err as ApiError)?.response?.data?.detail ||
           'Image conversion failed. Please try again.'
@@ -184,6 +254,10 @@ export function useImageToBraille() {
   return { ...state, convert, reset }
 }
 
+// ---------------------------------------------------------------------------
+// Braille → Text
+// Backend route: POST /braille/translate  (accepts { braille_text, grade })
+// ---------------------------------------------------------------------------
 export function useBrailleToText() {
   const [state, setState] = useState<ConversionState>({
     result: null,
@@ -212,20 +286,35 @@ export function useBrailleToText() {
         }))
       }, 100)
       try {
-        const response = await api.post('/convert/braille-to-text', {
-          braille: braille.trim(),
-          grade: options?.grade || 1,
-          language: options?.language || 'en',
+        // POST /braille/translate expects { braille_text: string, grade: number }
+        const response = await api.post('/braille/translate', {
+          braille_text: braille.trim(),
+          grade: options?.grade ?? 1,
         })
         clearInterval(progressInterval)
-        setState({
-          result: response.data,
-          isLoading: false,
-          error: null,
-          progress: 100,
-        })
+        const data = response.data
+        const result: ConversionResult = {
+          text: data.translated,
+          confidence: data.confidence,
+          word_count: (data.translated ?? '').split(/\s+/).filter(Boolean).length,
+          character_count: (data.translated ?? '').length,
+        }
+
+        try {
+          await api.post('/history', {
+            conversion_type: 'braille_to_text',
+            input_text: braille.trim(),
+            braille_output: braille.trim(),
+            output_text: data.translated,
+            processing_time_ms: 0
+          })
+        } catch (e) {
+          console.error('Failed to save history', e)
+        }
+
+        setState({ result, isLoading: false, error: null, progress: 100 })
         toast.success('Braille decoded successfully!')
-        return response.data
+        return result
       } catch (err: unknown) {
         clearInterval(progressInterval)
         const message =
