@@ -35,5 +35,5 @@ class ConversionHistoryItem(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
     )
 
-    user: Mapped["User"] = relationship("User", backref="conversion_history")
+    user: Mapped["User"] = relationship("User", back_populates="conversion_history")
     document: Mapped[Optional["Document"]] = relationship("Document")

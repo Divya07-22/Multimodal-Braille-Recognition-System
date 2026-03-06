@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { Accessibility } from "lucide-react";
 import { AccessibilityProvider } from "./context/AccessibilityContext";
@@ -17,6 +17,10 @@ import ImageToBraille from "./pages/ImageToBraille";
 import History from "./pages/History";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import VerifyEmail from "./pages/VerifyEmail";
+import ResendVerification from "./pages/ResendVerification";
 import { useAuth } from "./hooks/useAuth";
 import "./App.css";
 
@@ -83,6 +87,10 @@ const AppRoutes: React.FC = () => (
     <Route path="/" element={<MainLayout><Home /></MainLayout>} />
     <Route path="/login" element={<PublicRoute><AuthLayout><Login /></AuthLayout></PublicRoute>} />
     <Route path="/register" element={<PublicRoute><AuthLayout><Register /></AuthLayout></PublicRoute>} />
+    <Route path="/forgot-password" element={<AuthLayout><ForgotPassword /></AuthLayout>} />
+    <Route path="/reset-password" element={<AuthLayout><ResetPassword /></AuthLayout>} />
+    <Route path="/verify-email" element={<AuthLayout><VerifyEmail /></AuthLayout>} />
+    <Route path="/resend-verification" element={<AuthLayout><ResendVerification /></AuthLayout>} />
     <Route path="/dashboard" element={<ProtectedRoute><MainLayout><Dashboard /></MainLayout></ProtectedRoute>} />
     <Route path="/text-to-braille" element={<ProtectedRoute><MainLayout><TextToBraille /></MainLayout></ProtectedRoute>} />
     <Route path="/braille-to-text" element={<ProtectedRoute><MainLayout><BrailleToText /></MainLayout></ProtectedRoute>} />

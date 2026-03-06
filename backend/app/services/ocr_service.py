@@ -1,5 +1,7 @@
 import io
 import logging
+import shutil
+import sys
 import time
 from typing import Any, Dict
 
@@ -9,7 +11,16 @@ from PIL import Image
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
-pytesseract.pytesseract.tesseract_cmd = settings.TESSERACT_PATH
+
+# Resolve Tesseract binary path in a platform-aware manner.
+# On Windows the env variable may point to the wrong place; try PATH first.
+if sys.platform == "win32":
+    _tess = shutil.which("tesseract")
+    pytesseract.pytesseract.tesseract_cmd = (
+        _tess if _tess else r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+    )
+else:
+    pytesseract.pytesseract.tesseract_cmd = settings.TESSERACT_PATH
 
 
 class OCRService:

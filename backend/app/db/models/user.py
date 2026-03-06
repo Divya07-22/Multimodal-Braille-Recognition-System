@@ -38,3 +38,6 @@ class User(Base):
     audit_logs: Mapped[list["AuditLog"]] = relationship(
         "AuditLog", back_populates="user", cascade="all, delete-orphan"
     )
+    conversion_history: Mapped[list["ConversionHistoryItem"]] = relationship(
+        "ConversionHistoryItem", back_populates="user", cascade="all, delete-orphan"
+    )

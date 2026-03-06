@@ -22,6 +22,11 @@ from app.schemas.auth import (
     RefreshTokenRequest,
     RefreshTokenResponse,
     ChangePasswordRequest,
+    ForgotPasswordRequest,
+    ResetPasswordRequest,
+    VerifyEmailRequest,
+    ResendVerificationRequest,
+    MessageResponse,
 )
 from app.api.deps import get_current_user
 
@@ -145,3 +150,85 @@ async def change_password(
 async def logout(current_user: User = Depends(get_current_user)):
     logger.info(f"User logged out: {current_user.email}")
     return {"message": "Logged out successfully"}
+
+
+@router.post("/forgot-password", response_model=MessageResponse)
+async def forgot_password(
+    payload: ForgotPasswordRequest, db: AsyncSession = Depends(get_db)
+):
+    """Sends a password reset link. Always returns 200 to prevent email enumeration."""
+    import datetime
+    result = await db.execute(select(User).where(User.email == payload.email))
+    user = result.scalar_one_or_none()
+    if user:
+        token = create_access_token(
+            subject=user.id,
+            expires_delta=datetime.timedelta(minutes=30),
+        )
+        logger.info(
+            f"Password reset requested for {user.email}. "
+            f"Reset URL: /reset-password?token={token}"
+        )
+    return MessageResponse(message="If this email is registered, a password reset link has been sent.")
+
+
+@router.post("/reset-password", response_model=MessageResponse)
+async def reset_password(
+    payload: ResetPasswordRequest, db: AsyncSession = Depends(get_db)
+):
+    """Resets the user password using a valid reset token."""
+    token_data = verify_token(payload.token)
+    if not token_data:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired password reset token.",
+        )
+    user_id = int(token_data.get("sub", 0))
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User not found.")
+    user.hashed_password = hash_password(payload.new_password)
+    await db.commit()
+    logger.info(f"Password reset successfully for user {user.email}")
+    return MessageResponse(message="Password has been reset successfully.")
+
+
+@router.post("/verify-email", response_model=MessageResponse)
+async def verify_email_endpoint(
+    payload: VerifyEmailRequest, db: AsyncSession = Depends(get_db)
+):
+    """Verifies a user email address using a signed token."""
+    token_data = verify_token(payload.token)
+    if not token_data:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired verification token.",
+        )
+    user_id = int(token_data.get("sub", 0))
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User not found.")
+    if user.is_active:
+        return MessageResponse(message="Email already verified.")
+    user.is_active = True
+    await db.commit()
+    logger.info(f"Email verified for user {user.email}")
+    return MessageResponse(message="Email verified successfully. You can now log in.")
+
+
+@router.post("/resend-verification", response_model=MessageResponse)
+async def resend_verification(
+    payload: ResendVerificationRequest, db: AsyncSession = Depends(get_db)
+):
+    """Resends the email verification link. Always returns 200 to prevent enumeration."""
+    result = await db.execute(select(User).where(User.email == payload.email))
+    user = result.scalar_one_or_none()
+    if user and not user.is_active:
+        token = create_access_token(subject=user.id)
+        logger.info(
+            f"Verification resent for {user.email}. "
+            f"Verify URL: /verify-email?token={token}"
+        )
+    return MessageResponse(message="If this email is registered and unverified, a new link has been sent.")

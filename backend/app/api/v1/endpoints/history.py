@@ -1,7 +1,7 @@
 import logging
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, update
+from sqlalchemy import select, func
 
 from app.db.session import get_db
 from app.db.models.user import User
@@ -14,6 +14,7 @@ from pydantic import BaseModel
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+
 class HistoryItemCreate(BaseModel):
     conversion_type: str
     input_text: str | None = None
@@ -21,6 +22,42 @@ class HistoryItemCreate(BaseModel):
     braille_output: str | None = None
     document_id: int | None = None
     processing_time_ms: float | None = None
+
+
+# ────────────────────────────────────────────────────────────────────────────
+# IMPORTANT: Fixed routes (/stats, /clear) MUST be registered BEFORE the
+# parameterised route (/{item_id}) otherwise FastAPI tries to cast the fixed
+# path segments "stats" / "clear" as integers and returns 422.
+# ────────────────────────────────────────────────────────────────────────────
+
+
+@router.get("/stats")
+async def get_user_stats(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Return aggregate stats for the current user."""
+    total_conversions = await db.execute(
+        select(func.count()).select_from(ConversionHistoryItem).where(
+            ConversionHistoryItem.user_id == current_user.id
+        )
+    )
+    total_docs = await db.execute(
+        select(func.count()).select_from(Document).where(
+            Document.user_id == current_user.id
+        )
+    )
+    avg_time = await db.execute(
+        select(func.avg(ConversionHistoryItem.processing_time_ms)).where(
+            ConversionHistoryItem.user_id == current_user.id
+        )
+    )
+    return {
+        "total_conversions": total_conversions.scalar() or 0,
+        "total_documents": total_docs.scalar() or 0,
+        "average_processing_time_ms": round(float(avg_time.scalar() or 0), 4),
+    }
+
 
 @router.post("/")
 async def create_history_item(
@@ -39,8 +76,10 @@ async def create_history_item(
     )
     db.add(item)
     await db.commit()
+    await db.refresh(item)  # FIX: ensure item.id is populated after commit
     return {"message": "History saved", "id": item.id}
-    
+
+
 @router.get("/")
 async def get_history(
     page: int = Query(1, ge=1),
@@ -55,7 +94,7 @@ async def get_history(
         )
     )
     total = total_result.scalar()
-    
+
     result = await db.execute(
         select(ConversionHistoryItem)
         .where(ConversionHistoryItem.user_id == current_user.id)
@@ -64,7 +103,7 @@ async def get_history(
         .limit(limit)
     )
     db_items = result.scalars().all()
-    
+
     items = []
     for item in db_items:
         items.append({
@@ -78,7 +117,7 @@ async def get_history(
             "is_favorite": item.is_favorite,
             "created_at": item.created_at.isoformat() if item.created_at else None,
         })
-        
+
     return {
         "items": items,
         "total": total,
@@ -87,12 +126,13 @@ async def get_history(
     }
 
 
+# FIX: /clear must be registered BEFORE /{item_id} so it is not swallowed by
+# the path-param route. "clear" is not a valid integer → previously 422.
 @router.delete("/clear")
 async def clear_history(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    # Fetch all items for user
     result = await db.execute(
         select(ConversionHistoryItem).where(ConversionHistoryItem.user_id == current_user.id)
     )
@@ -118,7 +158,7 @@ async def toggle_favorite(
     item = result.scalar_one_or_none()
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
-        
+
     item.is_favorite = not item.is_favorite
     await db.commit()
     return {"message": "Favorite status updated", "is_favorite": item.is_favorite}
@@ -139,34 +179,7 @@ async def delete_history_item(
     item = result.scalar_one_or_none()
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
-        
+
     await db.delete(item)
     await db.commit()
     return {"message": "Item deleted"}
-
-
-@router.get("/stats")
-async def get_user_stats(
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
-    total_conversions = await db.execute(
-        select(func.count()).select_from(ConversionHistoryItem).where(
-            ConversionHistoryItem.user_id == current_user.id
-        )
-    )
-    total_docs = await db.execute(
-        select(func.count()).select_from(Document).where(
-            Document.user_id == current_user.id
-        )
-    )
-    avg_conf = await db.execute(
-        select(func.avg(ConversionHistoryItem.processing_time_ms)).where(
-            ConversionHistoryItem.user_id == current_user.id
-        )
-    )
-    return {
-        "total_conversions": total_conversions.scalar() or 0,
-        "total_documents": total_docs.scalar() or 0,
-        "average_processing_time_ms": round(float(avg_conf.scalar() or 0), 4),
-    }

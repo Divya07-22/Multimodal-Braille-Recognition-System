@@ -205,7 +205,7 @@ export function useImageToBraille() {
           use_onnx: false, // prefer PyTorch; falls back to CV-based detector if no weights
         })
 
-        setState({ result: null, isLoading: false, error: null, progress: 100 })
+
 
         const data = inferenceResponse.data
         const result: ConversionResult = {

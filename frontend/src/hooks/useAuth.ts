@@ -23,6 +23,12 @@ interface AuthState {
   fetchProfile: () => Promise<void>
   clearError: () => void
   setLoading: (loading: boolean) => void
+  // New methods required by ForgotPassword, ResetPassword, VerifyEmail, ResendVerification, ProtectedRoute
+  forgotPassword: (email: string) => Promise<string>
+  resetPassword: (token: string, newPassword: string) => Promise<string>
+  verifyEmail: (token: string) => Promise<string>
+  resendVerification: (email: string) => Promise<string>
+  loadFromStorage: () => void
 }
 
 interface RegisterData {
@@ -46,7 +52,6 @@ export const useAuthStore = create<AuthState>()(
       login: async (email, password) => {
         set({ isLoading: true, error: null })
         try {
-          // Backend expects JSON { email, password } — NOT form-data
           const response = await api.post('/auth/login', { email, password })
           const { access_token } = response.data
           localStorage.setItem('token', access_token)
@@ -65,7 +70,6 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true, error: null })
         try {
           await api.post('/auth/register', data)
-          // Login with email after register (backend login expects email)
           await get().login(data.email, data.password)
         } catch (err: unknown) {
           const message =
@@ -94,7 +98,6 @@ export const useAuthStore = create<AuthState>()(
 
       fetchProfile: async () => {
         try {
-          // Correct endpoint: GET /users/me (not /auth/me which does not exist)
           const response = await api.get('/users/me')
           set({ user: response.data, isAuthenticated: true })
         } catch (err: unknown) {
@@ -102,6 +105,105 @@ export const useAuthStore = create<AuthState>()(
             localStorage.removeItem('token')
             set({ user: null, token: null, isAuthenticated: false })
           }
+        }
+      },
+
+      /**
+       * Loads auth state from localStorage on app boot.
+       * Used by ProtectedRoute to re-hydrate auth state.
+       */
+      loadFromStorage: () => {
+        const token = localStorage.getItem('token')
+        if (token && !get().isAuthenticated) {
+          set({ token, isAuthenticated: true })
+          // Kick off a profile fetch to populate the user object
+          get().fetchProfile().catch(() => {
+            localStorage.removeItem('token')
+            set({ token: null, isAuthenticated: false })
+          })
+        }
+      },
+
+      /**
+       * Sends a password reset email to the given address.
+       * Backend route: POST /auth/forgot-password
+       */
+      forgotPassword: async (email: string): Promise<string> => {
+        set({ isLoading: true, error: null })
+        try {
+          const response = await api.post('/auth/forgot-password', { email })
+          return response.data?.message || 'Password reset email sent.'
+        } catch (err: unknown) {
+          const message =
+            (err as ApiError)?.response?.data?.detail ||
+            'Failed to send reset email. Please try again.'
+          set({ error: message })
+          throw new Error(message)
+        } finally {
+          set({ isLoading: false })
+        }
+      },
+
+      /**
+       * Resets the password using the token from the reset email.
+       * Backend route: POST /auth/reset-password
+       */
+      resetPassword: async (token: string, newPassword: string): Promise<string> => {
+        set({ isLoading: true, error: null })
+        try {
+          const response = await api.post('/auth/reset-password', {
+            token,
+            new_password: newPassword,
+          })
+          return response.data?.message || 'Password reset successfully.'
+        } catch (err: unknown) {
+          const message =
+            (err as ApiError)?.response?.data?.detail ||
+            'Failed to reset password. The link may have expired.'
+          set({ error: message })
+          throw new Error(message)
+        } finally {
+          set({ isLoading: false })
+        }
+      },
+
+      /**
+       * Verifies the user's email address using a token from the verification email.
+       * Backend route: POST /auth/verify-email
+       */
+      verifyEmail: async (token: string): Promise<string> => {
+        set({ isLoading: true, error: null })
+        try {
+          const response = await api.post('/auth/verify-email', { token })
+          return response.data?.message || 'Email verified successfully.'
+        } catch (err: unknown) {
+          const message =
+            (err as ApiError)?.response?.data?.detail ||
+            'Email verification failed. The link may have expired.'
+          set({ error: message })
+          throw new Error(message)
+        } finally {
+          set({ isLoading: false })
+        }
+      },
+
+      /**
+       * Resends the email verification link.
+       * Backend route: POST /auth/resend-verification
+       */
+      resendVerification: async (email: string): Promise<string> => {
+        set({ isLoading: true, error: null })
+        try {
+          const response = await api.post('/auth/resend-verification', { email })
+          return response.data?.message || 'Verification email sent.'
+        } catch (err: unknown) {
+          const message =
+            (err as ApiError)?.response?.data?.detail ||
+            'Failed to resend verification email.'
+          set({ error: message })
+          throw new Error(message)
+        } finally {
+          set({ isLoading: false })
         }
       },
 
@@ -119,6 +221,10 @@ export const useAuthStore = create<AuthState>()(
   )
 )
 
+// Named export for components using useAuth (not useAuthStore)
 export function useAuth() {
   return useAuthStore()
 }
+
+// Default export for backward compatibility with the newly uncommented pages
+export default useAuthStore
