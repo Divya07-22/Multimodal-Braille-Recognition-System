@@ -1,7 +1,6 @@
 import json
 import logging
 import os
-from typing import Literal
 
 from app.core.config import settings
 

@@ -3,19 +3,20 @@ Generate synthetic Braille cell images for training.
 Creates all 64 possible dot patterns (Grade 1 Braille) with
 realistic rendering including noise, blur, and illumination variation.
 """
+
 import os
 import json
 import random
 import numpy as np
 import cv2
-from itertools import product
-from typing import Tuple
-
 
 BRAILLE_DOT_POSITIONS = [
-    (0, 0), (1, 0),   # dots 1, 4
-    (0, 1), (1, 1),   # dots 2, 5
-    (0, 2), (1, 2),   # dots 3, 6
+    (0, 0),
+    (1, 0),  # dots 1, 4
+    (0, 1),
+    (1, 1),  # dots 2, 5
+    (0, 2),
+    (1, 2),  # dots 3, 6
 ]
 
 
@@ -73,7 +74,9 @@ def generate_dataset(
     test_ratio: float = 0.05,
 ):
     """Generate synthetic dataset for all 64 Braille patterns."""
-    print(f"Generating {64 * samples_per_class} synthetic braille cell images...")
+    print(
+        f"Generating {64 * samples_per_class} synthetic braille cell images..."
+    )
     annotation = []
 
     for pattern in range(64):
@@ -89,11 +92,13 @@ def generate_dataset(
             )
             fname = f"cell_{pattern:02d}_{i:04d}.png"
             cv2.imwrite(os.path.join(class_dir, fname), img)
-            annotation.append({
-                "filename": os.path.join(f"class_{pattern:02d}", fname),
-                "pattern": pattern,
-                "dots": [bool(pattern & (1 << k)) for k in range(6)],
-            })
+            annotation.append(
+                {
+                    "filename": os.path.join(f"class_{pattern:02d}", fname),
+                    "pattern": pattern,
+                    "dots": [bool(pattern & (1 << k)) for k in range(6)],
+                }
+            )
 
     annotation_path = os.path.join(output_dir, "annotations.json")
     with open(annotation_path, "w") as f:

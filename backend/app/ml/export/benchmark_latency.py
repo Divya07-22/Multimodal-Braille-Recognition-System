@@ -8,12 +8,11 @@ import logging
 import os
 import time
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 import numpy as np
 import torch
 import onnxruntime as ort
-from PIL import Image
 
 from app.core.config import settings
 
@@ -30,25 +29,35 @@ CELL_SIZE = settings.CELL_SIZE
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _make_dummy_image_tensor(batch: int = 1, c: int = 3, h: int = IMAGE_SIZE, w: int = IMAGE_SIZE) -> torch.Tensor:
+
+def _make_dummy_image_tensor(
+    batch: int = 1, c: int = 3, h: int = IMAGE_SIZE, w: int = IMAGE_SIZE
+) -> torch.Tensor:
     return torch.randn(batch, c, h, w, dtype=torch.float32)
 
 
-def _make_dummy_cell_tensor(batch: int = 1, c: int = 1, h: int = CELL_SIZE, w: int = CELL_SIZE) -> torch.Tensor:
+def _make_dummy_cell_tensor(
+    batch: int = 1, c: int = 1, h: int = CELL_SIZE, w: int = CELL_SIZE
+) -> torch.Tensor:
     return torch.randn(batch, c, h, w, dtype=torch.float32)
 
 
-def _make_dummy_numpy(batch: int = 1, c: int = 3, h: int = IMAGE_SIZE, w: int = IMAGE_SIZE) -> np.ndarray:
+def _make_dummy_numpy(
+    batch: int = 1, c: int = 3, h: int = IMAGE_SIZE, w: int = IMAGE_SIZE
+) -> np.ndarray:
     return np.random.randn(batch, c, h, w).astype(np.float32)
 
 
-def _make_dummy_cell_numpy(batch: int = 1, c: int = 1, h: int = CELL_SIZE, w: int = CELL_SIZE) -> np.ndarray:
+def _make_dummy_cell_numpy(
+    batch: int = 1, c: int = 1, h: int = CELL_SIZE, w: int = CELL_SIZE
+) -> np.ndarray:
     return np.random.randn(batch, c, h, w).astype(np.float32)
 
 
 # ---------------------------------------------------------------------------
 # Benchmark runners
 # ---------------------------------------------------------------------------
+
 
 def benchmark_pytorch_model(
     model_path: Path,
@@ -126,7 +135,9 @@ def benchmark_pytorch_quantized_model(
             _ = model(inp)
             latencies.append((time.perf_counter() - t0) * 1000)
 
-    return _compute_stats(latencies, model_path.name, "pytorch_quantized", device)
+    return _compute_stats(
+        latencies, model_path.name, "pytorch_quantized", device
+    )
 
 
 def benchmark_onnx_model(
@@ -143,7 +154,9 @@ def benchmark_onnx_model(
 
     try:
         sess_options = ort.SessionOptions()
-        sess_options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+        sess_options.graph_optimization_level = (
+            ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+        )
         sess_options.intra_op_num_threads = os.cpu_count() or 4
         session = ort.InferenceSession(
             str(onnx_path),
@@ -174,7 +187,10 @@ def benchmark_onnx_model(
 # Stats helper
 # ---------------------------------------------------------------------------
 
-def _compute_stats(latencies: List[float], model_name: str, backend: str, device: str) -> Dict:
+
+def _compute_stats(
+    latencies: List[float], model_name: str, backend: str, device: str
+) -> Dict:
     arr = np.array(latencies)
     return {
         "model_name": model_name,
@@ -197,6 +213,7 @@ def _compute_stats(latencies: List[float], model_name: str, backend: str, device
 # Speedup comparison
 # ---------------------------------------------------------------------------
 
+
 def _speedup(baseline_ms: float, target_ms: float) -> float:
     if target_ms <= 0:
         return 0.0
@@ -206,6 +223,7 @@ def _speedup(baseline_ms: float, target_ms: float) -> float:
 # ---------------------------------------------------------------------------
 # Main benchmark orchestrator
 # ---------------------------------------------------------------------------
+
 
 def run_full_benchmark() -> Dict:
     logger.info("=" * 60)
@@ -296,9 +314,13 @@ def run_full_benchmark() -> Dict:
     cls_base = safe_mean(cls_pytorch)
 
     results["speedups"] = {
-        "detector_quantized_vs_pytorch": _speedup(det_base, safe_mean(det_quantized)),
+        "detector_quantized_vs_pytorch": _speedup(
+            det_base, safe_mean(det_quantized)
+        ),
         "detector_onnx_vs_pytorch": _speedup(det_base, safe_mean(det_onnx)),
-        "classifier_quantized_vs_pytorch": _speedup(cls_base, safe_mean(cls_quantized)),
+        "classifier_quantized_vs_pytorch": _speedup(
+            cls_base, safe_mean(cls_quantized)
+        ),
         "classifier_onnx_vs_pytorch": _speedup(cls_base, safe_mean(cls_onnx)),
     }
 
@@ -306,15 +328,19 @@ def run_full_benchmark() -> Dict:
     # Summary
     # ------------------------------------------------------------------
     best_detector = min(
-        [("pytorch", safe_mean(det_pytorch)),
-         ("quantized", safe_mean(det_quantized)),
-         ("onnx", safe_mean(det_onnx))],
+        [
+            ("pytorch", safe_mean(det_pytorch)),
+            ("quantized", safe_mean(det_quantized)),
+            ("onnx", safe_mean(det_onnx)),
+        ],
         key=lambda x: x[1] if x[1] > 0 else float("inf"),
     )
     best_classifier = min(
-        [("pytorch", safe_mean(cls_pytorch)),
-         ("quantized", safe_mean(cls_quantized)),
-         ("onnx", safe_mean(cls_onnx))],
+        [
+            ("pytorch", safe_mean(cls_pytorch)),
+            ("quantized", safe_mean(cls_quantized)),
+            ("onnx", safe_mean(cls_onnx)),
+        ],
         key=lambda x: x[1] if x[1] > 0 else float("inf"),
     )
 
@@ -339,8 +365,12 @@ def run_full_benchmark() -> Dict:
 
     logger.info(f"Latency benchmark saved to: {out_path}")
     logger.info("Summary:")
-    logger.info(f"  Best detector  : {best_detector[0]} @ {best_detector[1]:.2f} ms")
-    logger.info(f"  Best classifier: {best_classifier[0]} @ {best_classifier[1]:.2f} ms")
+    logger.info(
+        f"  Best detector  : {best_detector[0]} @ {best_detector[1]:.2f} ms"
+    )
+    logger.info(
+        f"  Best classifier: {best_classifier[0]} @ {best_classifier[1]:.2f} ms"
+    )
 
     return results
 
@@ -348,6 +378,7 @@ def run_full_benchmark() -> Dict:
 # ---------------------------------------------------------------------------
 # Batch throughput benchmark
 # ---------------------------------------------------------------------------
+
 
 def benchmark_batch_throughput(batch_sizes: List[int] = None) -> Dict:
     """Test throughput at different batch sizes for ONNX models."""
@@ -390,6 +421,7 @@ def benchmark_batch_throughput(batch_sizes: List[int] = None) -> Dict:
 
 if __name__ == "__main__":
     import sys
+
     logging.basicConfig(level=logging.INFO)
 
     mode = sys.argv[1] if len(sys.argv) > 1 else "full"

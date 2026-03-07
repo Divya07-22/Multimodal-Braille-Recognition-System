@@ -7,16 +7,29 @@ def unwarp_image(image: np.ndarray) -> np.ndarray:
     Correct curved/warped documents using thin-plate spline-like approach
     via grid-based remapping derived from detected line curvature.
     """
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) if len(image.shape) == 3 else image
+    gray = (
+        cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        if len(image.shape) == 3
+        else image
+    )
 
     # Detect horizontal text lines via horizontal projection
     binary = cv2.adaptiveThreshold(
-        gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 31, 10
+        gray,
+        255,
+        cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+        cv2.THRESH_BINARY_INV,
+        31,
+        10,
     )
     horizontal_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (40, 1))
-    detected_lines = cv2.morphologyEx(binary, cv2.MORPH_OPEN, horizontal_kernel)
+    detected_lines = cv2.morphologyEx(
+        binary, cv2.MORPH_OPEN, horizontal_kernel
+    )
 
-    contours, _ = cv2.findContours(detected_lines, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours, _ = cv2.findContours(
+        detected_lines, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+    )
     if len(contours) < 3:
         return image
 
@@ -51,5 +64,7 @@ def unwarp_image(image: np.ndarray) -> np.ndarray:
         alpha = row / h
         map_y[row] += correction * np.sin(np.pi * alpha)
 
-    unwarped = cv2.remap(image, map_x, map_y, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+    unwarped = cv2.remap(
+        image, map_x, map_y, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE
+    )
     return unwarped

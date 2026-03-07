@@ -1,8 +1,8 @@
 """Export PyTorch models to ONNX format with dynamic axes."""
+
 import os
 import logging
 import torch
-import torch.nn as nn
 import onnx
 import onnxruntime as ort
 import numpy as np
@@ -49,7 +49,9 @@ def export_classifier_to_onnx(
     onnx.checker.check_model(onnx_model)
 
     # Verify output matches PyTorch
-    sess = ort.InferenceSession(output_path, providers=["CPUExecutionProvider"])
+    sess = ort.InferenceSession(
+        output_path, providers=["CPUExecutionProvider"]
+    )
     inp = dummy_input.numpy()
     ort_out = sess.run(None, {"input": inp})[0]
     with torch.no_grad():
@@ -83,7 +85,9 @@ def export_detector_to_onnx(
 
     dummy = [torch.randn(3, image_size, image_size)]
     torch.onnx.export(
-        model, dummy, output_path,
+        model,
+        dummy,
+        output_path,
         opset_version=opset,
         input_names=["input"],
         output_names=["boxes", "labels", "scores"],

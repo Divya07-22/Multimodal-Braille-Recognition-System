@@ -14,8 +14,11 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 ALLOWED_MIME_TYPES = {
-    "image/jpeg", "image/png", "image/bmp",
-    "image/tiff", "application/pdf"
+    "image/jpeg",
+    "image/png",
+    "image/bmp",
+    "image/tiff",
+    "application/pdf",
 }
 
 
@@ -39,7 +42,11 @@ async def upload_image(
         )
 
     file_id = str(uuid.uuid4())
-    ext = file.filename.rsplit(".", 1)[-1].lower() if "." in file.filename else "jpg"
+    ext = (
+        file.filename.rsplit(".", 1)[-1].lower()
+        if "." in file.filename
+        else "jpg"
+    )
     filename = f"{file_id}.{ext}"
     file_path = os.path.join(settings.UPLOAD_DIR, filename)
 

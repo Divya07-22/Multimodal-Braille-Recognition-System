@@ -1,6 +1,9 @@
-import pytest
 import torch
-from app.ml.training.losses import DiceLoss, FocalLoss, LabelSmoothingCrossEntropy
+from app.ml.training.losses import (
+    DiceLoss,
+    FocalLoss,
+    LabelSmoothingCrossEntropy,
+)
 
 
 def test_dice_loss_zero():

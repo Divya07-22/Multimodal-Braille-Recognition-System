@@ -1,6 +1,7 @@
 """
 Lightweight MobileNetV3 cell classifier for fast edge inference.
 """
+
 import logging
 import numpy as np
 import torch
@@ -34,14 +35,26 @@ class CellClassifierCNN:
         num_classes: int = 64,
         cell_size: int = 32,
     ):
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device(
+            "cuda" if torch.cuda.is_available() else "cpu"
+        )
         self.cell_size = cell_size
         self.model = build_mobilenet_classifier(num_classes).to(self.device)
         if os.path.exists(model_path):
-            self.model.load_state_dict(torch.load(model_path, map_location=self.device))
-            logger.info(f"Loaded CellClassifierCNN from {model_path}")
+            try:
+                self.model.load_state_dict(
+                    torch.load(model_path, map_location=self.device),
+                    strict=False,
+                )
+                logger.info(f"Loaded CellClassifierCNN from {model_path}")
+            except RuntimeError as e:
+                logger.warning(
+                    f"Failed to load some CellClassifier weights (strict=False allowed): {e}"
+                )
         else:
-            logger.warning(f"Cell classifier weights not found at {model_path}")
+            logger.warning(
+                f"Cell classifier weights not found at {model_path}"
+            )
         self.model.eval()
 
     def preprocess(self, images: List[np.ndarray]) -> np.ndarray:
@@ -69,9 +82,11 @@ class CellClassifierCNN:
         results = []
         for prob in probs:
             pattern = int(np.argmax(prob))
-            results.append({
-                "pattern": pattern,
-                "confidence": float(prob[pattern]),
-                "character": PATTERN_TO_CHAR.get(pattern, "?"),
-            })
+            results.append(
+                {
+                    "pattern": pattern,
+                    "confidence": float(prob[pattern]),
+                    "character": PATTERN_TO_CHAR.get(pattern, "?"),
+                }
+            )
         return results

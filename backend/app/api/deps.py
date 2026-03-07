@@ -1,4 +1,4 @@
-from typing import AsyncGenerator, Optional
+from typing import Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -68,7 +68,9 @@ async def get_current_admin(
 
 
 async def get_optional_user(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security_optional),
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(
+        security_optional
+    ),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[User]:
     if not credentials:

@@ -1,6 +1,5 @@
 import logging
 import os
-from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
@@ -23,7 +22,9 @@ async def list_documents(
     db: AsyncSession = Depends(get_db),
 ):
     total_result = await db.execute(
-        select(func.count()).select_from(Document).where(Document.user_id == current_user.id)
+        select(func.count())
+        .select_from(Document)
+        .where(Document.user_id == current_user.id)
     )
     total = total_result.scalar()
     result = await db.execute(

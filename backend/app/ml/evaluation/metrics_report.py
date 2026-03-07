@@ -1,6 +1,5 @@
 import json
 import os
-import numpy as np
 from sklearn.metrics import (
     classification_report,
     confusion_matrix,
@@ -16,7 +15,9 @@ def generate_classification_report(
     class_names: List[str] = None,
     output_path: str = "app/ml/artifacts/classification_report.json",
 ) -> Dict:
-    report = classification_report(y_true, y_pred, target_names=class_names, output_dict=True)
+    report = classification_report(
+        y_true, y_pred, target_names=class_names, output_dict=True
+    )
     accuracy = accuracy_score(y_true, y_pred)
     cm = confusion_matrix(y_true, y_pred)
     precision, recall, f1, support = precision_recall_fscore_support(

@@ -1,5 +1,5 @@
 import os
-from typing import List, Optional
+from typing import List
 from pydantic_settings import BaseSettings
 from pydantic import field_validator
 
@@ -21,7 +21,9 @@ class Settings(BaseSettings):
     RELOAD: bool = True
 
     # Database
-    DATABASE_URL: str = "mysql+aiomysql://braille_user:divdev123@localhost:3306/braille_db"
+    DATABASE_URL: str = (
+        "mysql+aiomysql://braille_user:divdev123@localhost:3306/braille_db"
+    )
     DATABASE_POOL_SIZE: int = 10
     DATABASE_MAX_OVERFLOW: int = 20
     DATABASE_POOL_TIMEOUT: int = 30
@@ -61,7 +63,16 @@ class Settings(BaseSettings):
     OUTPUT_DIR: str = "outputs"
     MAX_UPLOAD_SIZE_MB: int = 20
     MAX_FILE_SIZE: int = 10 * 1024 * 1024
-    ALLOWED_EXTENSIONS: List[str] = ["jpg", "jpeg", "png", "tiff", "tif", "bmp", "webp", "pdf"]
+    ALLOWED_EXTENSIONS: List[str] = [
+        "jpg",
+        "jpeg",
+        "png",
+        "tiff",
+        "tif",
+        "bmp",
+        "webp",
+        "pdf",
+    ]
 
     # ML Model Paths
     MODEL_DIR: str = "app/ml/artifacts"
@@ -69,7 +80,9 @@ class Settings(BaseSettings):
     DETECTOR_MODEL_PATH: str = "./app/ml/artifacts/detector_best.pt"
     CLASSIFIER_MODEL_PATH: str = "./app/ml/artifacts/classifier_best.pt"
     DETECTOR_QUANTIZED_PATH: str = "./app/ml/artifacts/detector_quantized.pt"
-    CLASSIFIER_QUANTIZED_PATH: str = "./app/ml/artifacts/classifier_quantized.pt"
+    CLASSIFIER_QUANTIZED_PATH: str = (
+        "./app/ml/artifacts/classifier_quantized.pt"
+    )
     DETECTOR_ONNX_PATH: str = "./app/ml/artifacts/detector.onnx"
     CLASSIFIER_ONNX_PATH: str = "./app/ml/artifacts/classifier.onnx"
     DOT_DETECTOR_WEIGHTS: str = "./app/ml/artifacts/detector_best.pt"
@@ -92,7 +105,11 @@ class Settings(BaseSettings):
     TESSERACT_PATH: str = "/usr/bin/tesseract"
 
     # CORS
-    ALLOWED_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:5173", "http://localhost:8080"]
+    ALLOWED_ORIGINS: List[str] = [
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://localhost:8080",
+    ]
     ALLOWED_HOSTS: List[str] = ["*"]
 
     @field_validator("UPLOAD_DIR", "MODEL_ARTIFACTS_DIR", mode="before")
@@ -104,7 +121,8 @@ class Settings(BaseSettings):
     model_config = {
         "env_file": ".env",
         "case_sensitive": True,
-        "extra": "allow"
+        "extra": "allow",
     }
+
 
 settings = Settings()

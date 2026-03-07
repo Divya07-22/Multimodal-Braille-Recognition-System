@@ -3,7 +3,9 @@ import numpy as np
 import torch
 import cv2
 from typing import List
-from torchvision.models.detection import fasterrcnn_resnet50_fpn, FasterRCNN_ResNet50_FPN_Weights
+from torchvision.models.detection import (
+    fasterrcnn_resnet50_fpn,
+)
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 import os
 
@@ -20,7 +22,9 @@ class BrailleDetector:
 
     def __init__(self, use_onnx: bool = False):
         self.use_onnx = use_onnx
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device(
+            "cuda" if torch.cuda.is_available() else "cpu"
+        )
         self.model = None
         self.onnx_session = None
         self._load_model()
@@ -29,21 +33,32 @@ class BrailleDetector:
         if self.use_onnx:
             try:
                 from app.ml.inference.model_loader import load_onnx_detector
+
                 self.onnx_session = load_onnx_detector()
                 logger.info("Loaded ONNX Braille detector.")
             except Exception as e:
-                logger.warning(f"ONNX detector not available: {e}. Using fallback.")
+                logger.warning(
+                    f"ONNX detector not available: {e}. Using fallback."
+                )
         else:
             try:
                 model = fasterrcnn_resnet50_fpn(weights=None)
-                in_features = model.roi_heads.box_predictor.cls_score.in_features
-                model.roi_heads.box_predictor = FastRCNNPredictor(in_features, 2)
+                in_features = (
+                    model.roi_heads.box_predictor.cls_score.in_features
+                )
+                model.roi_heads.box_predictor = FastRCNNPredictor(
+                    in_features, 2
+                )
                 path = settings.DETECTOR_MODEL_PATH
                 if os.path.exists(path):
-                    model.load_state_dict(torch.load(path, map_location=self.device))
+                    model.load_state_dict(
+                        torch.load(path, map_location=self.device)
+                    )
                     logger.info(f"Loaded Faster R-CNN detector from {path}")
                 else:
-                    logger.warning("Detector weights missing, using fallback detection.")
+                    logger.warning(
+                        "Detector weights missing, using fallback detection."
+                    )
                     self.model = None
                     return
                 model.to(self.device).eval()
@@ -52,8 +67,12 @@ class BrailleDetector:
                 logger.warning(f"Detector load failed: {e}. Using fallback.")
                 self.model = None
 
-    def detect(self, image: np.ndarray, confidence_threshold: float = None) -> List[np.ndarray]:
-        threshold = confidence_threshold or settings.DETECTOR_CONFIDENCE_THRESHOLD
+    def detect(
+        self, image: np.ndarray, confidence_threshold: float = None
+    ) -> List[np.ndarray]:
+        threshold = (
+            confidence_threshold or settings.DETECTOR_CONFIDENCE_THRESHOLD
+        )
 
         if self.model is not None:
             return self._detect_pytorch(image, threshold)
@@ -62,8 +81,14 @@ class BrailleDetector:
         else:
             return self._detect_fallback(image)
 
-    def _detect_pytorch(self, image: np.ndarray, threshold: float) -> List[np.ndarray]:
-        rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB) if len(image.shape) == 3 else image
+    def _detect_pytorch(
+        self, image: np.ndarray, threshold: float
+    ) -> List[np.ndarray]:
+        rgb = (
+            cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            if len(image.shape) == 3
+            else image
+        )
         tensor = torch.from_numpy(rgb).permute(2, 0, 1).float() / 255.0
         tensor = tensor.unsqueeze(0).to(self.device)
 
@@ -75,7 +100,9 @@ class BrailleDetector:
         mask = scores >= threshold
         return list(boxes[mask])
 
-    def _detect_onnx(self, image: np.ndarray, threshold: float) -> List[np.ndarray]:
+    def _detect_onnx(
+        self, image: np.ndarray, threshold: float
+    ) -> List[np.ndarray]:
         rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         input_tensor = rgb.transpose(2, 0, 1).astype(np.float32) / 255.0
         input_tensor = np.expand_dims(input_tensor, 0)
@@ -90,14 +117,24 @@ class BrailleDetector:
         Fallback: Connected component analysis on binarized image.
         Groups components into Braille cell-sized bounding boxes.
         """
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) if len(image.shape) == 3 else image
-        _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (settings.CELL_SIZE, settings.CELL_SIZE // 2))
+        gray = (
+            cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            if len(image.shape) == 3
+            else image
+        )
+        _, binary = cv2.threshold(
+            gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU
+        )
+        kernel = cv2.getStructuringElement(
+            cv2.MORPH_RECT, (settings.CELL_SIZE, settings.CELL_SIZE // 2)
+        )
         dilated = cv2.dilate(binary, kernel, iterations=1)
 
-        num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(dilated, connectivity=8)
+        num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(
+            dilated, connectivity=8
+        )
         boxes = []
-        min_area = (settings.CELL_SIZE ** 2) * 0.3
+        min_area = (settings.CELL_SIZE**2) * 0.3
         for i in range(1, num_labels):
             x = stats[i, cv2.CC_STAT_LEFT]
             y = stats[i, cv2.CC_STAT_TOP]

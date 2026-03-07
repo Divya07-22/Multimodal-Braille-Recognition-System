@@ -21,9 +21,13 @@ async def list_jobs(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    query = select(ConversionJob).where(ConversionJob.user_id == current_user.id)
-    count_query = select(func.count()).select_from(ConversionJob).where(
+    query = select(ConversionJob).where(
         ConversionJob.user_id == current_user.id
+    )
+    count_query = (
+        select(func.count())
+        .select_from(ConversionJob)
+        .where(ConversionJob.user_id == current_user.id)
     )
     if status:
         query = query.where(ConversionJob.status == status)
@@ -32,7 +36,9 @@ async def list_jobs(
     total_result = await db.execute(count_query)
     total = total_result.scalar()
     result = await db.execute(
-        query.offset(skip).limit(limit).order_by(ConversionJob.created_at.desc())
+        query.offset(skip)
+        .limit(limit)
+        .order_by(ConversionJob.created_at.desc())
     )
     jobs = result.scalars().all()
     return JobListResponse(
@@ -98,7 +104,9 @@ async def cancel_job(
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
     if job.status in ("completed", "failed"):
-        raise HTTPException(status_code=400, detail="Cannot cancel a finished job")
+        raise HTTPException(
+            status_code=400, detail="Cannot cancel a finished job"
+        )
     job.status = "cancelled"
     await db.commit()
     return {"message": "Job cancelled"}

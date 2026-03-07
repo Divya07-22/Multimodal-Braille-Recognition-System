@@ -15,6 +15,5 @@ class Base(DeclarativeBase):
 
     def to_dict(self) -> dict:
         return {
-            col.name: getattr(self, col.name)
-            for col in self.__table__.columns
+            col.name: getattr(self, col.name) for col in self.__table__.columns
         }

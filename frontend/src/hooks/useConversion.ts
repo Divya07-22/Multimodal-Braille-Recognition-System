@@ -149,11 +149,7 @@ export function useImageToBraille() {
 
   const convert = useCallback(
     async (
-      file: File,
-      options?: {
-        grade?: 1 | 2
-        enhance?: boolean
-      }
+      file: File
     ) => {
       if (!file) {
         toast.error('Please select an image file')

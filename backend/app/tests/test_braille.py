@@ -1,5 +1,5 @@
 import pytest
-from app.services.braille_service import BrailleService, DOT_PATTERN_TO_CHAR
+from app.services.braille_service import BrailleService
 
 
 @pytest.fixture

@@ -16,6 +16,7 @@ class RecognitionService:
     def _get_pipeline(self):
         if self._pipeline is None:
             from app.ml.inference.pipeline import BrailleInferencePipeline
+
             self._pipeline = BrailleInferencePipeline()
         return self._pipeline
 

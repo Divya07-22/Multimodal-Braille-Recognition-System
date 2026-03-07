@@ -1,9 +1,12 @@
 """Tesseract OCR baseline for comparison against our ML pipeline."""
+
 import logging
-import cv2
 import numpy as np
 from typing import Dict, List
-from app.ml.evaluation.evaluate_pipeline import character_error_rate, word_error_rate
+from app.ml.evaluation.evaluate_pipeline import (
+    character_error_rate,
+    word_error_rate,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -12,10 +15,15 @@ def run_tesseract_baseline(image_path: str, lang: str = "eng") -> Dict:
     try:
         import pytesseract
         from PIL import Image
+
         img = Image.open(image_path)
         text = pytesseract.image_to_string(img, lang=lang)
-        data = pytesseract.image_to_data(img, output_type=pytesseract.Output.DICT)
-        confidences = [int(c) for c in data["conf"] if str(c).isdigit() and int(c) >= 0]
+        data = pytesseract.image_to_data(
+            img, output_type=pytesseract.Output.DICT
+        )
+        confidences = [
+            int(c) for c in data["conf"] if str(c).isdigit() and int(c) >= 0
+        ]
         mean_conf = float(np.mean(confidences)) / 100.0 if confidences else 0.0
         return {"text": text.strip(), "confidence": mean_conf}
     except Exception as e:
@@ -29,6 +37,7 @@ def compare_with_baseline(
     output_path: str = "app/ml/artifacts/baseline_comparison.json",
 ) -> Dict:
     import json
+
     our_cer, our_wer = [], []
     tess_cer, tess_wer = [], []
 

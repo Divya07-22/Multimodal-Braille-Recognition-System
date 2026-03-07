@@ -26,7 +26,9 @@ class DocumentService:
         self, db: AsyncSession, user_id: int, skip: int = 0, limit: int = 20
     ) -> Tuple[List[Document], int]:
         total_r = await db.execute(
-            select(func.count()).select_from(Document).where(Document.user_id == user_id)
+            select(func.count())
+            .select_from(Document)
+            .where(Document.user_id == user_id)
         )
         total = total_r.scalar()
         result = await db.execute(

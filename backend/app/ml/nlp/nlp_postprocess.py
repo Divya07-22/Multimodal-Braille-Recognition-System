@@ -20,16 +20,24 @@ class NLPPostProcessor:
     def _load_symspell(self):
         try:
             from symspellpy import SymSpell, Verbosity
-            self.symspell = SymSpell(max_dictionary_edit_distance=2, prefix_length=7)
+
+            self.symspell = SymSpell(
+                max_dictionary_edit_distance=2, prefix_length=7
+            )
             import pkg_resources
+
             dict_path = pkg_resources.resource_filename(
                 "symspellpy", "frequency_dictionary_en_82_765.txt"
             )
-            self.symspell.load_dictionary(dict_path, term_index=0, count_index=1)
+            self.symspell.load_dictionary(
+                dict_path, term_index=0, count_index=1
+            )
             self._Verbosity = Verbosity
             logger.info("SymSpell spell checker loaded.")
         except Exception as e:
-            logger.warning(f"SymSpell not available: {e}. Spell correction disabled.")
+            logger.warning(
+                f"SymSpell not available: {e}. Spell correction disabled."
+            )
             self.symspell = None
 
     def correct(self, text: str) -> Tuple[str, float]:
@@ -55,7 +63,11 @@ class NLPPostProcessor:
 
     def _rule_based_clean(self, text: str) -> str:
         text = re.sub(r" {2,}", " ", text)
-        text = re.sub(r"([.!?])\s*([a-z])", lambda m: m.group(1) + " " + m.group(2).upper(), text)
+        text = re.sub(
+            r"([.!?])\s*([a-z])",
+            lambda m: m.group(1) + " " + m.group(2).upper(),
+            text,
+        )
         text = re.sub(r"[^\x20-\x7E\n]", "", text)
         text = text.strip()
         return text
@@ -70,7 +82,11 @@ class NLPPostProcessor:
                 continue
             punct_before = re.match(r"^([^a-zA-Z]*)", word).group(1)
             punct_after = re.search(r"([^a-zA-Z]*)$", word).group(1)
-            core = word[len(punct_before):len(word) - len(punct_after) if punct_after else None]
+            core = word[
+                len(punct_before) : (
+                    len(word) - len(punct_after) if punct_after else None
+                )
+            ]
             suggestions = self.symspell.lookup(
                 core.lower(), self._Verbosity.CLOSEST, max_edit_distance=2
             )

@@ -2,31 +2,71 @@ import logging
 import time
 from typing import Any, Dict, Optional
 
-from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
 # Grade 1 Braille unicode map (U+2800–U+283F)
 BRAILLE_TO_CHAR: Dict[str, str] = {
-    "⠁": "a", "⠃": "b", "⠉": "c", "⠙": "d", "⠑": "e",
-    "⠋": "f", "⠛": "g", "⠓": "h", "⠊": "i", "⠚": "j",
-    "⠅": "k", "⠇": "l", "⠍": "m", "⠝": "n", "⠕": "o",
-    "⠏": "p", "⠟": "q", "⠗": "r", "⠎": "s", "⠞": "t",
-    "⠥": "u", "⠧": "v", "⠺": "w", "⠭": "x", "⠽": "y",
-    "⠵": "z", "⠀": " ",
+    "⠁": "a",
+    "⠃": "b",
+    "⠉": "c",
+    "⠙": "d",
+    "⠑": "e",
+    "⠋": "f",
+    "⠛": "g",
+    "⠓": "h",
+    "⠊": "i",
+    "⠚": "j",
+    "⠅": "k",
+    "⠇": "l",
+    "⠍": "m",
+    "⠝": "n",
+    "⠕": "o",
+    "⠏": "p",
+    "⠟": "q",
+    "⠗": "r",
+    "⠎": "s",
+    "⠞": "t",
+    "⠥": "u",
+    "⠧": "v",
+    "⠺": "w",
+    "⠭": "x",
+    "⠽": "y",
+    "⠵": "z",
+    "⠀": " ",
 }
 
 CHAR_TO_BRAILLE: Dict[str, str] = {v: k for k, v in BRAILLE_TO_CHAR.items()}
 
 # Dot pattern to character map (6-dot braille cell)
 DOT_PATTERN_TO_CHAR: Dict[int, str] = {
-    0b000001: "a", 0b000011: "b", 0b001001: "c", 0b011001: "d",
-    0b010001: "e", 0b001011: "f", 0b011011: "g", 0b010011: "h",
-    0b001010: "i", 0b011010: "j", 0b000101: "k", 0b000111: "l",
-    0b001101: "m", 0b011101: "n", 0b010101: "o", 0b001111: "p",
-    0b011111: "q", 0b010111: "r", 0b001110: "s", 0b011110: "t",
-    0b100101: "u", 0b100111: "v", 0b111010: "w", 0b101101: "x",
-    0b111101: "y", 0b110101: "z", 0b000000: " ",
+    0b000001: "a",
+    0b000011: "b",
+    0b001001: "c",
+    0b011001: "d",
+    0b010001: "e",
+    0b001011: "f",
+    0b011011: "g",
+    0b010011: "h",
+    0b001010: "i",
+    0b011010: "j",
+    0b000101: "k",
+    0b000111: "l",
+    0b001101: "m",
+    0b011101: "n",
+    0b010101: "o",
+    0b001111: "p",
+    0b011111: "q",
+    0b010111: "r",
+    0b001110: "s",
+    0b011110: "t",
+    0b100101: "u",
+    0b100111: "v",
+    0b111010: "w",
+    0b101101: "x",
+    0b111101: "y",
+    0b110101: "z",
+    0b000000: " ",
 }
 
 
@@ -38,11 +78,19 @@ class BrailleService:
     def _get_pipeline(self):
         if self._pipeline is None:
             from app.ml.inference.pipeline import BrailleInferencePipeline
+
             self._pipeline = BrailleInferencePipeline()
         return self._pipeline
 
     def translate_braille_to_text(self, braille_text: str) -> Dict[str, Any]:
         """Translate unicode braille string to plain text."""
+        if not braille_text:
+            return {
+                "text": "",
+                "grade": 1,
+                "confidence": 1.0,
+                "processing_time_ms": 0.0,
+            }
         t0 = time.perf_counter()
         result_chars = []
         for ch in braille_text:

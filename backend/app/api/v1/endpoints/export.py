@@ -30,7 +30,9 @@ async def export_result(
     )
     inf = result.scalar_one_or_none()
     if not inf:
-        raise HTTPException(status_code=404, detail="Inference result not found")
+        raise HTTPException(
+            status_code=404, detail="Inference result not found"
+        )
 
     try:
         file_path = await export_service.export(

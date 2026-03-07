@@ -42,8 +42,8 @@ export default function Register() {
       await register({ username: form.username, email: form.email, password: form.password, full_name: form.full_name })
       toast.success('Account created! Welcome to BrailleAI 🎉')
       navigate('/dashboard')
-    } catch {
-      // error handled in store
+    } catch (err: any) {
+      toast.error(err.message || 'Registration failed. Please try a different username.')
     }
   }
 

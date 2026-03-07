@@ -5,4 +5,11 @@ from app.db.models.inference_result import InferenceResult
 from app.db.models.audit_log import AuditLog
 from app.db.models.conversion_history import ConversionHistoryItem
 
-__all__ = ["User", "Document", "ConversionJob", "InferenceResult", "AuditLog", "ConversionHistoryItem"]
+__all__ = [
+    "User",
+    "Document",
+    "ConversionJob",
+    "InferenceResult",
+    "AuditLog",
+    "ConversionHistoryItem",
+]

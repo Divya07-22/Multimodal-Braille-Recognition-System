@@ -39,6 +39,10 @@ backend/uploads/
 backend/outputs/
 backend/logs/
 
+# ML Data & Artifacts
+backend/app/ml/data/synthetic/
+backend/app/ml/artifacts/
+
 # Node
 node_modules/
 dist/

@@ -22,6 +22,7 @@ import ResetPassword from "./pages/ResetPassword";
 import VerifyEmail from "./pages/VerifyEmail";
 import ResendVerification from "./pages/ResendVerification";
 import { useAuth } from "./hooks/useAuth";
+import { Toaster } from 'react-hot-toast';
 import "./App.css";
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -106,6 +107,7 @@ const App: React.FC = () => (
     <AccessibilityProvider>
       <Router>
         <AppRoutes />
+        <Toaster position="top-center" />
       </Router>
     </AccessibilityProvider>
   </ErrorBoundary>

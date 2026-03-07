@@ -27,6 +27,7 @@ async def test_export_json(export_service, tmp_path, monkeypatch):
     path = await export_service.export("Hello Braille", "json", "test_out")
     assert os.path.exists(path)
     import json
+
     with open(path) as f:
         data = json.load(f)
     assert data["recognized_text"] == "Hello Braille"

@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 # ID / Token Generators
 # ---------------------------------------------------------------------------
 
+
 def generate_uuid() -> str:
     return str(uuid.uuid4())
 
@@ -48,6 +49,7 @@ def generate_file_id() -> str:
 # ---------------------------------------------------------------------------
 # Timestamp Helpers
 # ---------------------------------------------------------------------------
+
 
 def utcnow() -> datetime:
     return datetime.now(timezone.utc)
@@ -80,6 +82,7 @@ def format_duration(ms: float) -> str:
 # Hashing
 # ---------------------------------------------------------------------------
 
+
 def md5_hash(data: Union[str, bytes]) -> str:
     if isinstance(data, str):
         data = data.encode("utf-8")
@@ -101,6 +104,7 @@ def sha1_hash(data: Union[str, bytes]) -> str:
 # ---------------------------------------------------------------------------
 # Encoding / Decoding
 # ---------------------------------------------------------------------------
+
 
 def encode_base64(data: Union[str, bytes]) -> str:
     if isinstance(data, str):
@@ -130,6 +134,7 @@ def bytes_to_base64_image(content: bytes, mime: str = "image/png") -> str:
 # ---------------------------------------------------------------------------
 # Dict / JSON Helpers
 # ---------------------------------------------------------------------------
+
 
 def flatten_dict(
     d: Dict[str, Any],
@@ -169,6 +174,7 @@ def safe_json_dumps(obj: Any, indent: int = 2) -> str:
         if isinstance(o, bytes):
             return encode_base64(o)
         return str(o)
+
     return json.dumps(obj, indent=indent, default=default)
 
 
@@ -196,8 +202,9 @@ def omit_keys(d: Dict[str, Any], keys: List[str]) -> Dict[str, Any]:
 # List Helpers
 # ---------------------------------------------------------------------------
 
+
 def chunk_list(lst: List[Any], size: int) -> List[List[Any]]:
-    return [lst[i:i + size] for i in range(0, len(lst), size)]
+    return [lst[i : i + size] for i in range(0, len(lst), size)]
 
 
 def flatten_list(nested: List[List[Any]]) -> List[Any]:
@@ -226,13 +233,14 @@ def moving_average(values: List[float], window: int = 5) -> List[float]:
     result = []
     for i in range(len(values)):
         start = max(0, i - window + 1)
-        result.append(float(np.mean(values[start:i + 1])))
+        result.append(float(np.mean(values[start : i + 1])))
     return result
 
 
 # ---------------------------------------------------------------------------
 # String Helpers
 # ---------------------------------------------------------------------------
+
 
 def slugify(text: str) -> str:
     text = text.lower().strip()
@@ -244,7 +252,7 @@ def slugify(text: str) -> str:
 def truncate(text: str, max_len: int = 100, suffix: str = "...") -> str:
     if len(text) <= max_len:
         return text
-    return text[:max_len - len(suffix)] + suffix
+    return text[: max_len - len(suffix)] + suffix
 
 
 def camel_to_snake(name: str) -> str:
@@ -275,6 +283,7 @@ def mask_token(token: str, visible: int = 6) -> str:
 # Math / Numeric Helpers
 # ---------------------------------------------------------------------------
 
+
 def clamp(value: float, min_val: float, max_val: float) -> float:
     return max(min_val, min(max_val, value))
 
@@ -283,7 +292,9 @@ def round_to(value: float, decimals: int = 4) -> float:
     return round(value, decimals)
 
 
-def safe_divide(numerator: float, denominator: float, default: float = 0.0) -> float:
+def safe_divide(
+    numerator: float, denominator: float, default: float = 0.0
+) -> float:
     if denominator == 0:
         return default
     return numerator / denominator
@@ -305,20 +316,22 @@ def normalize_scores(scores: List[float]) -> List[float]:
 # System / Environment Helpers
 # ---------------------------------------------------------------------------
 
+
 def get_system_info() -> Dict[str, Any]:
     return {
-        "os":             platform.system(),
-        "os_version":     platform.version(),
+        "os": platform.system(),
+        "os_version": platform.version(),
         "python_version": platform.python_version(),
-        "cpu_count":      os.cpu_count(),
-        "machine":        platform.machine(),
-        "processor":      platform.processor(),
+        "cpu_count": os.cpu_count(),
+        "machine": platform.machine(),
+        "processor": platform.processor(),
     }
 
 
 def is_gpu_available() -> bool:
     try:
         import torch
+
         return torch.cuda.is_available()
     except ImportError:
         return False
@@ -337,6 +350,7 @@ def set_random_seed(seed: int = 42) -> None:
     np.random.seed(seed)
     try:
         import torch
+
         torch.manual_seed(seed)
         if torch.cuda.is_available():
             torch.cuda.manual_seed_all(seed)
@@ -350,6 +364,7 @@ def set_random_seed(seed: int = 42) -> None:
 # ---------------------------------------------------------------------------
 # Retry Helper
 # ---------------------------------------------------------------------------
+
 
 def retry(
     func,
@@ -372,6 +387,7 @@ def retry(
 # ---------------------------------------------------------------------------
 # Batch Processing Helper
 # ---------------------------------------------------------------------------
+
 
 def batch_process(
     items: List[Any],

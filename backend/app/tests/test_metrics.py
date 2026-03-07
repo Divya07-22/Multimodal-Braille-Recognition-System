@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from app.ml.evaluation.metrics_report import (
+from app.utils.metrics import (
     compute_cer,
     compute_wer,
     compute_precision_recall_f1,

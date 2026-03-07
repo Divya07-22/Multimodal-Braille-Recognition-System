@@ -25,7 +25,6 @@ def _build_classifier_arch(num_classes: int = 64) -> nn.Module:
 
 
 def load_pytorch_classifier(device: torch.device = None) -> nn.Module:
-    global _cached_models
     if "classifier_pt" in _cached_models:
         return _cached_models["classifier_pt"]
 
@@ -39,7 +38,9 @@ def load_pytorch_classifier(device: torch.device = None) -> nn.Module:
         model.load_state_dict(state)
         logger.info(f"Loaded classifier from {path}")
     else:
-        logger.warning(f"Classifier weights not found at {path}, using random weights.")
+        logger.warning(
+            f"Classifier weights not found at {path}, using random weights."
+        )
 
     model.to(device).eval()
     _cached_models["classifier_pt"] = model
@@ -47,7 +48,6 @@ def load_pytorch_classifier(device: torch.device = None) -> nn.Module:
 
 
 def load_onnx_classifier() -> ort.InferenceSession:
-    global _cached_models
     if "classifier_onnx" in _cached_models:
         return _cached_models["classifier_onnx"]
 
@@ -67,7 +67,6 @@ def load_onnx_classifier() -> ort.InferenceSession:
 
 
 def load_onnx_detector() -> ort.InferenceSession:
-    global _cached_models
     if "detector_onnx" in _cached_models:
         return _cached_models["detector_onnx"]
 
@@ -87,6 +86,5 @@ def load_onnx_detector() -> ort.InferenceSession:
 
 
 def clear_model_cache():
-    global _cached_models
     _cached_models.clear()
     logger.info("Model cache cleared.")

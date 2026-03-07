@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 import useAuthStore from '../hooks/useAuth'
 
 const VerifyEmail = () => {
   const [searchParams] = useSearchParams()
-  const { verifyEmail, isLoading } = useAuthStore()
+  const { verifyEmail } = useAuthStore()
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
   const [message, setMessage] = useState('')
 

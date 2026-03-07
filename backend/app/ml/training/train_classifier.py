@@ -3,6 +3,7 @@ Train Braille Cell Classifier CNN.
 Uses ResNet-18 backbone with custom head for 64-class classification.
 Includes: mixed precision, cosine annealing LR, label smoothing, focal loss.
 """
+
 import os
 import json
 import logging
@@ -12,21 +13,28 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.cuda.amp import GradScaler, autocast
 from torchvision import models
-from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.metrics import classification_report
 import numpy as np
 
 from app.ml.training.dataset import get_classification_dataloaders
-from app.ml.training.losses import LabelSmoothingCrossEntropy, FocalLoss
-from app.ml.training.callbacks import EarlyStopping, ModelCheckpoint, MetricsTracker
-from app.core.config import settings
+from app.ml.training.losses import LabelSmoothingCrossEntropy
+from app.ml.training.callbacks import (
+    EarlyStopping,
+    ModelCheckpoint,
+    MetricsTracker,
+)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def build_classifier(num_classes: int = 64, pretrained: bool = True) -> nn.Module:
+def build_classifier(
+    num_classes: int = 64, pretrained: bool = True
+) -> nn.Module:
     """Build ResNet-18 based classifier for Braille cells."""
-    model = models.resnet18(weights=models.ResNet18_Weights.DEFAULT if pretrained else None)
+    model = models.resnet18(
+        weights=models.ResNet18_Weights.DEFAULT if pretrained else None
+    )
     # Modify first conv for single-channel or keep RGB
     in_features = model.fc.in_features
     model.fc = nn.Sequential(
@@ -73,7 +81,9 @@ def train_one_epoch(
         total += labels.size(0)
 
         if batch_idx % 50 == 0:
-            logger.info(f"Epoch {epoch} [{batch_idx}/{len(loader)}] Loss: {loss.item():.4f}")
+            logger.info(
+                f"Epoch {epoch} [{batch_idx}/{len(loader)}] Loss: {loss.item():.4f}"
+            )
 
     return {
         "loss": total_loss / len(loader),
@@ -118,11 +128,11 @@ def evaluate(
 def train_classifier(
     data_dir: str = "app/ml/data/synthetic/cells",
     artifacts_dir: str = "app/ml/artifacts",
-    num_epochs: int = 80,
+    num_epochs: int = 20,
     batch_size: int = 64,
     lr: float = 1e-3,
     weight_decay: float = 1e-4,
-    num_classes: int = 256,
+    num_classes: int = 64,
     image_size: int = 32,
     num_workers: int = 4,
     cell_size: int = 32,
@@ -140,8 +150,12 @@ def train_classifier(
 
     model = build_classifier(num_classes=num_classes).to(device)
     criterion = LabelSmoothingCrossEntropy(smoothing=0.1)
-    optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
-    scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=num_epochs, eta_min=1e-6)
+    optimizer = optim.AdamW(
+        model.parameters(), lr=lr, weight_decay=weight_decay
+    )
+    scheduler = optim.lr_scheduler.CosineAnnealingLR(
+        optimizer, T_max=num_epochs, eta_min=1e-6
+    )
     scaler = GradScaler()
 
     early_stopping = EarlyStopping(patience=15, mode="min")
@@ -151,13 +165,23 @@ def train_classifier(
         monitor="val_loss",
         mode="min",
     )
-    tracker = MetricsTracker(os.path.join(artifacts_dir, "classifier_metrics.json"))
+    tracker = MetricsTracker(
+        os.path.join(artifacts_dir, "classifier_metrics.json")
+    )
 
-    logger.info(f"Starting training: {num_epochs} epochs, {len(dataloaders['train'])} batches/epoch")
+    logger.info(
+        f"Starting training: {num_epochs} epochs, {len(dataloaders['train'])} batches/epoch"
+    )
 
     for epoch in range(1, num_epochs + 1):
         train_metrics = train_one_epoch(
-            model, dataloaders["train"], optimizer, criterion, scaler, device, epoch
+            model,
+            dataloaders["train"],
+            optimizer,
+            criterion,
+            scaler,
+            device,
+            epoch,
         )
         val_metrics = evaluate(model, dataloaders["val"], criterion, device)
         scheduler.step()
@@ -184,8 +208,12 @@ def train_classifier(
 
     # Final test evaluation
     test_metrics = evaluate(model, dataloaders["test"], criterion, device)
-    report = classification_report(test_metrics["labels"], test_metrics["preds"], output_dict=True)
-    with open(os.path.join(artifacts_dir, "classifier_eval_report.json"), "w") as f:
+    report = classification_report(
+        test_metrics["labels"], test_metrics["preds"], output_dict=True
+    )
+    with open(
+        os.path.join(artifacts_dir, "classifier_eval_report.json"), "w"
+    ) as f:
         json.dump(report, f, indent=2)
     logger.info(f"Test Accuracy: {test_metrics['accuracy']:.4f}")
     logger.info("Training complete.")

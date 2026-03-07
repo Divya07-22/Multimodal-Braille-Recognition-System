@@ -38,14 +38,14 @@ async def get_user_stats(
 ):
     """Return aggregate stats for the current user."""
     total_conversions = await db.execute(
-        select(func.count()).select_from(ConversionHistoryItem).where(
-            ConversionHistoryItem.user_id == current_user.id
-        )
+        select(func.count())
+        .select_from(ConversionHistoryItem)
+        .where(ConversionHistoryItem.user_id == current_user.id)
     )
     total_docs = await db.execute(
-        select(func.count()).select_from(Document).where(
-            Document.user_id == current_user.id
-        )
+        select(func.count())
+        .select_from(Document)
+        .where(Document.user_id == current_user.id)
     )
     avg_time = await db.execute(
         select(func.avg(ConversionHistoryItem.processing_time_ms)).where(
@@ -89,9 +89,9 @@ async def get_history(
 ):
     skip = (page - 1) * limit
     total_result = await db.execute(
-        select(func.count()).select_from(ConversionHistoryItem).where(
-            ConversionHistoryItem.user_id == current_user.id
-        )
+        select(func.count())
+        .select_from(ConversionHistoryItem)
+        .where(ConversionHistoryItem.user_id == current_user.id)
     )
     total = total_result.scalar()
 
@@ -106,17 +106,21 @@ async def get_history(
 
     items = []
     for item in db_items:
-        items.append({
-            "id": item.id,
-            "document_id": item.document_id,
-            "conversion_type": item.conversion_type,
-            "input_text": item.input_text,
-            "output_text": item.output_text,
-            "braille_output": item.braille_output,
-            "processing_time": item.processing_time_ms,
-            "is_favorite": item.is_favorite,
-            "created_at": item.created_at.isoformat() if item.created_at else None,
-        })
+        items.append(
+            {
+                "id": item.id,
+                "document_id": item.document_id,
+                "conversion_type": item.conversion_type,
+                "input_text": item.input_text,
+                "output_text": item.output_text,
+                "braille_output": item.braille_output,
+                "processing_time": item.processing_time_ms,
+                "is_favorite": item.is_favorite,
+                "created_at": (
+                    item.created_at.isoformat() if item.created_at else None
+                ),
+            }
+        )
 
     return {
         "items": items,
@@ -134,7 +138,9 @@ async def clear_history(
     db: AsyncSession = Depends(get_db),
 ):
     result = await db.execute(
-        select(ConversionHistoryItem).where(ConversionHistoryItem.user_id == current_user.id)
+        select(ConversionHistoryItem).where(
+            ConversionHistoryItem.user_id == current_user.id
+        )
     )
     items = result.scalars().all()
     for item in items:
@@ -152,7 +158,7 @@ async def toggle_favorite(
     result = await db.execute(
         select(ConversionHistoryItem).where(
             ConversionHistoryItem.id == item_id,
-            ConversionHistoryItem.user_id == current_user.id
+            ConversionHistoryItem.user_id == current_user.id,
         )
     )
     item = result.scalar_one_or_none()
@@ -161,7 +167,10 @@ async def toggle_favorite(
 
     item.is_favorite = not item.is_favorite
     await db.commit()
-    return {"message": "Favorite status updated", "is_favorite": item.is_favorite}
+    return {
+        "message": "Favorite status updated",
+        "is_favorite": item.is_favorite,
+    }
 
 
 @router.delete("/{item_id}")
@@ -173,7 +182,7 @@ async def delete_history_item(
     result = await db.execute(
         select(ConversionHistoryItem).where(
             ConversionHistoryItem.id == item_id,
-            ConversionHistoryItem.user_id == current_user.id
+            ConversionHistoryItem.user_id == current_user.id,
         )
     )
     item = result.scalar_one_or_none()

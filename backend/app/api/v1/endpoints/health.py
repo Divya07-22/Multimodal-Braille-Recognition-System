@@ -37,11 +37,16 @@ async def detailed_health_check(db: AsyncSession = Depends(get_db)):
 
     # ML Artifacts check
     import os
+
     checks["ml_artifacts"] = (
         "healthy" if os.path.isdir(settings.MODEL_ARTIFACTS_DIR) else "missing"
     )
 
-    overall = "healthy" if all(v == "healthy" for v in checks.values()) else "degraded"
+    overall = (
+        "healthy"
+        if all(v == "healthy" for v in checks.values())
+        else "degraded"
+    )
 
     return {
         "status": overall,

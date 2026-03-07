@@ -2,7 +2,9 @@ from fastapi import HTTPException
 
 
 class BrailleBaseException(HTTPException):
-    def __init__(self, status_code: int, detail: str, error_code: str = "UNKNOWN_ERROR"):
+    def __init__(
+        self, status_code: int, detail: str, error_code: str = "UNKNOWN_ERROR"
+    ):
         super().__init__(status_code=status_code, detail=detail)
         self.error_code = error_code
 
@@ -49,4 +51,6 @@ class StorageError(BrailleBaseException):
 
 class ModelNotLoadedError(BrailleBaseException):
     def __init__(self, model_name: str = "Model"):
-        super().__init__(503, f"{model_name} is not loaded", "MODEL_NOT_LOADED")
+        super().__init__(
+            503, f"{model_name} is not loaded", "MODEL_NOT_LOADED"
+        )

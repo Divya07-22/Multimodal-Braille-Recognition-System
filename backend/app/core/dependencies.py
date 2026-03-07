@@ -2,6 +2,7 @@
 Shared FastAPI dependency providers.
 Any shared dep that does not belong to a specific module lives here.
 """
+
 from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import AsyncSessionLocal

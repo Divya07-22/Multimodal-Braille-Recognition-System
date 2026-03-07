@@ -31,7 +31,9 @@ class RegisterRequest(BaseModel):
         if not any(c.isdigit() for c in v):
             raise ValueError("Password must contain at least one digit")
         if not any(c.isupper() for c in v):
-            raise ValueError("Password must contain at least one uppercase letter")
+            raise ValueError(
+                "Password must contain at least one uppercase letter"
+            )
         return v
 
     @field_validator("username")

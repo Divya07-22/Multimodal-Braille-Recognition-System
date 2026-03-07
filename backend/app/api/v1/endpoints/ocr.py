@@ -47,7 +47,9 @@ async def process_ocr(
         )
     except Exception as e:
         logger.error(f"OCR processing failed: {e}")
-        raise HTTPException(status_code=500, detail=f"OCR processing failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"OCR processing failed: {str(e)}"
+        )
 
 
 @router.post("/process-upload")

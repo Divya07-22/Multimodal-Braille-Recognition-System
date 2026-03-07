@@ -1,8 +1,12 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
+
+if TYPE_CHECKING:
+    from app.db.models.user import User
+    from app.db.models.document import Document
 
 
 class ConversionJob(Base):
@@ -10,12 +14,20 @@ class ConversionJob(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     user_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     document_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("documents.id", ondelete="CASCADE"), nullable=False, index=True
+        Integer,
+        ForeignKey("documents.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
-    job_type: Mapped[str] = mapped_column(String(100), nullable=False, default="braille_conversion")
+    job_type: Mapped[str] = mapped_column(
+        String(100), nullable=False, default="braille_conversion"
+    )
     status: Mapped[str] = mapped_column(
         String(50), default="pending", nullable=False, index=True
     )  # pending | processing | completed | failed | cancelled
@@ -29,5 +41,9 @@ class ConversionJob(Base):
         DateTime(timezone=True), nullable=True
     )
 
-    user: Mapped["User"] = relationship("User", back_populates="conversion_jobs")
-    document: Mapped["Document"] = relationship("Document", back_populates="conversion_jobs")
+    user: Mapped["User"] = relationship(
+        "User", back_populates="conversion_jobs"
+    )
+    document: Mapped["Document"] = relationship(
+        "Document", back_populates="conversion_jobs"
+    )

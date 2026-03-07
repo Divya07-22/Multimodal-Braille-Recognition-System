@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 # Grade 1 Braille: pattern (int 0-63, bits 0-5 = dots 1-6) -> character
 # Bit order: bit0=dot1, bit1=dot2, bit2=dot3, bit3=dot4, bit4=dot5, bit5=dot6
 PATTERN_TO_CHAR = {
-    0b000000: " ",   # space
+    0b000000: " ",  # space
     0b000001: "a",
     0b000011: "b",
     0b001001: "c",
@@ -42,7 +42,7 @@ PATTERN_TO_CHAR = {
     0b010010: "!",
     0b000010: "'",
     0b001100: "-",
-    0b110010: "/",   # Braille pattern for forward-slash (dots 3 4 6)
+    0b110010: "/",  # Braille pattern for forward-slash (dots 3 4 6)
     # Digits (used in number mode via letter mapping a-j -> 1-0)
     0b100001: "1",
     0b100011: "2",
@@ -53,11 +53,10 @@ PATTERN_TO_CHAR = {
     0b111011: "7",
     0b110011: "8",
     0b101010: "9",
-    0b011010: "0",   # same as 'j' pattern; resolved by number_mode context
 }
 
-CAPITAL_INDICATOR = 0b100000   # dot 6 only = capital prefix
-NUMBER_INDICATOR = 0b011111    # dots 3-4-5-6 = number mode prefix
+CAPITAL_INDICATOR = 0b100000  # dot 6 only = capital prefix
+NUMBER_INDICATOR = 0b011111  # dots 3-4-5-6 = number mode prefix
 
 
 class PostProcessor:
@@ -105,8 +104,16 @@ class PostProcessor:
             if number_mode:
                 # Shift a-j to 1-0
                 num_map = {
-                    "a": "1", "b": "2", "c": "3", "d": "4", "e": "5",
-                    "f": "6", "g": "7", "h": "8", "i": "9", "j": "0",
+                    "a": "1",
+                    "b": "2",
+                    "c": "3",
+                    "d": "4",
+                    "e": "5",
+                    "f": "6",
+                    "g": "7",
+                    "h": "8",
+                    "i": "9",
+                    "j": "0",
                 }
                 char = num_map.get(char, char)
             elif capital_mode:

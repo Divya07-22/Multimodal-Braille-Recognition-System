@@ -1,0 +1,2396 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.6, pytest-8.3.5, pluggy-1.5.0
+rootdir: D:\Hacknight\braille-conversion-tool\backend
+configfile: pytest.ini
+plugins: anyio-4.12.1, asyncio-1.3.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=function, asyncio_default_test_loop_scope=function
+collected 65 items
+
+app\tests\test_auth.py FFFF                                              [  6%]
+app\tests\test_braille.py ......                                         [ 15%]
+app\tests\test_braille_translation.py ............................       [ 58%]
+app\tests\test_export.py ...                                             [ 63%]
+app\tests\test_losses.py .....                                           [ 70%]
+app\tests\test_metrics.py ........                                       [ 83%]
+app\tests\test_ml_models.py ......                                       [ 92%]
+app\tests\test_ocr.py FFF                                                [ 96%]
+app\tests\test_recognition_pipeline.py ..                                [100%]
+
+================================== FAILURES ===================================
+___________________________ test_register_and_login ___________________________
+
+self = <sqlalchemy.engine.base.Connection object at 0x000001E33B8D82F0>
+dialect = <sqlalchemy.dialects.mysql.aiomysql.MySQLDialect_aiomysql object at 0x000001E31E00A600>
+context = <sqlalchemy.dialects.mysql.mysqldb.MySQLExecutionContext_mysqldb object at 0x000001E33BA6EAE0>
+statement = <sqlalchemy.dialects.mysql.mysqldb.MySQLCompiler_mysqldb object at 0x000001E33BA6E960>
+parameters = [('testuser@example.com', 'testuser', 'Test User', '$2b$12$bWAYUNGAcoz0d18ZAKdRBuzr1Amzf8VYS8.HjJ.XO4bWKpGm3G0J2', 1, 0)]
+
+    def _exec_single_context(
+        self,
+        dialect: Dialect,
+        context: ExecutionContext,
+        statement: Union[str, Compiled],
+        parameters: Optional[_AnyMultiExecuteParams],
+    ) -> CursorResult[Any]:
+        """continue the _execute_context() method for a single DBAPI
+        cursor.execute() or cursor.executemany() call.
+    
+        """
+        if dialect.bind_typing is BindTyping.SETINPUTSIZES:
+            generic_setinputsizes = context._prepare_set_input_sizes()
+    
+            if generic_setinputsizes:
+                try:
+                    dialect.do_set_input_sizes(
+                        context.cursor, generic_setinputsizes, context
+                    )
+                except BaseException as e:
+                    self._handle_dbapi_exception(
+                        e, str(statement), parameters, None, context
+                    )
+    
+        cursor, str_statement, parameters = (
+            context.cursor,
+            context.statement,
+            context.parameters,
+        )
+    
+        effective_parameters: Optional[_AnyExecuteParams]
+    
+        if not context.executemany:
+            effective_parameters = parameters[0]
+        else:
+            effective_parameters = parameters
+    
+        if self._has_events or self.engine._has_events:
+            for fn in self.dispatch.before_cursor_execute:
+                str_statement, effective_parameters = fn(
+                    self,
+                    cursor,
+                    str_statement,
+                    effective_parameters,
+                    context,
+                    context.executemany,
+                )
+    
+        if self._echo:
+            self._log_info(str_statement)
+    
+            stats = context._get_cache_stats()
+    
+            if not self.engine.hide_parameters:
+                self._log_info(
+                    "[%s] %r",
+                    stats,
+                    sql_util._repr_params(
+                        effective_parameters,
+                        batches=10,
+                        ismulti=context.executemany,
+                    ),
+                )
+            else:
+                self._log_info(
+                    "[%s] [SQL parameters hidden due to hide_parameters=True]",
+                    stats,
+                )
+    
+        evt_handled: bool = False
+        try:
+            if context.execute_style is ExecuteStyle.EXECUTEMANY:
+                effective_parameters = cast(
+                    "_CoreMultiExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_executemany:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_executemany(
+                        cursor,
+                        str_statement,
+                        effective_parameters,
+                        context,
+                    )
+            elif not effective_parameters and context.no_parameters:
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute_no_params:
+                        if fn(cursor, str_statement, context):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_execute_no_params(
+                        cursor, str_statement, context
+                    )
+            else:
+                effective_parameters = cast(
+                    "_CoreSingleExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+>                   self.dialect.do_execute(
+                        cursor, str_statement, effective_parameters, context
+                    )
+
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\base.py:1967: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\default.py:951: in do_execute
+    cursor.execute(statement, parameters)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\connectors\asyncio.py:192: in execute
+    self._adapt_connection._handle_exception(error)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\connectors\asyncio.py:330: in _handle_exception
+    raise error.with_traceback(exc_info[2])
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\connectors\asyncio.py:190: in execute
+    return self.await_(self._execute_async(operation, parameters))
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\util\_concurrency_py3k.py:132: in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\util\_concurrency_py3k.py:196: in greenlet_spawn
+    value = await result
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\connectors\asyncio.py:213: in _execute_async
+    result = await self._cursor.execute(operation, parameters)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\cursors.py:239: in execute
+    await self._query(query)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\cursors.py:457: in _query
+    await conn.query(q)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py:469: in query
+    await self._read_query_result(unbuffered=unbuffered)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py:683: in _read_query_result
+    await result.read()
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py:1164: in read
+    first_packet = await self.connection._read_packet()
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py:652: in _read_packet
+    packet.raise_for_error()
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\pymysql\protocol.py:219: in raise_for_error
+    err.raise_mysql_exception(self._data)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+data = b"\xffT\x05#HY000Field 'is_verified' doesn't have a default value"
+
+    def raise_mysql_exception(data):
+        errno = struct.unpack("<h", data[1:3])[0]
+        # https://dev.mysql.com/doc/dev/mysql-server/latest/page_protocol_basic_err_packet.html
+        # Error packet has optional sqlstate that is 5 bytes and starts with '#'.
+        if data[3] == 0x23:  # '#'
+            # sqlstate = data[4:9].decode()
+            # TODO: Append (sqlstate) in the error message. This will be come in next minor release.
+            errval = data[9:].decode("utf-8", "replace")
+        else:
+            errval = data[3:].decode("utf-8", "replace")
+        errorclass = error_map.get(errno)
+        if errorclass is None:
+            errorclass = InternalError if errno < 1000 else OperationalError
+>       raise errorclass(errno, errval)
+E       pymysql.err.OperationalError: (1364, "Field 'is_verified' doesn't have a default value")
+
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\pymysql\err.py:150: OperationalError
+
+The above exception was the direct cause of the following exception:
+
+    @pytest.mark.asyncio
+    async def test_register_and_login():
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            # Register
+>           reg = await client.post(
+                "/api/v1/auth/register",
+                json={
+                    "email": "testuser@example.com",
+                    "username": "testuser",
+                    "full_name": "Test User",
+                    "password": "TestPass1",
+                },
+            )
+
+app\tests\test_auth.py:10: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py:1859: in post
+    return await self.request(
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py:1540: in request
+    return await self.send(request, auth=auth, follow_redirects=follow_redirects)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py:1629: in send
+    response = await self._send_handling_auth(
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py:1657: in _send_handling_auth
+    response = await self._send_handling_redirects(
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py:1694: in _send_handling_redirects
+    response = await self._send_single_request(request)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py:1730: in _send_single_request
+    response = await transport.handle_async_request(request)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\httpx\_transports\asgi.py:170: in handle_async_request
+    await self.app(scope, receive, send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\fastapi\applications.py:1135: in __call__
+    await super().__call__(scope, receive, send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\applications.py:107: in __call__
+    await self.middleware_stack(scope, receive, send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\middleware\errors.py:186: in __call__
+    raise exc
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\middleware\errors.py:164: in __call__
+    await self.app(scope, receive, _send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\middleware\trustedhost.py:36: in __call__
+    await self.app(scope, receive, send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\middleware\cors.py:85: in __call__
+    await self.app(scope, receive, send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\middleware\exceptions.py:63: in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\_exception_handler.py:53: in wrapped_app
+    raise exc
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\fastapi\middleware\asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\routing.py:716: in __call__
+    await self.middleware_stack(scope, receive, send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\routing.py:736: in app
+    await route.handle(scope, receive, send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\routing.py:290: in handle
+    await self.app(scope, receive, send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\fastapi\routing.py:118: in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\_exception_handler.py:53: in wrapped_app
+    raise exc
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\fastapi\routing.py:104: in app
+    response = await f(request)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\fastapi\routing.py:428: in app
+    raw_response = await run_endpoint_function(
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\fastapi\routing.py:314: in run_endpoint_function
+    return await dependant.call(**values)
+app\api\v1\endpoints\auth.py:65: in register
+    await db.commit()
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\ext\asyncio\session.py:1014: in commit
+    await greenlet_spawn(self.sync_session.commit)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\util\_concurrency_py3k.py:203: in greenlet_spawn
+    result = context.switch(value)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\session.py:2032: in commit
+    trans.commit(_to_root=True)
+<string>:2: in commit
+    ???
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\state_changes.py:137: in _go
+    ret_value = fn(self, *arg, **kw)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\session.py:1313: in commit
+    self._prepare_impl()
+<string>:2: in _prepare_impl
+    ???
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\state_changes.py:137: in _go
+    ret_value = fn(self, *arg, **kw)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\session.py:1288: in _prepare_impl
+    self.session.flush()
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\session.py:4345: in flush
+    self._flush(objects)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\session.py:4480: in _flush
+    with util.safe_reraise():
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\util\langhelpers.py:224: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\session.py:4441: in _flush
+    flush_context.execute()
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\unitofwork.py:466: in execute
+    rec.execute(self)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\unitofwork.py:642: in execute
+    util.preloaded.orm_persistence.save_obj(
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\persistence.py:93: in save_obj
+    _emit_insert_statements(
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\persistence.py:1233: in _emit_insert_statements
+    result = connection.execute(
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\base.py:1419: in execute
+    return meth(
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\sql\elements.py:526: in _execute_on_connection
+    return connection._execute_clauseelement(
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\base.py:1641: in _execute_clauseelement
+    ret = self._execute_context(
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\base.py:1846: in _execute_context
+    return self._exec_single_context(
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\base.py:1986: in _exec_single_context
+    self._handle_dbapi_exception(
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\base.py:2355: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\base.py:1967: in _exec_single_context
+    self.dialect.do_execute(
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\default.py:951: in do_execute
+    cursor.execute(statement, parameters)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\connectors\asyncio.py:192: in execute
+    self._adapt_connection._handle_exception(error)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\connectors\asyncio.py:330: in _handle_exception
+    raise error.with_traceback(exc_info[2])
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\connectors\asyncio.py:190: in execute
+    return self.await_(self._execute_async(operation, parameters))
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\util\_concurrency_py3k.py:132: in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\util\_concurrency_py3k.py:196: in greenlet_spawn
+    value = await result
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\connectors\asyncio.py:213: in _execute_async
+    result = await self._cursor.execute(operation, parameters)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\cursors.py:239: in execute
+    await self._query(query)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\cursors.py:457: in _query
+    await conn.query(q)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py:469: in query
+    await self._read_query_result(unbuffered=unbuffered)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py:683: in _read_query_result
+    await result.read()
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py:1164: in read
+    first_packet = await self.connection._read_packet()
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py:652: in _read_packet
+    packet.raise_for_error()
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\pymysql\protocol.py:219: in raise_for_error
+    err.raise_mysql_exception(self._data)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+data = b"\xffT\x05#HY000Field 'is_verified' doesn't have a default value"
+
+    def raise_mysql_exception(data):
+        errno = struct.unpack("<h", data[1:3])[0]
+        # https://dev.mysql.com/doc/dev/mysql-server/latest/page_protocol_basic_err_packet.html
+        # Error packet has optional sqlstate that is 5 bytes and starts with '#'.
+        if data[3] == 0x23:  # '#'
+            # sqlstate = data[4:9].decode()
+            # TODO: Append (sqlstate) in the error message. This will be come in next minor release.
+            errval = data[9:].decode("utf-8", "replace")
+        else:
+            errval = data[3:].decode("utf-8", "replace")
+        errorclass = error_map.get(errno)
+        if errorclass is None:
+            errorclass = InternalError if errno < 1000 else OperationalError
+>       raise errorclass(errno, errval)
+E       sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (1364, "Field 'is_verified' doesn't have a default value")
+E       [SQL: INSERT INTO users (email, username, full_name, hashed_password, is_active, is_admin) VALUES (%s, %s, %s, %s, %s, %s)]
+E       [parameters: ('testuser@example.com', 'testuser', 'Test User', '$2b$12$bWAYUNGAcoz0d18ZAKdRBuzr1Amzf8VYS8.HjJ.XO4bWKpGm3G0J2', 1, 0)]
+E       (Background on this error at: https://sqlalche.me/e/20/e3q8)
+
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\pymysql\err.py:150: OperationalError
+----------------------------- Captured log setup ------------------------------
+DEBUG    asyncio:proactor_events.py:634 Using proactor: IocpProactor
+DEBUG    asyncio:proactor_events.py:634 Using proactor: IocpProactor
+---------------------------- Captured stdout call -----------------------------
+2026-03-07 10:09:07,006 INFO sqlalchemy.engine.Engine SELECT DATABASE()
+2026-03-07 10:09:07,006 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-03-07 10:09:07,006 INFO sqlalchemy.engine.Engine SELECT @@sql_mode
+2026-03-07 10:09:07,006 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-03-07 10:09:07,006 INFO sqlalchemy.engine.Engine SELECT @@lower_case_table_names
+2026-03-07 10:09:07,006 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-03-07 10:09:07,013 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-03-07 10:09:07,082 INFO sqlalchemy.engine.Engine SELECT users.id, users.email, users.username, users.full_name, users.hashed_password, users.is_active, users.is_admin, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = %s
+2026-03-07 10:09:07,082 INFO sqlalchemy.engine.Engine [generated in 0.00110s] ('testuser@example.com',)
+2026-03-07 10:09:07,093 INFO sqlalchemy.engine.Engine SELECT users.id, users.email, users.username, users.full_name, users.hashed_password, users.is_active, users.is_admin, users.created_at, users.updated_at 
+FROM users 
+WHERE users.username = %s
+2026-03-07 10:09:07,093 INFO sqlalchemy.engine.Engine [generated in 0.00074s] ('testuser',)
+2026-03-07 10:09:07,871 INFO sqlalchemy.engine.Engine INSERT INTO users (email, username, full_name, hashed_password, is_active, is_admin) VALUES (%s, %s, %s, %s, %s, %s)
+2026-03-07 10:09:07,872 INFO sqlalchemy.engine.Engine [generated in 0.00067s] ('testuser@example.com', 'testuser', 'Test User', '$2b$12$bWAYUNGAcoz0d18ZAKdRBuzr1Amzf8VYS8.HjJ.XO4bWKpGm3G0J2', 1, 0)
+2026-03-07 10:09:07,874 INFO sqlalchemy.engine.Engine ROLLBACK
+------------------------------ Captured log call ------------------------------
+DEBUG    aiomysql:connection.py:951 caching sha2: succeeded by fast path.
+INFO     sqlalchemy.engine.Engine:base.py:1846 SELECT DATABASE()
+INFO     sqlalchemy.engine.Engine:base.py:1846 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1846 SELECT @@sql_mode
+INFO     sqlalchemy.engine.Engine:base.py:1846 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1846 SELECT @@lower_case_table_names
+INFO     sqlalchemy.engine.Engine:base.py:1846 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:2702 BEGIN (implicit)
+INFO     sqlalchemy.engine.Engine:base.py:1846 SELECT users.id, users.email, users.username, users.full_name, users.hashed_password, users.is_active, users.is_admin, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = %s
+INFO     sqlalchemy.engine.Engine:base.py:1846 [generated in 0.00110s] ('testuser@example.com',)
+INFO     sqlalchemy.engine.Engine:base.py:1846 SELECT users.id, users.email, users.username, users.full_name, users.hashed_password, users.is_active, users.is_admin, users.created_at, users.updated_at 
+FROM users 
+WHERE users.username = %s
+INFO     sqlalchemy.engine.Engine:base.py:1846 [generated in 0.00074s] ('testuser',)
+INFO     sqlalchemy.engine.Engine:base.py:1846 INSERT INTO users (email, username, full_name, hashed_password, is_active, is_admin) VALUES (%s, %s, %s, %s, %s, %s)
+INFO     sqlalchemy.engine.Engine:base.py:1846 [generated in 0.00067s] ('testuser@example.com', 'testuser', 'Test User', '$2b$12$bWAYUNGAcoz0d18ZAKdRBuzr1Amzf8VYS8.HjJ.XO4bWKpGm3G0J2', 1, 0)
+INFO     sqlalchemy.engine.Engine:base.py:2705 ROLLBACK
+ERROR    app.main:main.py:73 Unhandled exception: (pymysql.err.OperationalError) (1364, "Field 'is_verified' doesn't have a default value")
+[SQL: INSERT INTO users (email, username, full_name, hashed_password, is_active, is_admin) VALUES (%s, %s, %s, %s, %s, %s)]
+[parameters: ('testuser@example.com', 'testuser', 'Test User', '$2b$12$bWAYUNGAcoz0d18ZAKdRBuzr1Amzf8VYS8.HjJ.XO4bWKpGm3G0J2', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+Traceback (most recent call last):
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\connectors\asyncio.py", line 192, in execute
+    self._adapt_connection._handle_exception(error)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\connectors\asyncio.py", line 330, in _handle_exception
+    raise error.with_traceback(exc_info[2])
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\connectors\asyncio.py", line 190, in execute
+    return self.await_(self._execute_async(operation, parameters))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\connectors\asyncio.py", line 213, in _execute_async
+    result = await self._cursor.execute(operation, parameters)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\cursors.py", line 239, in execute
+    await self._query(query)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\cursors.py", line 457, in _query
+    await conn.query(q)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py", line 469, in query
+    await self._read_query_result(unbuffered=unbuffered)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py", line 683, in _read_query_result
+    await result.read()
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py", line 1164, in read
+    first_packet = await self.connection._read_packet()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py", line 652, in _read_packet
+    packet.raise_for_error()
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\pymysql\protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\pymysql\err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+pymysql.err.OperationalError: (1364, "Field 'is_verified' doesn't have a default value")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\middleware\errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\middleware\trustedhost.py", line 36, in __call__
+    await self.app(scope, receive, send)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\middleware\cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\middleware\exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\fastapi\middleware\asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\fastapi\routing.py", line 118, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\fastapi\routing.py", line 104, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\fastapi\routing.py", line 428, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\fastapi\routing.py", line 314, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Hacknight\braille-conversion-tool\backend\app\api\v1\endpoints\auth.py", line 65, in register
+    await db.commit()
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\ext\asyncio\session.py", line 1014, in commit
+    await greenlet_spawn(self.sync_session.commit)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 203, in greenlet_spawn
+    result = context.switch(value)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\session.py", line 2032, in commit
+    trans.commit(_to_root=True)
+  File "<string>", line 2, in commit
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\state_changes.py", line 137, in _go
+    ret_value = fn(self, *arg, **kw)
+                ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\session.py", line 1313, in commit
+    self._prepare_impl()
+  File "<string>", line 2, in _prepare_impl
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\state_changes.py", line 137, in _go
+    ret_value = fn(self, *arg, **kw)
+                ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\session.py", line 1288, in _prepare_impl
+    self.session.flush()
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\session.py", line 4345, in flush
+    self._flush(objects)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\session.py", line 4480, in _flush
+    with util.safe_reraise():
+         ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\util\langhelpers.py", line 224, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\session.py", line 4441, in _flush
+    flush_context.execute()
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\unitofwork.py", line 466, in execute
+    rec.execute(self)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\unitofwork.py", line 642, in execute
+    util.preloaded.orm_persistence.save_obj(
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\persistence.py", line 93, in save_obj
+    _emit_insert_statements(
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\persistence.py", line 1233, in _emit_insert_statements
+    result = connection.execute(
+             ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\base.py", line 1419, in execute
+    return meth(
+           ^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\sql\elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\base.py", line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+          ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\base.py", line 2355, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\connectors\asyncio.py", line 192, in execute
+    self._adapt_connection._handle_exception(error)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\connectors\asyncio.py", line 330, in _handle_exception
+    raise error.with_traceback(exc_info[2])
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\connectors\asyncio.py", line 190, in execute
+    return self.await_(self._execute_async(operation, parameters))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\connectors\asyncio.py", line 213, in _execute_async
+    result = await self._cursor.execute(operation, parameters)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\cursors.py", line 239, in execute
+    await self._query(query)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\cursors.py", line 457, in _query
+    await conn.query(q)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py", line 469, in query
+    await self._read_query_result(unbuffered=unbuffered)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py", line 683, in _read_query_result
+    await result.read()
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py", line 1164, in read
+    first_packet = await self.connection._read_packet()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py", line 652, in _read_packet
+    packet.raise_for_error()
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\pymysql\protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\pymysql\err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (1364, "Field 'is_verified' doesn't have a default value")
+[SQL: INSERT INTO users (email, username, full_name, hashed_password, is_active, is_admin) VALUES (%s, %s, %s, %s, %s, %s)]
+[parameters: ('testuser@example.com', 'testuser', 'Test User', '$2b$12$bWAYUNGAcoz0d18ZAKdRBuzr1Amzf8VYS8.HjJ.XO4bWKpGm3G0J2', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+__________________________ test_login_wrong_password __________________________
+
+    @pytest.mark.asyncio
+    async def test_login_wrong_password():
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+>           resp = await client.post(
+                "/api/v1/auth/login",
+                json={
+                    "email": "testuser@example.com",
+                    "password": "WrongPass99",
+                },
+            )
+
+app\tests\test_auth.py:39: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py:1859: in post
+    return await self.request(
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py:1540: in request
+    return await self.send(request, auth=auth, follow_redirects=follow_redirects)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py:1629: in send
+    response = await self._send_handling_auth(
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py:1657: in _send_handling_auth
+    response = await self._send_handling_redirects(
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py:1694: in _send_handling_redirects
+    response = await self._send_single_request(request)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py:1730: in _send_single_request
+    response = await transport.handle_async_request(request)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\httpx\_transports\asgi.py:170: in handle_async_request
+    await self.app(scope, receive, send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\fastapi\applications.py:1135: in __call__
+    await super().__call__(scope, receive, send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\applications.py:107: in __call__
+    await self.middleware_stack(scope, receive, send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\middleware\errors.py:186: in __call__
+    raise exc
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\middleware\errors.py:164: in __call__
+    await self.app(scope, receive, _send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\middleware\trustedhost.py:36: in __call__
+    await self.app(scope, receive, send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\middleware\cors.py:85: in __call__
+    await self.app(scope, receive, send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\middleware\exceptions.py:63: in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\_exception_handler.py:53: in wrapped_app
+    raise exc
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\fastapi\middleware\asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\routing.py:716: in __call__
+    await self.middleware_stack(scope, receive, send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\routing.py:736: in app
+    await route.handle(scope, receive, send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\routing.py:290: in handle
+    await self.app(scope, receive, send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\fastapi\routing.py:118: in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\_exception_handler.py:53: in wrapped_app
+    raise exc
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\fastapi\routing.py:104: in app
+    response = await f(request)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\fastapi\routing.py:428: in app
+    raw_response = await run_endpoint_function(
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\fastapi\routing.py:314: in run_endpoint_function
+    return await dependant.call(**values)
+app\api\v1\endpoints\auth.py:79: in login
+    result = await db.execute(select(User).where(User.email == payload.email))
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\ext\asyncio\session.py:463: in execute
+    result = await greenlet_spawn(
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\util\_concurrency_py3k.py:201: in greenlet_spawn
+    result = context.throw(*sys.exc_info())
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\session.py:2365: in execute
+    return self._execute_internal(
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\session.py:2241: in _execute_internal
+    conn = self._connection_for_bind(bind)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\session.py:2110: in _connection_for_bind
+    return trans._connection_for_bind(engine, execution_options)
+<string>:2: in _connection_for_bind
+    ???
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\state_changes.py:137: in _go
+    ret_value = fn(self, *arg, **kw)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\session.py:1189: in _connection_for_bind
+    conn = bind.connect()
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\base.py:3277: in connect
+    return self._connection_cls(self)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\base.py:143: in __init__
+    self._dbapi_connection = engine.raw_connection()
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\base.py:3301: in raw_connection
+    return self.pool.connect()
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\pool\base.py:447: in connect
+    return _ConnectionFairy._checkout(self)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\pool\base.py:1363: in _checkout
+    with util.safe_reraise():
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\util\langhelpers.py:224: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\pool\base.py:1301: in _checkout
+    result = pool._dialect._do_ping_w_event(
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\default.py:728: in _do_ping_w_event
+    return self.do_ping(dbapi_connection)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\dialects\mysql\pymysql.py:121: in do_ping
+    dbapi_connection.ping(False)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\dialects\mysql\aiomysql.py:93: in ping
+    self.await_(self._connection.ping(reconnect))
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\util\_concurrency_py3k.py:132: in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\util\_concurrency_py3k.py:196: in greenlet_spawn
+    value = await result
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py:493: in ping
+    await self._execute_command(COMMAND.COM_PING, "")
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py:724: in _execute_command
+    self._write_bytes(prelude + sql[:chunk_size - 1])
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py:669: in _write_bytes
+    return self._writer.write(data)
+C:\Python312\Lib\asyncio\streams.py:346: in write
+    self._transport.write(data)
+C:\Python312\Lib\asyncio\proactor_events.py:366: in write
+    self._loop_writing(data=bytes(data))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <_ProactorSocketTransport closing fd=4084 read=<_OverlappedFuture cancelled>>
+f = None, data = b'\x01\x00\x00\x00\x0e'
+
+    def _loop_writing(self, f=None, data=None):
+        try:
+            if f is not None and self._write_fut is None and self._closing:
+                # XXX most likely self._force_close() has been called, and
+                # it has set self._write_fut to None.
+                return
+            assert f is self._write_fut
+            self._write_fut = None
+            self._pending_write = 0
+            if f:
+                f.result()
+            if data is None:
+                data = self._buffer
+                self._buffer = None
+            if not data:
+                if self._closing:
+                    self._loop.call_soon(self._call_connection_lost, None)
+                if self._eof_written:
+                    self._sock.shutdown(socket.SHUT_WR)
+                # Now that we've reduced the buffer size, tell the
+                # protocol to resume writing if it was paused.  Note that
+                # we do this last since the callback is called immediately
+                # and it may add more data to the buffer (even causing the
+                # protocol to be paused again).
+                self._maybe_resume_protocol()
+            else:
+>               self._write_fut = self._loop._proactor.send(self._sock, data)
+E               AttributeError: 'NoneType' object has no attribute 'send'
+
+C:\Python312\Lib\asyncio\proactor_events.py:402: AttributeError
+----------------------------- Captured log setup ------------------------------
+DEBUG    asyncio:proactor_events.py:634 Using proactor: IocpProactor
+------------------------------ Captured log call ------------------------------
+ERROR    sqlalchemy.pool.impl.AsyncAdaptedQueuePool:base.py:376 Exception terminating connection <AdaptedConnection <aiomysql.connection.Connection object at 0x000001E33B8D8590>>
+Traceback (most recent call last):
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\pool\base.py", line 1301, in _checkout
+    result = pool._dialect._do_ping_w_event(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\default.py", line 728, in _do_ping_w_event
+    return self.do_ping(dbapi_connection)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\dialects\mysql\pymysql.py", line 121, in do_ping
+    dbapi_connection.ping(False)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\dialects\mysql\aiomysql.py", line 93, in ping
+    self.await_(self._connection.ping(reconnect))
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py", line 493, in ping
+    await self._execute_command(COMMAND.COM_PING, "")
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py", line 724, in _execute_command
+    self._write_bytes(prelude + sql[:chunk_size - 1])
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py", line 669, in _write_bytes
+    return self._writer.write(data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\asyncio\streams.py", line 346, in write
+    self._transport.write(data)
+  File "C:\Python312\Lib\asyncio\proactor_events.py", line 366, in write
+    self._loop_writing(data=bytes(data))
+  File "C:\Python312\Lib\asyncio\proactor_events.py", line 402, in _loop_writing
+    self._write_fut = self._loop._proactor.send(self._sock, data)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'send'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\pool\base.py", line 372, in _close_connection
+    self._dialect.do_terminate(connection)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\dialects\mysql\aiomysql.py", line 212, in do_terminate
+    dbapi_connection.terminate()
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\dialects\mysql\aiomysql.py", line 106, in terminate
+    self._connection.close()
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py", line 339, in close
+    self._writer.transport.close()
+  File "C:\Python312\Lib\asyncio\proactor_events.py", line 109, in close
+    self._loop.call_soon(self._call_connection_lost, None)
+  File "C:\Python312\Lib\asyncio\base_events.py", line 795, in call_soon
+    self._check_closed()
+  File "C:\Python312\Lib\asyncio\base_events.py", line 541, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+ERROR    app.main:main.py:73 Unhandled exception: 'NoneType' object has no attribute 'send'
+Traceback (most recent call last):
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\middleware\errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\middleware\trustedhost.py", line 36, in __call__
+    await self.app(scope, receive, send)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\middleware\cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\middleware\exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\fastapi\middleware\asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\fastapi\routing.py", line 118, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\fastapi\routing.py", line 104, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\fastapi\routing.py", line 428, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\fastapi\routing.py", line 314, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Hacknight\braille-conversion-tool\backend\app\api\v1\endpoints\auth.py", line 79, in login
+    result = await db.execute(select(User).where(User.email == payload.email))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\ext\asyncio\session.py", line 463, in execute
+    result = await greenlet_spawn(
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 201, in greenlet_spawn
+    result = context.throw(*sys.exc_info())
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\session.py", line 2365, in execute
+    return self._execute_internal(
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\session.py", line 2241, in _execute_internal
+    conn = self._connection_for_bind(bind)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\session.py", line 2110, in _connection_for_bind
+    return trans._connection_for_bind(engine, execution_options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 2, in _connection_for_bind
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\state_changes.py", line 137, in _go
+    ret_value = fn(self, *arg, **kw)
+                ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\session.py", line 1189, in _connection_for_bind
+    conn = bind.connect()
+           ^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\base.py", line 3277, in connect
+    return self._connection_cls(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\base.py", line 143, in __init__
+    self._dbapi_connection = engine.raw_connection()
+                             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\base.py", line 3301, in raw_connection
+    return self.pool.connect()
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\pool\base.py", line 447, in connect
+    return _ConnectionFairy._checkout(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\pool\base.py", line 1363, in _checkout
+    with util.safe_reraise():
+         ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\util\langhelpers.py", line 224, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\pool\base.py", line 1301, in _checkout
+    result = pool._dialect._do_ping_w_event(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\default.py", line 728, in _do_ping_w_event
+    return self.do_ping(dbapi_connection)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\dialects\mysql\pymysql.py", line 121, in do_ping
+    dbapi_connection.ping(False)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\dialects\mysql\aiomysql.py", line 93, in ping
+    self.await_(self._connection.ping(reconnect))
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py", line 493, in ping
+    await self._execute_command(COMMAND.COM_PING, "")
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py", line 724, in _execute_command
+    self._write_bytes(prelude + sql[:chunk_size - 1])
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py", line 669, in _write_bytes
+    return self._writer.write(data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\asyncio\streams.py", line 346, in write
+    self._transport.write(data)
+  File "C:\Python312\Lib\asyncio\proactor_events.py", line 366, in write
+    self._loop_writing(data=bytes(data))
+  File "C:\Python312\Lib\asyncio\proactor_events.py", line 402, in _loop_writing
+    self._write_fut = self._loop._proactor.send(self._sock, data)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'send'
+________________________ test_register_duplicate_email ________________________
+
+self = <sqlalchemy.engine.base.Connection object at 0x000001E33C153590>
+dialect = <sqlalchemy.dialects.mysql.aiomysql.MySQLDialect_aiomysql object at 0x000001E31E00A600>
+context = <sqlalchemy.dialects.mysql.mysqldb.MySQLExecutionContext_mysqldb object at 0x000001E33C10CFB0>
+statement = <sqlalchemy.dialects.mysql.mysqldb.MySQLCompiler_mysqldb object at 0x000001E33BA6E960>
+parameters = [('dup@example.com', 'dupuser', 'Dup User', '$2b$12$glHVbsJ76eJUPH97m1phWOiHExDnwcwNOOv0BzaMPnWzMsxROzEkm', 1, 0)]
+
+    def _exec_single_context(
+        self,
+        dialect: Dialect,
+        context: ExecutionContext,
+        statement: Union[str, Compiled],
+        parameters: Optional[_AnyMultiExecuteParams],
+    ) -> CursorResult[Any]:
+        """continue the _execute_context() method for a single DBAPI
+        cursor.execute() or cursor.executemany() call.
+    
+        """
+        if dialect.bind_typing is BindTyping.SETINPUTSIZES:
+            generic_setinputsizes = context._prepare_set_input_sizes()
+    
+            if generic_setinputsizes:
+                try:
+                    dialect.do_set_input_sizes(
+                        context.cursor, generic_setinputsizes, context
+                    )
+                except BaseException as e:
+                    self._handle_dbapi_exception(
+                        e, str(statement), parameters, None, context
+                    )
+    
+        cursor, str_statement, parameters = (
+            context.cursor,
+            context.statement,
+            context.parameters,
+        )
+    
+        effective_parameters: Optional[_AnyExecuteParams]
+    
+        if not context.executemany:
+            effective_parameters = parameters[0]
+        else:
+            effective_parameters = parameters
+    
+        if self._has_events or self.engine._has_events:
+            for fn in self.dispatch.before_cursor_execute:
+                str_statement, effective_parameters = fn(
+                    self,
+                    cursor,
+                    str_statement,
+                    effective_parameters,
+                    context,
+                    context.executemany,
+                )
+    
+        if self._echo:
+            self._log_info(str_statement)
+    
+            stats = context._get_cache_stats()
+    
+            if not self.engine.hide_parameters:
+                self._log_info(
+                    "[%s] %r",
+                    stats,
+                    sql_util._repr_params(
+                        effective_parameters,
+                        batches=10,
+                        ismulti=context.executemany,
+                    ),
+                )
+            else:
+                self._log_info(
+                    "[%s] [SQL parameters hidden due to hide_parameters=True]",
+                    stats,
+                )
+    
+        evt_handled: bool = False
+        try:
+            if context.execute_style is ExecuteStyle.EXECUTEMANY:
+                effective_parameters = cast(
+                    "_CoreMultiExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_executemany:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_executemany(
+                        cursor,
+                        str_statement,
+                        effective_parameters,
+                        context,
+                    )
+            elif not effective_parameters and context.no_parameters:
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute_no_params:
+                        if fn(cursor, str_statement, context):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_execute_no_params(
+                        cursor, str_statement, context
+                    )
+            else:
+                effective_parameters = cast(
+                    "_CoreSingleExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+>                   self.dialect.do_execute(
+                        cursor, str_statement, effective_parameters, context
+                    )
+
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\base.py:1967: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\default.py:951: in do_execute
+    cursor.execute(statement, parameters)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\connectors\asyncio.py:192: in execute
+    self._adapt_connection._handle_exception(error)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\connectors\asyncio.py:330: in _handle_exception
+    raise error.with_traceback(exc_info[2])
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\connectors\asyncio.py:190: in execute
+    return self.await_(self._execute_async(operation, parameters))
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\util\_concurrency_py3k.py:132: in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\util\_concurrency_py3k.py:196: in greenlet_spawn
+    value = await result
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\connectors\asyncio.py:213: in _execute_async
+    result = await self._cursor.execute(operation, parameters)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\cursors.py:239: in execute
+    await self._query(query)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\cursors.py:457: in _query
+    await conn.query(q)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py:469: in query
+    await self._read_query_result(unbuffered=unbuffered)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py:683: in _read_query_result
+    await result.read()
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py:1164: in read
+    first_packet = await self.connection._read_packet()
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py:652: in _read_packet
+    packet.raise_for_error()
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\pymysql\protocol.py:219: in raise_for_error
+    err.raise_mysql_exception(self._data)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+data = b"\xffT\x05#HY000Field 'is_verified' doesn't have a default value"
+
+    def raise_mysql_exception(data):
+        errno = struct.unpack("<h", data[1:3])[0]
+        # https://dev.mysql.com/doc/dev/mysql-server/latest/page_protocol_basic_err_packet.html
+        # Error packet has optional sqlstate that is 5 bytes and starts with '#'.
+        if data[3] == 0x23:  # '#'
+            # sqlstate = data[4:9].decode()
+            # TODO: Append (sqlstate) in the error message. This will be come in next minor release.
+            errval = data[9:].decode("utf-8", "replace")
+        else:
+            errval = data[3:].decode("utf-8", "replace")
+        errorclass = error_map.get(errno)
+        if errorclass is None:
+            errorclass = InternalError if errno < 1000 else OperationalError
+>       raise errorclass(errno, errval)
+E       pymysql.err.OperationalError: (1364, "Field 'is_verified' doesn't have a default value")
+
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\pymysql\err.py:150: OperationalError
+
+The above exception was the direct cause of the following exception:
+
+    @pytest.mark.asyncio
+    async def test_register_duplicate_email():
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            payload = {
+                "email": "dup@example.com",
+                "username": "dupuser",
+                "full_name": "Dup User",
+                "password": "TestPass1",
+            }
+>           r1 = await client.post("/api/v1/auth/register", json=payload)
+
+app\tests\test_auth.py:58: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py:1859: in post
+    return await self.request(
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py:1540: in request
+    return await self.send(request, auth=auth, follow_redirects=follow_redirects)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py:1629: in send
+    response = await self._send_handling_auth(
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py:1657: in _send_handling_auth
+    response = await self._send_handling_redirects(
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py:1694: in _send_handling_redirects
+    response = await self._send_single_request(request)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py:1730: in _send_single_request
+    response = await transport.handle_async_request(request)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\httpx\_transports\asgi.py:170: in handle_async_request
+    await self.app(scope, receive, send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\fastapi\applications.py:1135: in __call__
+    await super().__call__(scope, receive, send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\applications.py:107: in __call__
+    await self.middleware_stack(scope, receive, send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\middleware\errors.py:186: in __call__
+    raise exc
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\middleware\errors.py:164: in __call__
+    await self.app(scope, receive, _send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\middleware\trustedhost.py:36: in __call__
+    await self.app(scope, receive, send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\middleware\cors.py:85: in __call__
+    await self.app(scope, receive, send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\middleware\exceptions.py:63: in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\_exception_handler.py:53: in wrapped_app
+    raise exc
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\fastapi\middleware\asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\routing.py:716: in __call__
+    await self.middleware_stack(scope, receive, send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\routing.py:736: in app
+    await route.handle(scope, receive, send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\routing.py:290: in handle
+    await self.app(scope, receive, send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\fastapi\routing.py:118: in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\_exception_handler.py:53: in wrapped_app
+    raise exc
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\fastapi\routing.py:104: in app
+    response = await f(request)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\fastapi\routing.py:428: in app
+    raw_response = await run_endpoint_function(
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\fastapi\routing.py:314: in run_endpoint_function
+    return await dependant.call(**values)
+app\api\v1\endpoints\auth.py:65: in register
+    await db.commit()
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\ext\asyncio\session.py:1014: in commit
+    await greenlet_spawn(self.sync_session.commit)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\util\_concurrency_py3k.py:203: in greenlet_spawn
+    result = context.switch(value)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\session.py:2032: in commit
+    trans.commit(_to_root=True)
+<string>:2: in commit
+    ???
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\state_changes.py:137: in _go
+    ret_value = fn(self, *arg, **kw)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\session.py:1313: in commit
+    self._prepare_impl()
+<string>:2: in _prepare_impl
+    ???
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\state_changes.py:137: in _go
+    ret_value = fn(self, *arg, **kw)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\session.py:1288: in _prepare_impl
+    self.session.flush()
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\session.py:4345: in flush
+    self._flush(objects)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\session.py:4480: in _flush
+    with util.safe_reraise():
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\util\langhelpers.py:224: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\session.py:4441: in _flush
+    flush_context.execute()
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\unitofwork.py:466: in execute
+    rec.execute(self)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\unitofwork.py:642: in execute
+    util.preloaded.orm_persistence.save_obj(
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\persistence.py:93: in save_obj
+    _emit_insert_statements(
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\persistence.py:1233: in _emit_insert_statements
+    result = connection.execute(
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\base.py:1419: in execute
+    return meth(
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\sql\elements.py:526: in _execute_on_connection
+    return connection._execute_clauseelement(
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\base.py:1641: in _execute_clauseelement
+    ret = self._execute_context(
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\base.py:1846: in _execute_context
+    return self._exec_single_context(
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\base.py:1986: in _exec_single_context
+    self._handle_dbapi_exception(
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\base.py:2355: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\base.py:1967: in _exec_single_context
+    self.dialect.do_execute(
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\default.py:951: in do_execute
+    cursor.execute(statement, parameters)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\connectors\asyncio.py:192: in execute
+    self._adapt_connection._handle_exception(error)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\connectors\asyncio.py:330: in _handle_exception
+    raise error.with_traceback(exc_info[2])
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\connectors\asyncio.py:190: in execute
+    return self.await_(self._execute_async(operation, parameters))
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\util\_concurrency_py3k.py:132: in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\util\_concurrency_py3k.py:196: in greenlet_spawn
+    value = await result
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\connectors\asyncio.py:213: in _execute_async
+    result = await self._cursor.execute(operation, parameters)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\cursors.py:239: in execute
+    await self._query(query)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\cursors.py:457: in _query
+    await conn.query(q)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py:469: in query
+    await self._read_query_result(unbuffered=unbuffered)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py:683: in _read_query_result
+    await result.read()
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py:1164: in read
+    first_packet = await self.connection._read_packet()
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py:652: in _read_packet
+    packet.raise_for_error()
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\pymysql\protocol.py:219: in raise_for_error
+    err.raise_mysql_exception(self._data)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+data = b"\xffT\x05#HY000Field 'is_verified' doesn't have a default value"
+
+    def raise_mysql_exception(data):
+        errno = struct.unpack("<h", data[1:3])[0]
+        # https://dev.mysql.com/doc/dev/mysql-server/latest/page_protocol_basic_err_packet.html
+        # Error packet has optional sqlstate that is 5 bytes and starts with '#'.
+        if data[3] == 0x23:  # '#'
+            # sqlstate = data[4:9].decode()
+            # TODO: Append (sqlstate) in the error message. This will be come in next minor release.
+            errval = data[9:].decode("utf-8", "replace")
+        else:
+            errval = data[3:].decode("utf-8", "replace")
+        errorclass = error_map.get(errno)
+        if errorclass is None:
+            errorclass = InternalError if errno < 1000 else OperationalError
+>       raise errorclass(errno, errval)
+E       sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (1364, "Field 'is_verified' doesn't have a default value")
+E       [SQL: INSERT INTO users (email, username, full_name, hashed_password, is_active, is_admin) VALUES (%s, %s, %s, %s, %s, %s)]
+E       [parameters: ('dup@example.com', 'dupuser', 'Dup User', '$2b$12$glHVbsJ76eJUPH97m1phWOiHExDnwcwNOOv0BzaMPnWzMsxROzEkm', 1, 0)]
+E       (Background on this error at: https://sqlalche.me/e/20/e3q8)
+
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\pymysql\err.py:150: OperationalError
+----------------------------- Captured log setup ------------------------------
+DEBUG    asyncio:proactor_events.py:634 Using proactor: IocpProactor
+---------------------------- Captured stdout call -----------------------------
+2026-03-07 10:09:12,309 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-03-07 10:09:12,309 INFO sqlalchemy.engine.Engine SELECT users.id, users.email, users.username, users.full_name, users.hashed_password, users.is_active, users.is_admin, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = %s
+2026-03-07 10:09:12,309 INFO sqlalchemy.engine.Engine [cached since 5.228s ago] ('dup@example.com',)
+2026-03-07 10:09:12,309 INFO sqlalchemy.engine.Engine SELECT users.id, users.email, users.username, users.full_name, users.hashed_password, users.is_active, users.is_admin, users.created_at, users.updated_at 
+FROM users 
+WHERE users.username = %s
+2026-03-07 10:09:12,309 INFO sqlalchemy.engine.Engine [cached since 5.221s ago] ('dupuser',)
+2026-03-07 10:09:13,071 INFO sqlalchemy.engine.Engine INSERT INTO users (email, username, full_name, hashed_password, is_active, is_admin) VALUES (%s, %s, %s, %s, %s, %s)
+2026-03-07 10:09:13,071 INFO sqlalchemy.engine.Engine [cached since 5.201s ago] ('dup@example.com', 'dupuser', 'Dup User', '$2b$12$glHVbsJ76eJUPH97m1phWOiHExDnwcwNOOv0BzaMPnWzMsxROzEkm', 1, 0)
+2026-03-07 10:09:13,073 INFO sqlalchemy.engine.Engine ROLLBACK
+------------------------------ Captured log call ------------------------------
+DEBUG    aiomysql:connection.py:951 caching sha2: succeeded by fast path.
+INFO     sqlalchemy.engine.Engine:base.py:2702 BEGIN (implicit)
+INFO     sqlalchemy.engine.Engine:base.py:1846 SELECT users.id, users.email, users.username, users.full_name, users.hashed_password, users.is_active, users.is_admin, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = %s
+INFO     sqlalchemy.engine.Engine:base.py:1846 [cached since 5.228s ago] ('dup@example.com',)
+INFO     sqlalchemy.engine.Engine:base.py:1846 SELECT users.id, users.email, users.username, users.full_name, users.hashed_password, users.is_active, users.is_admin, users.created_at, users.updated_at 
+FROM users 
+WHERE users.username = %s
+INFO     sqlalchemy.engine.Engine:base.py:1846 [cached since 5.221s ago] ('dupuser',)
+INFO     sqlalchemy.engine.Engine:base.py:1846 INSERT INTO users (email, username, full_name, hashed_password, is_active, is_admin) VALUES (%s, %s, %s, %s, %s, %s)
+INFO     sqlalchemy.engine.Engine:base.py:1846 [cached since 5.201s ago] ('dup@example.com', 'dupuser', 'Dup User', '$2b$12$glHVbsJ76eJUPH97m1phWOiHExDnwcwNOOv0BzaMPnWzMsxROzEkm', 1, 0)
+INFO     sqlalchemy.engine.Engine:base.py:2705 ROLLBACK
+ERROR    app.main:main.py:73 Unhandled exception: (pymysql.err.OperationalError) (1364, "Field 'is_verified' doesn't have a default value")
+[SQL: INSERT INTO users (email, username, full_name, hashed_password, is_active, is_admin) VALUES (%s, %s, %s, %s, %s, %s)]
+[parameters: ('dup@example.com', 'dupuser', 'Dup User', '$2b$12$glHVbsJ76eJUPH97m1phWOiHExDnwcwNOOv0BzaMPnWzMsxROzEkm', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+Traceback (most recent call last):
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\connectors\asyncio.py", line 192, in execute
+    self._adapt_connection._handle_exception(error)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\connectors\asyncio.py", line 330, in _handle_exception
+    raise error.with_traceback(exc_info[2])
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\connectors\asyncio.py", line 190, in execute
+    return self.await_(self._execute_async(operation, parameters))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\connectors\asyncio.py", line 213, in _execute_async
+    result = await self._cursor.execute(operation, parameters)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\cursors.py", line 239, in execute
+    await self._query(query)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\cursors.py", line 457, in _query
+    await conn.query(q)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py", line 469, in query
+    await self._read_query_result(unbuffered=unbuffered)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py", line 683, in _read_query_result
+    await result.read()
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py", line 1164, in read
+    first_packet = await self.connection._read_packet()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py", line 652, in _read_packet
+    packet.raise_for_error()
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\pymysql\protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\pymysql\err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+pymysql.err.OperationalError: (1364, "Field 'is_verified' doesn't have a default value")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\middleware\errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\middleware\trustedhost.py", line 36, in __call__
+    await self.app(scope, receive, send)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\middleware\cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\middleware\exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\fastapi\middleware\asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\fastapi\routing.py", line 118, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\fastapi\routing.py", line 104, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\fastapi\routing.py", line 428, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\fastapi\routing.py", line 314, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Hacknight\braille-conversion-tool\backend\app\api\v1\endpoints\auth.py", line 65, in register
+    await db.commit()
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\ext\asyncio\session.py", line 1014, in commit
+    await greenlet_spawn(self.sync_session.commit)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 203, in greenlet_spawn
+    result = context.switch(value)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\session.py", line 2032, in commit
+    trans.commit(_to_root=True)
+  File "<string>", line 2, in commit
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\state_changes.py", line 137, in _go
+    ret_value = fn(self, *arg, **kw)
+                ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\session.py", line 1313, in commit
+    self._prepare_impl()
+  File "<string>", line 2, in _prepare_impl
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\state_changes.py", line 137, in _go
+    ret_value = fn(self, *arg, **kw)
+                ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\session.py", line 1288, in _prepare_impl
+    self.session.flush()
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\session.py", line 4345, in flush
+    self._flush(objects)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\session.py", line 4480, in _flush
+    with util.safe_reraise():
+         ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\util\langhelpers.py", line 224, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\session.py", line 4441, in _flush
+    flush_context.execute()
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\unitofwork.py", line 466, in execute
+    rec.execute(self)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\unitofwork.py", line 642, in execute
+    util.preloaded.orm_persistence.save_obj(
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\persistence.py", line 93, in save_obj
+    _emit_insert_statements(
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\persistence.py", line 1233, in _emit_insert_statements
+    result = connection.execute(
+             ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\base.py", line 1419, in execute
+    return meth(
+           ^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\sql\elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\base.py", line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+          ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\base.py", line 2355, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\connectors\asyncio.py", line 192, in execute
+    self._adapt_connection._handle_exception(error)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\connectors\asyncio.py", line 330, in _handle_exception
+    raise error.with_traceback(exc_info[2])
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\connectors\asyncio.py", line 190, in execute
+    return self.await_(self._execute_async(operation, parameters))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\connectors\asyncio.py", line 213, in _execute_async
+    result = await self._cursor.execute(operation, parameters)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\cursors.py", line 239, in execute
+    await self._query(query)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\cursors.py", line 457, in _query
+    await conn.query(q)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py", line 469, in query
+    await self._read_query_result(unbuffered=unbuffered)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py", line 683, in _read_query_result
+    await result.read()
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py", line 1164, in read
+    first_packet = await self.connection._read_packet()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py", line 652, in _read_packet
+    packet.raise_for_error()
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\pymysql\protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\pymysql\err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (1364, "Field 'is_verified' doesn't have a default value")
+[SQL: INSERT INTO users (email, username, full_name, hashed_password, is_active, is_admin) VALUES (%s, %s, %s, %s, %s, %s)]
+[parameters: ('dup@example.com', 'dupuser', 'Dup User', '$2b$12$glHVbsJ76eJUPH97m1phWOiHExDnwcwNOOv0BzaMPnWzMsxROzEkm', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+_____________________________ test_refresh_token ______________________________
+
+    @pytest.mark.asyncio
+    async def test_refresh_token():
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+>           login = await client.post(
+                "/api/v1/auth/login",
+                json={
+                    "email": "testuser@example.com",
+                    "password": "TestPass1",
+                },
+            )
+
+app\tests\test_auth.py:66: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py:1859: in post
+    return await self.request(
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py:1540: in request
+    return await self.send(request, auth=auth, follow_redirects=follow_redirects)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py:1629: in send
+    response = await self._send_handling_auth(
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py:1657: in _send_handling_auth
+    response = await self._send_handling_redirects(
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py:1694: in _send_handling_redirects
+    response = await self._send_single_request(request)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py:1730: in _send_single_request
+    response = await transport.handle_async_request(request)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\httpx\_transports\asgi.py:170: in handle_async_request
+    await self.app(scope, receive, send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\fastapi\applications.py:1135: in __call__
+    await super().__call__(scope, receive, send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\applications.py:107: in __call__
+    await self.middleware_stack(scope, receive, send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\middleware\errors.py:186: in __call__
+    raise exc
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\middleware\errors.py:164: in __call__
+    await self.app(scope, receive, _send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\middleware\trustedhost.py:36: in __call__
+    await self.app(scope, receive, send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\middleware\cors.py:85: in __call__
+    await self.app(scope, receive, send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\middleware\exceptions.py:63: in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\_exception_handler.py:53: in wrapped_app
+    raise exc
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\fastapi\middleware\asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\routing.py:716: in __call__
+    await self.middleware_stack(scope, receive, send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\routing.py:736: in app
+    await route.handle(scope, receive, send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\routing.py:290: in handle
+    await self.app(scope, receive, send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\fastapi\routing.py:118: in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\_exception_handler.py:53: in wrapped_app
+    raise exc
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\fastapi\routing.py:104: in app
+    response = await f(request)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\fastapi\routing.py:428: in app
+    raw_response = await run_endpoint_function(
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\fastapi\routing.py:314: in run_endpoint_function
+    return await dependant.call(**values)
+app\api\v1\endpoints\auth.py:79: in login
+    result = await db.execute(select(User).where(User.email == payload.email))
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\ext\asyncio\session.py:463: in execute
+    result = await greenlet_spawn(
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\util\_concurrency_py3k.py:201: in greenlet_spawn
+    result = context.throw(*sys.exc_info())
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\session.py:2365: in execute
+    return self._execute_internal(
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\session.py:2241: in _execute_internal
+    conn = self._connection_for_bind(bind)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\session.py:2110: in _connection_for_bind
+    return trans._connection_for_bind(engine, execution_options)
+<string>:2: in _connection_for_bind
+    ???
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\state_changes.py:137: in _go
+    ret_value = fn(self, *arg, **kw)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\session.py:1189: in _connection_for_bind
+    conn = bind.connect()
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\base.py:3277: in connect
+    return self._connection_cls(self)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\base.py:143: in __init__
+    self._dbapi_connection = engine.raw_connection()
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\base.py:3301: in raw_connection
+    return self.pool.connect()
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\pool\base.py:447: in connect
+    return _ConnectionFairy._checkout(self)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\pool\base.py:1363: in _checkout
+    with util.safe_reraise():
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\util\langhelpers.py:224: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\pool\base.py:1301: in _checkout
+    result = pool._dialect._do_ping_w_event(
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\default.py:728: in _do_ping_w_event
+    return self.do_ping(dbapi_connection)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\dialects\mysql\pymysql.py:121: in do_ping
+    dbapi_connection.ping(False)
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\dialects\mysql\aiomysql.py:93: in ping
+    self.await_(self._connection.ping(reconnect))
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\util\_concurrency_py3k.py:132: in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\util\_concurrency_py3k.py:196: in greenlet_spawn
+    value = await result
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py:493: in ping
+    await self._execute_command(COMMAND.COM_PING, "")
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py:724: in _execute_command
+    self._write_bytes(prelude + sql[:chunk_size - 1])
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py:669: in _write_bytes
+    return self._writer.write(data)
+C:\Python312\Lib\asyncio\streams.py:346: in write
+    self._transport.write(data)
+C:\Python312\Lib\asyncio\proactor_events.py:366: in write
+    self._loop_writing(data=bytes(data))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <_ProactorSocketTransport closing fd=4292 read=<_OverlappedFuture cancelled>>
+f = None, data = b'\x01\x00\x00\x00\x0e'
+
+    def _loop_writing(self, f=None, data=None):
+        try:
+            if f is not None and self._write_fut is None and self._closing:
+                # XXX most likely self._force_close() has been called, and
+                # it has set self._write_fut to None.
+                return
+            assert f is self._write_fut
+            self._write_fut = None
+            self._pending_write = 0
+            if f:
+                f.result()
+            if data is None:
+                data = self._buffer
+                self._buffer = None
+            if not data:
+                if self._closing:
+                    self._loop.call_soon(self._call_connection_lost, None)
+                if self._eof_written:
+                    self._sock.shutdown(socket.SHUT_WR)
+                # Now that we've reduced the buffer size, tell the
+                # protocol to resume writing if it was paused.  Note that
+                # we do this last since the callback is called immediately
+                # and it may add more data to the buffer (even causing the
+                # protocol to be paused again).
+                self._maybe_resume_protocol()
+            else:
+>               self._write_fut = self._loop._proactor.send(self._sock, data)
+E               AttributeError: 'NoneType' object has no attribute 'send'
+
+C:\Python312\Lib\asyncio\proactor_events.py:402: AttributeError
+----------------------------- Captured log setup ------------------------------
+DEBUG    asyncio:proactor_events.py:634 Using proactor: IocpProactor
+------------------------------ Captured log call ------------------------------
+ERROR    sqlalchemy.pool.impl.AsyncAdaptedQueuePool:base.py:376 Exception terminating connection <AdaptedConnection <aiomysql.connection.Connection object at 0x000001E33C153FE0>>
+Traceback (most recent call last):
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\pool\base.py", line 1301, in _checkout
+    result = pool._dialect._do_ping_w_event(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\default.py", line 728, in _do_ping_w_event
+    return self.do_ping(dbapi_connection)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\dialects\mysql\pymysql.py", line 121, in do_ping
+    dbapi_connection.ping(False)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\dialects\mysql\aiomysql.py", line 93, in ping
+    self.await_(self._connection.ping(reconnect))
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py", line 493, in ping
+    await self._execute_command(COMMAND.COM_PING, "")
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py", line 724, in _execute_command
+    self._write_bytes(prelude + sql[:chunk_size - 1])
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py", line 669, in _write_bytes
+    return self._writer.write(data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\asyncio\streams.py", line 346, in write
+    self._transport.write(data)
+  File "C:\Python312\Lib\asyncio\proactor_events.py", line 366, in write
+    self._loop_writing(data=bytes(data))
+  File "C:\Python312\Lib\asyncio\proactor_events.py", line 402, in _loop_writing
+    self._write_fut = self._loop._proactor.send(self._sock, data)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'send'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\pool\base.py", line 372, in _close_connection
+    self._dialect.do_terminate(connection)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\dialects\mysql\aiomysql.py", line 212, in do_terminate
+    dbapi_connection.terminate()
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\dialects\mysql\aiomysql.py", line 106, in terminate
+    self._connection.close()
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py", line 339, in close
+    self._writer.transport.close()
+  File "C:\Python312\Lib\asyncio\proactor_events.py", line 109, in close
+    self._loop.call_soon(self._call_connection_lost, None)
+  File "C:\Python312\Lib\asyncio\base_events.py", line 795, in call_soon
+    self._check_closed()
+  File "C:\Python312\Lib\asyncio\base_events.py", line 541, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+ERROR    app.main:main.py:73 Unhandled exception: 'NoneType' object has no attribute 'send'
+Traceback (most recent call last):
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\middleware\errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\middleware\trustedhost.py", line 36, in __call__
+    await self.app(scope, receive, send)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\middleware\cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\middleware\exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\fastapi\middleware\asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\fastapi\routing.py", line 118, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\fastapi\routing.py", line 104, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\fastapi\routing.py", line 428, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\fastapi\routing.py", line 314, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Hacknight\braille-conversion-tool\backend\app\api\v1\endpoints\auth.py", line 79, in login
+    result = await db.execute(select(User).where(User.email == payload.email))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\ext\asyncio\session.py", line 463, in execute
+    result = await greenlet_spawn(
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 201, in greenlet_spawn
+    result = context.throw(*sys.exc_info())
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\session.py", line 2365, in execute
+    return self._execute_internal(
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\session.py", line 2241, in _execute_internal
+    conn = self._connection_for_bind(bind)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\session.py", line 2110, in _connection_for_bind
+    return trans._connection_for_bind(engine, execution_options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 2, in _connection_for_bind
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\state_changes.py", line 137, in _go
+    ret_value = fn(self, *arg, **kw)
+                ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\orm\session.py", line 1189, in _connection_for_bind
+    conn = bind.connect()
+           ^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\base.py", line 3277, in connect
+    return self._connection_cls(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\base.py", line 143, in __init__
+    self._dbapi_connection = engine.raw_connection()
+                             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\base.py", line 3301, in raw_connection
+    return self.pool.connect()
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\pool\base.py", line 447, in connect
+    return _ConnectionFairy._checkout(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\pool\base.py", line 1363, in _checkout
+    with util.safe_reraise():
+         ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\util\langhelpers.py", line 224, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\pool\base.py", line 1301, in _checkout
+    result = pool._dialect._do_ping_w_event(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\engine\default.py", line 728, in _do_ping_w_event
+    return self.do_ping(dbapi_connection)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\dialects\mysql\pymysql.py", line 121, in do_ping
+    dbapi_connection.ping(False)
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\dialects\mysql\aiomysql.py", line 93, in ping
+    self.await_(self._connection.ping(reconnect))
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py", line 493, in ping
+    await self._execute_command(COMMAND.COM_PING, "")
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py", line 724, in _execute_command
+    self._write_bytes(prelude + sql[:chunk_size - 1])
+  File "C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\aiomysql\connection.py", line 669, in _write_bytes
+    return self._writer.write(data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\asyncio\streams.py", line 346, in write
+    self._transport.write(data)
+  File "C:\Python312\Lib\asyncio\proactor_events.py", line 366, in write
+    self._loop_writing(data=bytes(data))
+  File "C:\Python312\Lib\asyncio\proactor_events.py", line 402, in _loop_writing
+    self._write_fut = self._loop._proactor.send(self._sock, data)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'send'
+_____________________ test_ocr_process_bytes_returns_dict _____________________
+
+    @run_once
+    def get_tesseract_version():
+        """
+        Returns Version object of the Tesseract version
+        """
+        try:
+>           output = subprocess.check_output(
+                [tesseract_cmd, '--version'],
+                stderr=subprocess.STDOUT,
+                env=environ,
+                stdin=subprocess.DEVNULL,
+            )
+
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\pytesseract\pytesseract.py:451: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+C:\Python312\Lib\subprocess.py:466: in check_output
+    return run(*popenargs, stdout=PIPE, timeout=timeout, check=True,
+C:\Python312\Lib\subprocess.py:548: in run
+    with Popen(*popenargs, **kwargs) as process:
+C:\Python312\Lib\subprocess.py:1026: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <Popen: returncode: None args: ['C:\\Program Files\\Tesseract-OCR\\tesseract...>
+args = '"C:\\Program Files\\Tesseract-OCR\\tesseract.exe" --version'
+executable = None, preexec_fn = None, close_fds = False, pass_fds = ()
+cwd = None
+env = environ({'ALLUSERSPROFILE': 'C:\\ProgramData', 'APPDATA': 'C:\\Users\\HP\\AppData\\Roaming', 'CHOCOLATEYINSTALL': 'C:\...MP_INIT_AT_FORK': 'FALSE', 'PYTEST_CURRENT_TEST': 'app/tests/test_ocr.py::test_ocr_process_bytes_returns_dict (call)'})
+startupinfo = <subprocess.STARTUPINFO object at 0x000001E33C6AACC0>
+creationflags = 0, shell = False, p2cread = Handle(4532), p2cwrite = -1
+c2pread = 13, c2pwrite = Handle(4368), errread = -1, errwrite = Handle(4520)
+unused_restore_signals = True, unused_gid = None, unused_gids = None
+unused_uid = None, unused_umask = -1, unused_start_new_session = False
+unused_process_group = -1
+
+    def _execute_child(self, args, executable, preexec_fn, close_fds,
+                       pass_fds, cwd, env,
+                       startupinfo, creationflags, shell,
+                       p2cread, p2cwrite,
+                       c2pread, c2pwrite,
+                       errread, errwrite,
+                       unused_restore_signals,
+                       unused_gid, unused_gids, unused_uid,
+                       unused_umask,
+                       unused_start_new_session, unused_process_group):
+        """Execute program (MS Windows version)"""
+    
+        assert not pass_fds, "pass_fds not supported on Windows."
+    
+        if isinstance(args, str):
+            pass
+        elif isinstance(args, bytes):
+            if shell:
+                raise TypeError('bytes args is not allowed on Windows')
+            args = list2cmdline([args])
+        elif isinstance(args, os.PathLike):
+            if shell:
+                raise TypeError('path-like args is not allowed when '
+                                'shell is true')
+            args = list2cmdline([args])
+        else:
+            args = list2cmdline(args)
+    
+        if executable is not None:
+            executable = os.fsdecode(executable)
+    
+        # Process startup details
+        if startupinfo is None:
+            startupinfo = STARTUPINFO()
+        else:
+            # bpo-34044: Copy STARTUPINFO since it is modified above,
+            # so the caller can reuse it multiple times.
+            startupinfo = startupinfo.copy()
+    
+        use_std_handles = -1 not in (p2cread, c2pwrite, errwrite)
+        if use_std_handles:
+            startupinfo.dwFlags |= _winapi.STARTF_USESTDHANDLES
+            startupinfo.hStdInput = p2cread
+            startupinfo.hStdOutput = c2pwrite
+            startupinfo.hStdError = errwrite
+    
+        attribute_list = startupinfo.lpAttributeList
+        have_handle_list = bool(attribute_list and
+                                "handle_list" in attribute_list and
+                                attribute_list["handle_list"])
+    
+        # If we were given an handle_list or need to create one
+        if have_handle_list or (use_std_handles and close_fds):
+            if attribute_list is None:
+                attribute_list = startupinfo.lpAttributeList = {}
+            handle_list = attribute_list["handle_list"] = \
+                list(attribute_list.get("handle_list", []))
+    
+            if use_std_handles:
+                handle_list += [int(p2cread), int(c2pwrite), int(errwrite)]
+    
+            handle_list[:] = self._filter_handle_list(handle_list)
+    
+            if handle_list:
+                if not close_fds:
+                    warnings.warn("startupinfo.lpAttributeList['handle_list'] "
+                                  "overriding close_fds", RuntimeWarning)
+    
+                # When using the handle_list we always request to inherit
+                # handles but the only handles that will be inherited are
+                # the ones in the handle_list
+                close_fds = False
+    
+        if shell:
+            startupinfo.dwFlags |= _winapi.STARTF_USESHOWWINDOW
+            startupinfo.wShowWindow = _winapi.SW_HIDE
+            if not executable:
+                # gh-101283: without a fully-qualified path, before Windows
+                # checks the system directories, it first looks in the
+                # application directory, and also the current directory if
+                # NeedCurrentDirectoryForExePathW(ExeName) is true, so try
+                # to avoid executing unqualified "cmd.exe".
+                comspec = os.environ.get('ComSpec')
+                if not comspec:
+                    system_root = os.environ.get('SystemRoot', '')
+                    comspec = os.path.join(system_root, 'System32', 'cmd.exe')
+                    if not os.path.isabs(comspec):
+                        raise FileNotFoundError('shell not found: neither %ComSpec% nor %SystemRoot% is set')
+                if os.path.isabs(comspec):
+                    executable = comspec
+            else:
+                comspec = executable
+    
+            args = '{} /c "{}"'.format (comspec, args)
+    
+        if cwd is not None:
+            cwd = os.fsdecode(cwd)
+    
+        sys.audit("subprocess.Popen", executable, args, cwd, env)
+    
+        # Start the process
+        try:
+>           hp, ht, pid, tid = _winapi.CreateProcess(executable, args,
+                                     # no special security
+                                     None, None,
+                                     int(not close_fds),
+                                     creationflags,
+                                     env,
+                                     cwd,
+                                     startupinfo)
+E                                    FileNotFoundError: [WinError 2] The system cannot find the file specified
+
+C:\Python312\Lib\subprocess.py:1538: FileNotFoundError
+
+During handling of the above exception, another exception occurred:
+
+ocr_service = <app.services.ocr_service.OCRService object at 0x000001E33C11EBA0>
+
+    @pytest.mark.asyncio
+    async def test_ocr_process_bytes_returns_dict(ocr_service):
+        with patch("app.services.ocr_service.pytesseract.image_to_string", return_value="mock text"):
+            content = _make_white_image_bytes()
+>           result = await ocr_service.process_bytes(content)
+
+app\tests\test_ocr.py:25: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\services\ocr_service.py:70: in process_bytes
+    data = pytesseract.image_to_data(
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\pytesseract\pytesseract.py:590: in image_to_data
+    if get_tesseract_version(cached=True) < TESSERACT_MIN_VERSION:
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\pytesseract\pytesseract.py:163: in wrapper
+    wrapper._result = func(*args, **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    @run_once
+    def get_tesseract_version():
+        """
+        Returns Version object of the Tesseract version
+        """
+        try:
+            output = subprocess.check_output(
+                [tesseract_cmd, '--version'],
+                stderr=subprocess.STDOUT,
+                env=environ,
+                stdin=subprocess.DEVNULL,
+            )
+        except OSError:
+>           raise TesseractNotFoundError()
+E           pytesseract.pytesseract.TesseractNotFoundError: C:\Program Files\Tesseract-OCR\tesseract.exe is not installed or it's not in your PATH. See README file for more information.
+
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\pytesseract\pytesseract.py:458: TesseractNotFoundError
+----------------------------- Captured log setup ------------------------------
+INFO     app.services.ocr_service:ocr_service.py:28 OCRService initialized
+DEBUG    asyncio:proactor_events.py:634 Using proactor: IocpProactor
+------------------------------ Captured log call ------------------------------
+DEBUG    PIL.PngImagePlugin:PngImagePlugin.py:197 STREAM b'IHDR' 16 13
+DEBUG    PIL.PngImagePlugin:PngImagePlugin.py:197 STREAM b'IDAT' 41 282
+____________________________ test_ocr_empty_image _____________________________
+
+    @run_once
+    def get_tesseract_version():
+        """
+        Returns Version object of the Tesseract version
+        """
+        try:
+>           output = subprocess.check_output(
+                [tesseract_cmd, '--version'],
+                stderr=subprocess.STDOUT,
+                env=environ,
+                stdin=subprocess.DEVNULL,
+            )
+
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\pytesseract\pytesseract.py:451: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+C:\Python312\Lib\subprocess.py:466: in check_output
+    return run(*popenargs, stdout=PIPE, timeout=timeout, check=True,
+C:\Python312\Lib\subprocess.py:548: in run
+    with Popen(*popenargs, **kwargs) as process:
+C:\Python312\Lib\subprocess.py:1026: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <Popen: returncode: None args: ['C:\\Program Files\\Tesseract-OCR\\tesseract...>
+args = '"C:\\Program Files\\Tesseract-OCR\\tesseract.exe" --version'
+executable = None, preexec_fn = None, close_fds = False, pass_fds = ()
+cwd = None
+env = environ({'ALLUSERSPROFILE': 'C:\\ProgramData', 'APPDATA': 'C:\\Users\\HP\\AppData\\Roaming', 'CHOCOLATEYINSTALL': 'C:\...OK': 'True', 'KMP_INIT_AT_FORK': 'FALSE', 'PYTEST_CURRENT_TEST': 'app/tests/test_ocr.py::test_ocr_empty_image (call)'})
+startupinfo = <subprocess.STARTUPINFO object at 0x000001E33C6DD2B0>
+creationflags = 0, shell = False, p2cread = Handle(4584), p2cwrite = -1
+c2pread = 13, c2pwrite = Handle(4600), errread = -1, errwrite = Handle(4604)
+unused_restore_signals = True, unused_gid = None, unused_gids = None
+unused_uid = None, unused_umask = -1, unused_start_new_session = False
+unused_process_group = -1
+
+    def _execute_child(self, args, executable, preexec_fn, close_fds,
+                       pass_fds, cwd, env,
+                       startupinfo, creationflags, shell,
+                       p2cread, p2cwrite,
+                       c2pread, c2pwrite,
+                       errread, errwrite,
+                       unused_restore_signals,
+                       unused_gid, unused_gids, unused_uid,
+                       unused_umask,
+                       unused_start_new_session, unused_process_group):
+        """Execute program (MS Windows version)"""
+    
+        assert not pass_fds, "pass_fds not supported on Windows."
+    
+        if isinstance(args, str):
+            pass
+        elif isinstance(args, bytes):
+            if shell:
+                raise TypeError('bytes args is not allowed on Windows')
+            args = list2cmdline([args])
+        elif isinstance(args, os.PathLike):
+            if shell:
+                raise TypeError('path-like args is not allowed when '
+                                'shell is true')
+            args = list2cmdline([args])
+        else:
+            args = list2cmdline(args)
+    
+        if executable is not None:
+            executable = os.fsdecode(executable)
+    
+        # Process startup details
+        if startupinfo is None:
+            startupinfo = STARTUPINFO()
+        else:
+            # bpo-34044: Copy STARTUPINFO since it is modified above,
+            # so the caller can reuse it multiple times.
+            startupinfo = startupinfo.copy()
+    
+        use_std_handles = -1 not in (p2cread, c2pwrite, errwrite)
+        if use_std_handles:
+            startupinfo.dwFlags |= _winapi.STARTF_USESTDHANDLES
+            startupinfo.hStdInput = p2cread
+            startupinfo.hStdOutput = c2pwrite
+            startupinfo.hStdError = errwrite
+    
+        attribute_list = startupinfo.lpAttributeList
+        have_handle_list = bool(attribute_list and
+                                "handle_list" in attribute_list and
+                                attribute_list["handle_list"])
+    
+        # If we were given an handle_list or need to create one
+        if have_handle_list or (use_std_handles and close_fds):
+            if attribute_list is None:
+                attribute_list = startupinfo.lpAttributeList = {}
+            handle_list = attribute_list["handle_list"] = \
+                list(attribute_list.get("handle_list", []))
+    
+            if use_std_handles:
+                handle_list += [int(p2cread), int(c2pwrite), int(errwrite)]
+    
+            handle_list[:] = self._filter_handle_list(handle_list)
+    
+            if handle_list:
+                if not close_fds:
+                    warnings.warn("startupinfo.lpAttributeList['handle_list'] "
+                                  "overriding close_fds", RuntimeWarning)
+    
+                # When using the handle_list we always request to inherit
+                # handles but the only handles that will be inherited are
+                # the ones in the handle_list
+                close_fds = False
+    
+        if shell:
+            startupinfo.dwFlags |= _winapi.STARTF_USESHOWWINDOW
+            startupinfo.wShowWindow = _winapi.SW_HIDE
+            if not executable:
+                # gh-101283: without a fully-qualified path, before Windows
+                # checks the system directories, it first looks in the
+                # application directory, and also the current directory if
+                # NeedCurrentDirectoryForExePathW(ExeName) is true, so try
+                # to avoid executing unqualified "cmd.exe".
+                comspec = os.environ.get('ComSpec')
+                if not comspec:
+                    system_root = os.environ.get('SystemRoot', '')
+                    comspec = os.path.join(system_root, 'System32', 'cmd.exe')
+                    if not os.path.isabs(comspec):
+                        raise FileNotFoundError('shell not found: neither %ComSpec% nor %SystemRoot% is set')
+                if os.path.isabs(comspec):
+                    executable = comspec
+            else:
+                comspec = executable
+    
+            args = '{} /c "{}"'.format (comspec, args)
+    
+        if cwd is not None:
+            cwd = os.fsdecode(cwd)
+    
+        sys.audit("subprocess.Popen", executable, args, cwd, env)
+    
+        # Start the process
+        try:
+>           hp, ht, pid, tid = _winapi.CreateProcess(executable, args,
+                                     # no special security
+                                     None, None,
+                                     int(not close_fds),
+                                     creationflags,
+                                     env,
+                                     cwd,
+                                     startupinfo)
+E                                    FileNotFoundError: [WinError 2] The system cannot find the file specified
+
+C:\Python312\Lib\subprocess.py:1538: FileNotFoundError
+
+During handling of the above exception, another exception occurred:
+
+ocr_service = <app.services.ocr_service.OCRService object at 0x000001E33C6A36B0>
+
+    @pytest.mark.asyncio
+    async def test_ocr_empty_image(ocr_service):
+        with patch("app.services.ocr_service.pytesseract.image_to_string", return_value=""):
+            content = _make_white_image_bytes()
+>           result = await ocr_service.process_bytes(content)
+
+app\tests\test_ocr.py:35: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\services\ocr_service.py:70: in process_bytes
+    data = pytesseract.image_to_data(
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\pytesseract\pytesseract.py:590: in image_to_data
+    if get_tesseract_version(cached=True) < TESSERACT_MIN_VERSION:
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\pytesseract\pytesseract.py:163: in wrapper
+    wrapper._result = func(*args, **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    @run_once
+    def get_tesseract_version():
+        """
+        Returns Version object of the Tesseract version
+        """
+        try:
+            output = subprocess.check_output(
+                [tesseract_cmd, '--version'],
+                stderr=subprocess.STDOUT,
+                env=environ,
+                stdin=subprocess.DEVNULL,
+            )
+        except OSError:
+>           raise TesseractNotFoundError()
+E           pytesseract.pytesseract.TesseractNotFoundError: C:\Program Files\Tesseract-OCR\tesseract.exe is not installed or it's not in your PATH. See README file for more information.
+
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\pytesseract\pytesseract.py:458: TesseractNotFoundError
+----------------------------- Captured log setup ------------------------------
+INFO     app.services.ocr_service:ocr_service.py:28 OCRService initialized
+DEBUG    asyncio:proactor_events.py:634 Using proactor: IocpProactor
+------------------------------ Captured log call ------------------------------
+DEBUG    PIL.PngImagePlugin:PngImagePlugin.py:197 STREAM b'IHDR' 16 13
+DEBUG    PIL.PngImagePlugin:PngImagePlugin.py:197 STREAM b'IDAT' 41 282
+__________________________ test_ocr_confidence_range __________________________
+
+    @run_once
+    def get_tesseract_version():
+        """
+        Returns Version object of the Tesseract version
+        """
+        try:
+>           output = subprocess.check_output(
+                [tesseract_cmd, '--version'],
+                stderr=subprocess.STDOUT,
+                env=environ,
+                stdin=subprocess.DEVNULL,
+            )
+
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\pytesseract\pytesseract.py:451: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+C:\Python312\Lib\subprocess.py:466: in check_output
+    return run(*popenargs, stdout=PIPE, timeout=timeout, check=True,
+C:\Python312\Lib\subprocess.py:548: in run
+    with Popen(*popenargs, **kwargs) as process:
+C:\Python312\Lib\subprocess.py:1026: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <Popen: returncode: None args: ['C:\\Program Files\\Tesseract-OCR\\tesseract...>
+args = '"C:\\Program Files\\Tesseract-OCR\\tesseract.exe" --version'
+executable = None, preexec_fn = None, close_fds = False, pass_fds = ()
+cwd = None
+env = environ({'ALLUSERSPROFILE': 'C:\\ProgramData', 'APPDATA': 'C:\\Users\\HP\\AppData\\Roaming', 'CHOCOLATEYINSTALL': 'C:\...'True', 'KMP_INIT_AT_FORK': 'FALSE', 'PYTEST_CURRENT_TEST': 'app/tests/test_ocr.py::test_ocr_confidence_range (call)'})
+startupinfo = <subprocess.STARTUPINFO object at 0x000001E33B895FA0>
+creationflags = 0, shell = False, p2cread = Handle(4464), p2cwrite = -1
+c2pread = 13, c2pwrite = Handle(2384), errread = -1, errwrite = Handle(4204)
+unused_restore_signals = True, unused_gid = None, unused_gids = None
+unused_uid = None, unused_umask = -1, unused_start_new_session = False
+unused_process_group = -1
+
+    def _execute_child(self, args, executable, preexec_fn, close_fds,
+                       pass_fds, cwd, env,
+                       startupinfo, creationflags, shell,
+                       p2cread, p2cwrite,
+                       c2pread, c2pwrite,
+                       errread, errwrite,
+                       unused_restore_signals,
+                       unused_gid, unused_gids, unused_uid,
+                       unused_umask,
+                       unused_start_new_session, unused_process_group):
+        """Execute program (MS Windows version)"""
+    
+        assert not pass_fds, "pass_fds not supported on Windows."
+    
+        if isinstance(args, str):
+            pass
+        elif isinstance(args, bytes):
+            if shell:
+                raise TypeError('bytes args is not allowed on Windows')
+            args = list2cmdline([args])
+        elif isinstance(args, os.PathLike):
+            if shell:
+                raise TypeError('path-like args is not allowed when '
+                                'shell is true')
+            args = list2cmdline([args])
+        else:
+            args = list2cmdline(args)
+    
+        if executable is not None:
+            executable = os.fsdecode(executable)
+    
+        # Process startup details
+        if startupinfo is None:
+            startupinfo = STARTUPINFO()
+        else:
+            # bpo-34044: Copy STARTUPINFO since it is modified above,
+            # so the caller can reuse it multiple times.
+            startupinfo = startupinfo.copy()
+    
+        use_std_handles = -1 not in (p2cread, c2pwrite, errwrite)
+        if use_std_handles:
+            startupinfo.dwFlags |= _winapi.STARTF_USESTDHANDLES
+            startupinfo.hStdInput = p2cread
+            startupinfo.hStdOutput = c2pwrite
+            startupinfo.hStdError = errwrite
+    
+        attribute_list = startupinfo.lpAttributeList
+        have_handle_list = bool(attribute_list and
+                                "handle_list" in attribute_list and
+                                attribute_list["handle_list"])
+    
+        # If we were given an handle_list or need to create one
+        if have_handle_list or (use_std_handles and close_fds):
+            if attribute_list is None:
+                attribute_list = startupinfo.lpAttributeList = {}
+            handle_list = attribute_list["handle_list"] = \
+                list(attribute_list.get("handle_list", []))
+    
+            if use_std_handles:
+                handle_list += [int(p2cread), int(c2pwrite), int(errwrite)]
+    
+            handle_list[:] = self._filter_handle_list(handle_list)
+    
+            if handle_list:
+                if not close_fds:
+                    warnings.warn("startupinfo.lpAttributeList['handle_list'] "
+                                  "overriding close_fds", RuntimeWarning)
+    
+                # When using the handle_list we always request to inherit
+                # handles but the only handles that will be inherited are
+                # the ones in the handle_list
+                close_fds = False
+    
+        if shell:
+            startupinfo.dwFlags |= _winapi.STARTF_USESHOWWINDOW
+            startupinfo.wShowWindow = _winapi.SW_HIDE
+            if not executable:
+                # gh-101283: without a fully-qualified path, before Windows
+                # checks the system directories, it first looks in the
+                # application directory, and also the current directory if
+                # NeedCurrentDirectoryForExePathW(ExeName) is true, so try
+                # to avoid executing unqualified "cmd.exe".
+                comspec = os.environ.get('ComSpec')
+                if not comspec:
+                    system_root = os.environ.get('SystemRoot', '')
+                    comspec = os.path.join(system_root, 'System32', 'cmd.exe')
+                    if not os.path.isabs(comspec):
+                        raise FileNotFoundError('shell not found: neither %ComSpec% nor %SystemRoot% is set')
+                if os.path.isabs(comspec):
+                    executable = comspec
+            else:
+                comspec = executable
+    
+            args = '{} /c "{}"'.format (comspec, args)
+    
+        if cwd is not None:
+            cwd = os.fsdecode(cwd)
+    
+        sys.audit("subprocess.Popen", executable, args, cwd, env)
+    
+        # Start the process
+        try:
+>           hp, ht, pid, tid = _winapi.CreateProcess(executable, args,
+                                     # no special security
+                                     None, None,
+                                     int(not close_fds),
+                                     creationflags,
+                                     env,
+                                     cwd,
+                                     startupinfo)
+E                                    FileNotFoundError: [WinError 2] The system cannot find the file specified
+
+C:\Python312\Lib\subprocess.py:1538: FileNotFoundError
+
+During handling of the above exception, another exception occurred:
+
+ocr_service = <app.services.ocr_service.OCRService object at 0x000001E33C6A8110>
+
+    @pytest.mark.asyncio
+    async def test_ocr_confidence_range(ocr_service):
+        with patch("app.services.ocr_service.pytesseract.image_to_string", return_value="mock text"):
+            content = _make_white_image_bytes()
+>           result = await ocr_service.process_bytes(content)
+
+app\tests\test_ocr.py:44: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\services\ocr_service.py:70: in process_bytes
+    data = pytesseract.image_to_data(
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\pytesseract\pytesseract.py:590: in image_to_data
+    if get_tesseract_version(cached=True) < TESSERACT_MIN_VERSION:
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\pytesseract\pytesseract.py:163: in wrapper
+    wrapper._result = func(*args, **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    @run_once
+    def get_tesseract_version():
+        """
+        Returns Version object of the Tesseract version
+        """
+        try:
+            output = subprocess.check_output(
+                [tesseract_cmd, '--version'],
+                stderr=subprocess.STDOUT,
+                env=environ,
+                stdin=subprocess.DEVNULL,
+            )
+        except OSError:
+>           raise TesseractNotFoundError()
+E           pytesseract.pytesseract.TesseractNotFoundError: C:\Program Files\Tesseract-OCR\tesseract.exe is not installed or it's not in your PATH. See README file for more information.
+
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\pytesseract\pytesseract.py:458: TesseractNotFoundError
+----------------------------- Captured log setup ------------------------------
+INFO     app.services.ocr_service:ocr_service.py:28 OCRService initialized
+DEBUG    asyncio:proactor_events.py:634 Using proactor: IocpProactor
+------------------------------ Captured log call ------------------------------
+DEBUG    PIL.PngImagePlugin:PngImagePlugin.py:197 STREAM b'IHDR' 16 13
+DEBUG    PIL.PngImagePlugin:PngImagePlugin.py:197 STREAM b'IDAT' 41 282
+============================== warnings summary ===============================
+app\schemas\document.py:6
+  D:\Hacknight\braille-conversion-tool\backend\app\schemas\document.py:6: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class DocumentResponse(BaseModel):
+
+app\schemas\inference.py:21
+  D:\Hacknight\braille-conversion-tool\backend\app\schemas\inference.py:21: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class InferenceResultDetail(BaseModel):
+
+app\schemas\job.py:6
+  D:\Hacknight\braille-conversion-tool\backend\app\schemas\job.py:6: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class JobResponse(BaseModel):
+
+app\schemas\user.py:6
+  D:\Hacknight\braille-conversion-tool\backend\app\schemas\user.py:6: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class UserProfile(BaseModel):
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED app/tests/test_auth.py::test_register_and_login - sqlalchemy.exc.Opera...
+FAILED app/tests/test_auth.py::test_login_wrong_password - AttributeError: 'N...
+FAILED app/tests/test_auth.py::test_register_duplicate_email - sqlalchemy.exc...
+FAILED app/tests/test_auth.py::test_refresh_token - AttributeError: 'NoneType...
+FAILED app/tests/test_ocr.py::test_ocr_process_bytes_returns_dict - pytessera...
+FAILED app/tests/test_ocr.py::test_ocr_empty_image - pytesseract.pytesseract....
+FAILED app/tests/test_ocr.py::test_ocr_confidence_range - pytesseract.pytesse...
+================== 7 failed, 58 passed, 4 warnings in 27.94s ==================

@@ -7,14 +7,20 @@ def correct_perspective(image: np.ndarray) -> np.ndarray:
     Detect document edges and apply perspective transform.
     Uses contour detection to find document boundary.
     """
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) if len(image.shape) == 3 else image
+    gray = (
+        cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        if len(image.shape) == 3
+        else image
+    )
     blurred = cv2.GaussianBlur(gray, (5, 5), 0)
     edges = cv2.Canny(blurred, 50, 150)
 
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
     edges = cv2.dilate(edges, kernel, iterations=2)
 
-    contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours, _ = cv2.findContours(
+        edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+    )
     if not contours:
         return image
 
@@ -31,22 +37,19 @@ def correct_perspective(image: np.ndarray) -> np.ndarray:
     pts = approx.reshape(4, 2).astype(np.float32)
     pts = _order_points(pts)
 
-    (tl, tr, br, bl) = pts
-    maxW = int(max(
-        np.linalg.norm(br - bl),
-        np.linalg.norm(tr - tl)
-    ))
-    maxH = int(max(
-        np.linalg.norm(tr - br),
-        np.linalg.norm(tl - bl)
-    ))
+    tl, tr, br, bl = pts
+    maxW = int(max(np.linalg.norm(br - bl), np.linalg.norm(tr - tl)))
+    maxH = int(max(np.linalg.norm(tr - br), np.linalg.norm(tl - bl)))
 
-    dst = np.array([
-        [0, 0],
-        [maxW - 1, 0],
-        [maxW - 1, maxH - 1],
-        [0, maxH - 1],
-    ], dtype=np.float32)
+    dst = np.array(
+        [
+            [0, 0],
+            [maxW - 1, 0],
+            [maxW - 1, maxH - 1],
+            [0, maxH - 1],
+        ],
+        dtype=np.float32,
+    )
 
     M = cv2.getPerspectiveTransform(pts, dst)
     warped = cv2.warpPerspective(image, M, (maxW, maxH))

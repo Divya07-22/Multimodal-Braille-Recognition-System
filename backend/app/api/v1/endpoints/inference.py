@@ -9,7 +9,11 @@ from app.db.models.document import Document
 from app.db.models.inference_result import InferenceResult
 from app.api.deps import get_current_user
 from app.services.inference_service import InferenceService
-from app.schemas.inference import InferenceRequest, InferenceResponse, InferenceResultDetail
+from app.schemas.inference import (
+    InferenceRequest,
+    InferenceResponse,
+    InferenceResultDetail,
+)
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -61,7 +65,9 @@ async def run_inference(
         )
     except Exception as e:
         logger.error(f"Inference failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Inference failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Inference failed: {str(e)}"
+        )
 
 
 @router.get("/{inference_id}", response_model=InferenceResultDetail)
@@ -78,7 +84,9 @@ async def get_inference_result(
     )
     inf = result.scalar_one_or_none()
     if not inf:
-        raise HTTPException(status_code=404, detail="Inference result not found")
+        raise HTTPException(
+            status_code=404, detail="Inference result not found"
+        )
     return InferenceResultDetail(
         id=inf.id,
         document_id=inf.document_id,

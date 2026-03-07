@@ -31,8 +31,10 @@ class JobService:
         status: Optional[str] = None,
     ) -> Tuple[List[ConversionJob], int]:
         query = select(ConversionJob).where(ConversionJob.user_id == user_id)
-        count_q = select(func.count()).select_from(ConversionJob).where(
-            ConversionJob.user_id == user_id
+        count_q = (
+            select(func.count())
+            .select_from(ConversionJob)
+            .where(ConversionJob.user_id == user_id)
         )
         if status:
             query = query.where(ConversionJob.status == status)
@@ -40,7 +42,9 @@ class JobService:
         total_r = await db.execute(count_q)
         total = total_r.scalar()
         result = await db.execute(
-            query.offset(skip).limit(limit).order_by(ConversionJob.created_at.desc())
+            query.offset(skip)
+            .limit(limit)
+            .order_by(ConversionJob.created_at.desc())
         )
         return result.scalars().all(), total
 

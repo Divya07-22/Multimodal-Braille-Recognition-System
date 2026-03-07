@@ -1,5 +1,4 @@
 import logging
-from datetime import timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -35,7 +34,9 @@ logger = logging.getLogger(__name__)
 
 
 @router.post("/register", response_model=RegisterResponse, status_code=201)
-async def register(payload: RegisterRequest, db: AsyncSession = Depends(get_db)):
+async def register(
+    payload: RegisterRequest, db: AsyncSession = Depends(get_db)
+):
     result = await db.execute(select(User).where(User.email == payload.email))
     if result.scalar_one_or_none():
         raise HTTPException(
@@ -43,7 +44,9 @@ async def register(payload: RegisterRequest, db: AsyncSession = Depends(get_db))
             detail="Email already registered",
         )
 
-    result2 = await db.execute(select(User).where(User.username == payload.username))
+    result2 = await db.execute(
+        select(User).where(User.username == payload.username)
+    )
     if result2.scalar_one_or_none():
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -57,6 +60,7 @@ async def register(payload: RegisterRequest, db: AsyncSession = Depends(get_db))
         hashed_password=hash_password(payload.password),
         is_active=True,
         is_admin=False,
+        is_verified=False,
     )
     db.add(user)
     await db.commit()
@@ -136,7 +140,9 @@ async def change_password(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    if not verify_password(payload.current_password, current_user.hashed_password):
+    if not verify_password(
+        payload.current_password, current_user.hashed_password
+    ):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Current password is incorrect",
@@ -152,12 +158,19 @@ async def logout(current_user: User = Depends(get_current_user)):
     return {"message": "Logged out successfully"}
 
 
+@router.get("/me", response_model=User)
+async def read_users_me(current_user: User = Depends(get_current_user)):
+    """Get the current logged in user from the JWT Token."""
+    return current_user
+
+
 @router.post("/forgot-password", response_model=MessageResponse)
 async def forgot_password(
     payload: ForgotPasswordRequest, db: AsyncSession = Depends(get_db)
 ):
     """Sends a password reset link. Always returns 200 to prevent email enumeration."""
     import datetime
+
     result = await db.execute(select(User).where(User.email == payload.email))
     user = result.scalar_one_or_none()
     if user:
@@ -169,7 +182,9 @@ async def forgot_password(
             f"Password reset requested for {user.email}. "
             f"Reset URL: /reset-password?token={token}"
         )
-    return MessageResponse(message="If this email is registered, a password reset link has been sent.")
+    return MessageResponse(
+        message="If this email is registered, a password reset link has been sent."
+    )
 
 
 @router.post("/reset-password", response_model=MessageResponse)
@@ -187,7 +202,9 @@ async def reset_password(
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
     if not user:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User not found.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="User not found."
+        )
     user.hashed_password = hash_password(payload.new_password)
     await db.commit()
     logger.info(f"Password reset successfully for user {user.email}")
@@ -209,13 +226,17 @@ async def verify_email_endpoint(
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
     if not user:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User not found.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="User not found."
+        )
     if user.is_active:
         return MessageResponse(message="Email already verified.")
     user.is_active = True
     await db.commit()
     logger.info(f"Email verified for user {user.email}")
-    return MessageResponse(message="Email verified successfully. You can now log in.")
+    return MessageResponse(
+        message="Email verified successfully. You can now log in."
+    )
 
 
 @router.post("/resend-verification", response_model=MessageResponse)
@@ -231,4 +252,6 @@ async def resend_verification(
             f"Verification resent for {user.email}. "
             f"Verify URL: /verify-email?token={token}"
         )
-    return MessageResponse(message="If this email is registered and unverified, a new link has been sent.")
+    return MessageResponse(
+        message="If this email is registered and unverified, a new link has been sent."
+    )

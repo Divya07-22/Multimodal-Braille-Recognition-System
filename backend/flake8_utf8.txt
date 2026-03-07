@@ -1,0 +1,89 @@
+﻿app/api\deps.py:1:1: F401 'typing.AsyncGenerator' imported but unused
+app/api\v1\endpoints\auth.py:2:1: F401 'datetime.timedelta' imported but unused
+app/api\v1\endpoints\auth.py:165:80: E501 line too long (87 > 79 characters)
+app/api\v1\endpoints\auth.py:180:80: E501 line too long (83 > 79 characters)
+app/api\v1\endpoints\auth.py:240:80: E501 line too long (89 > 79 characters)
+app/api\v1\endpoints\auth.py:250:80: E501 line too long (87 > 79 characters)
+app/api\v1\endpoints\documents.py:3:1: F401 'typing.List' imported but unused
+app/api\v1\endpoints\export.py:46:80: E501 line too long (85 > 79 characters)
+app/api\v1\endpoints\recognition.py:3:1: F401 'sqlalchemy.ext.asyncio.AsyncSession' imported but unused
+app/api\v1\endpoints\recognition.py:5:1: F401 'app.db.session.get_db' imported but unused
+app/api\v1\endpoints\users.py:2:1: F401 'typing.List' imported but unused
+app/core\config.py:2:1: F401 'typing.Optional' imported but unused
+app/ml\evaluation\evaluate_pipeline.py:7:1: F401 'os' imported but unused
+app/ml\evaluation\evaluate_pipeline.py:10:1: F401 'typing.Tuple' imported but unused
+app/ml\evaluation\evaluate_pipeline.py:12:1: F401 'cv2' imported but unused
+app/ml\evaluation\evaluate_pipeline.py:18:80: E501 line too long (81 > 79 characters)
+app/ml\evaluation\evaluate_pipeline.py:125:80: E501 line too long (82 > 79 characters)
+app/ml\evaluation\metrics_report.py:3:1: F401 'numpy as np' imported but unused
+app/ml\evaluation\tesseract_baseline.py:4:1: F401 'cv2' imported but unused
+app/ml\export\benchmark_latency.py:11:1: F401 'typing.Tuple' imported but unused
+app/ml\export\benchmark_latency.py:16:1: F401 'PIL.Image' imported but unused
+app/ml\export\benchmark_latency.py:373:80: E501 line too long (80 > 79 characters)
+app/ml\export\export_to_onnx.py:6:1: F401 'torch.nn' imported but unused
+app/ml\inference\braille_classifier.py:7:1: F401 'os' imported but unused
+app/ml\inference\braille_classifier.py:41:80: E501 line too long (83 > 79 characters)
+app/ml\inference\braille_detector.py:6:1: F401 'torchvision.models.detection.FasterRCNN_ResNet50_FPN_Weights' imported but unused
+app/ml\inference\cell_classifier_cnn.py:52:80: E501 line too long (93 > 79 characters)
+app/ml\inference\pipeline.py:5:1: F401 'torch' imported but unused
+app/ml\inference\pipeline.py:6:1: F401 'typing.List' imported but unused
+app/ml\inference\pipeline.py:7:1: F401 'PIL.Image' imported but unused
+app/ml\inference\pipeline.py:12:1: F401 'app.ml.preprocessing.resize.resize_image' imported but unused
+app/ml\inference\pipeline.py:25:80: E501 line too long (86 > 79 characters)
+app/ml\inference\pipeline.py:43:9: F841 local variable 'binary' is assigned to but never used
+app/ml\inference\pipeline.py:119:80: E501 line too long (85 > 79 characters)
+app/ml\inference\postprocess.py:20:5: F601 dictionary key 26 repeated with different values
+app/ml\inference\postprocess.py:56:5: F601 dictionary key 26 repeated with different values
+app/ml\nlp\nlp_postprocess.py:46:80: E501 line too long (82 > 79 characters)
+app/ml\nlp\nlp_postprocess.py:86:34: E203 whitespace before ':'
+app/ml\preprocessing\resize.py:38:19: E203 whitespace before ':'
+app/ml\preprocessing\resize.py:38:47: E203 whitespace before ':'
+app/ml\training\callbacks.py:38:80: E501 line too long (97 > 79 characters)
+app/ml\training\callbacks.py:75:80: E501 line too long (94 > 79 characters)
+app/ml\training\dataset.py:8:1: F401 'albumentations.pytorch.ToTensorV2' imported but unused
+app/ml\training\dataset.py:72:38: E203 whitespace before ':'
+app/ml\training\dataset.py:74:46: E203 whitespace before ':'
+app/ml\training\dataset.py:99:80: E501 line too long (96 > 79 characters)
+app/ml\training\generate_synthetic_data.py:12:1: F401 'itertools.product' imported but unused
+app/ml\training\generate_synthetic_data.py:13:1: F401 'typing.Tuple' imported but unused
+app/ml\training\train_cell_classifier.py:2:80: E501 line too long (80 > 79 characters)
+app/ml\training\train_cell_classifier.py:148:80: E501 line too long (114 > 79 characters)
+app/ml\training\train_classifier.py:16:1: F401 'sklearn.metrics.confusion_matrix' imported but unused
+app/ml\training\train_classifier.py:20:1: F401 'app.ml.training.losses.FocalLoss' imported but unused
+app/ml\training\train_classifier.py:26:1: F401 'app.core.config.settings' imported but unused
+app/ml\training\train_classifier.py:86:80: E501 line too long (84 > 79 characters)
+app/ml\training\train_classifier.py:174:80: E501 line too long (92 > 79 characters)
+app/ml\training\train_classifier.py:202:80: E501 line too long (94 > 79 characters)
+app/ml\training\train_classifier.py:203:80: E501 line too long (85 > 79 characters)
+app/ml\training\train_detector.py:7:1: F401 'json' imported but unused
+app/ml\training\train_detector.py:65:80: E501 line too long (88 > 79 characters)
+app/ml\training\train_detector.py:110:5: F841 local variable 'val_loader' is assigned to but never used
+app/ml\training\train_detector.py:147:80: E501 line too long (83 > 79 characters)
+app/ml\training\train_dot_detector.py:17:1: F401 'PIL.Image' imported but unused
+app/ml\training\train_dot_detector.py:132:5: F841 local variable 'test_loader' is assigned to but never used
+app/ml\training\train_dot_detector.py:210:80: E501 line too long (150 > 79 characters)
+app/schemas\document.py:2:1: F401 'typing.Optional' imported but unused
+app/schemas\user.py:3:1: F401 'pydantic.EmailStr' imported but unused
+app/services\braille_service.py:5:1: F401 'app.core.config.settings' imported but unused
+app/services\export_service.py:4:1: F401 'typing.Literal' imported but unused
+app/services\rectification_service.py:4:1: F401 'PIL.Image' imported but unused
+app/services\storage_service.py:3:1: F401 'shutil' imported but unused
+app/tests\test_auth.py:58:9: F841 local variable 'r1' is assigned to but never used
+app/tests\test_braille.py:2:1: F401 'app.services.braille_service.DOT_PATTERN_TO_CHAR' imported but unused
+app/tests\test_losses.py:1:1: F401 'pytest' imported but unused
+app/tests\test_ml_models.py:3:1: F401 'numpy as np' imported but unused
+app/tests\test_recognition_pipeline.py:2:1: F401 'numpy as np' imported but unused
+app/tests\test_recognition_pipeline.py:3:1: F401 'unittest.mock.MagicMock' imported but unused
+app/utils\file_utils.py:8:1: F401 'typing.Tuple' imported but unused
+app/utils\helpers.py:207:18: E203 whitespace before ':'
+app/utils\helpers.py:236:49: E203 whitespace before ':'
+app/utils\image_utils.py:3:1: F401 'typing.Optional' imported but unused
+app/utils\image_utils.py:7:1: F401 'PIL.ImageEnhance' imported but unused
+app/utils\image_utils.py:7:1: F401 'PIL.ImageFilter' imported but unused
+app/utils\image_utils.py:43:21: E203 whitespace before ':'
+app/utils\image_utils.py:43:44: E203 whitespace before ':'
+app/utils\image_utils.py:152:19: E203 whitespace before ':'
+app/utils\image_utils.py:152:30: E203 whitespace before ':'
+app/utils\metrics.py:410:80: E501 line too long (95 > 79 characters)
+app/utils\postprocessing.py:2:1: F401 'typing.Optional' imported but unused
+app/utils\validators.py:36:80: E501 line too long (80 > 79 characters)

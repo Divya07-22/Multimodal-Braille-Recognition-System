@@ -31,7 +31,10 @@ def validate_file_size(size_bytes: int) -> tuple[bool, Optional[str]]:
     if size_bytes <= 0:
         return False, "File is empty"
     if size_bytes > MAX_FILE_SIZE_BYTES:
-        return False, f"File exceeds max size of {MAX_FILE_SIZE_BYTES // (1024*1024)} MB"
+        return (
+            False,
+            f"File exceeds max size of {MAX_FILE_SIZE_BYTES // (1024*1024)} MB",
+        )
     return True, None
 
 
@@ -40,16 +43,26 @@ def validate_image_dimensions(
     height: int,
 ) -> tuple[bool, Optional[str]]:
     if width < MIN_IMAGE_DIMENSION or height < MIN_IMAGE_DIMENSION:
-        return False, f"Image too small. Min dimension: {MIN_IMAGE_DIMENSION}px"
+        return (
+            False,
+            f"Image too small. Min dimension: {MIN_IMAGE_DIMENSION}px",
+        )
     if width > MAX_IMAGE_DIMENSION or height > MAX_IMAGE_DIMENSION:
-        return False, f"Image too large. Max dimension: {MAX_IMAGE_DIMENSION}px"
+        return (
+            False,
+            f"Image too large. Max dimension: {MAX_IMAGE_DIMENSION}px",
+        )
     return True, None
 
 
 def validate_mime_type(mime_type: str) -> tuple[bool, Optional[str]]:
     allowed = {
-        "image/jpeg", "image/png", "image/tiff",
-        "image/bmp", "image/webp", "application/pdf",
+        "image/jpeg",
+        "image/png",
+        "image/tiff",
+        "image/bmp",
+        "image/webp",
+        "application/pdf",
     }
     if mime_type not in allowed:
         return False, f"Unsupported file type: {mime_type}. Allowed: {allowed}"

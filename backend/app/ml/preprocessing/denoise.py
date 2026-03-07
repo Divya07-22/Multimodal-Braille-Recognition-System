@@ -9,7 +9,9 @@ def denoise_image(image: np.ndarray, method: str = "nlmeans") -> np.ndarray:
     """
     if len(image.shape) == 3:
         if method == "nlmeans":
-            denoised = cv2.fastNlMeansDenoisingColored(image, None, 10, 10, 7, 21)
+            denoised = cv2.fastNlMeansDenoisingColored(
+                image, None, 10, 10, 7, 21
+            )
         elif method == "bilateral":
             denoised = cv2.bilateralFilter(image, 9, 75, 75)
         elif method == "gaussian":

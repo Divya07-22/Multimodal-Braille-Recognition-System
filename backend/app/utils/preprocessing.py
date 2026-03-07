@@ -11,17 +11,21 @@ from app.core.config import settings
 logger = logging.getLogger(__name__)
 
 IMAGE_MEAN = [0.485, 0.456, 0.406]
-IMAGE_STD  = [0.229, 0.224, 0.225]
+IMAGE_STD = [0.229, 0.224, 0.225]
 
-_detector_transform = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.Normalize(mean=IMAGE_MEAN, std=IMAGE_STD),
-])
+_detector_transform = transforms.Compose(
+    [
+        transforms.ToTensor(),
+        transforms.Normalize(mean=IMAGE_MEAN, std=IMAGE_STD),
+    ]
+)
 
-_cell_transform = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.Normalize(mean=[0.5], std=[0.5]),
-])
+_cell_transform = transforms.Compose(
+    [
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.5], std=[0.5]),
+    ]
+)
 
 
 def preprocess_for_detector(
@@ -98,7 +102,7 @@ def extract_cell_crops(
     """
     h, w = image.shape[:2]
     crops = []
-    for (x, y, bw, bh) in bboxes:
+    for x, y, bw, bh in bboxes:
         x1 = max(0, x - padding)
         y1 = max(0, y - padding)
         x2 = min(w, x + bw + padding)

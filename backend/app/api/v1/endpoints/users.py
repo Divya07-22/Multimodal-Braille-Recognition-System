@@ -1,5 +1,4 @@
 import logging
-from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
@@ -36,7 +35,9 @@ async def update_my_profile(
         current_user.full_name = payload.full_name
     if payload.username is not None:
         result = await db.execute(
-            select(User).where(User.username == payload.username, User.id != current_user.id)
+            select(User).where(
+                User.username == payload.username, User.id != current_user.id
+            )
         )
         if result.scalar_one_or_none():
             raise HTTPException(

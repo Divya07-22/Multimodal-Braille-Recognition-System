@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 import numpy as np
 
@@ -7,19 +7,70 @@ logger = logging.getLogger(__name__)
 
 # Index -> braille character mapping (64 cells, grade 1)
 IDX_TO_CHAR: Dict[int, str] = {
-    0: " ", 1: "a", 2: "b", 3: "c", 4: "d", 5: "e",
-    6: "f", 7: "g", 8: "h", 9: "i", 10: "j",
-    11: "k", 12: "l", 13: "m", 14: "n", 15: "o",
-    16: "p", 17: "q", 18: "r", 19: "s", 20: "t",
-    21: "u", 22: "v", 23: "w", 24: "x", 25: "y",
-    26: "z", 27: "0", 28: "1", 29: "2", 30: "3",
-    31: "4", 32: "5", 33: "6", 34: "7", 35: "8",
-    36: "9", 37: ".", 38: ",", 39: "!", 40: "?",
-    41: ";", 42: ":", 43: "'", 44: '"', 45: "-",
-    46: "(", 47: ")", 48: "/", 49: "@", 50: "#",
-    51: "$", 52: "%", 53: "&", 54: "*", 55: "+",
-    56: "=", 57: "<", 58: ">", 59: "[", 60: "]",
-    61: "_", 62: "^", 63: "~",
+    0: " ",
+    1: "a",
+    2: "b",
+    3: "c",
+    4: "d",
+    5: "e",
+    6: "f",
+    7: "g",
+    8: "h",
+    9: "i",
+    10: "j",
+    11: "k",
+    12: "l",
+    13: "m",
+    14: "n",
+    15: "o",
+    16: "p",
+    17: "q",
+    18: "r",
+    19: "s",
+    20: "t",
+    21: "u",
+    22: "v",
+    23: "w",
+    24: "x",
+    25: "y",
+    26: "z",
+    27: "0",
+    28: "1",
+    29: "2",
+    30: "3",
+    31: "4",
+    32: "5",
+    33: "6",
+    34: "7",
+    35: "8",
+    36: "9",
+    37: ".",
+    38: ",",
+    39: "!",
+    40: "?",
+    41: ";",
+    42: ":",
+    43: "'",
+    44: '"',
+    45: "-",
+    46: "(",
+    47: ")",
+    48: "/",
+    49: "@",
+    50: "#",
+    51: "$",
+    52: "%",
+    53: "&",
+    54: "*",
+    55: "+",
+    56: "=",
+    57: "<",
+    58: ">",
+    59: "[",
+    60: "]",
+    61: "_",
+    62: "^",
+    63: "~",
 }
 
 
@@ -81,7 +132,9 @@ def nms_bboxes(
     if not bboxes:
         return []
 
-    boxes = np.array([[x, y, x + w, y + h] for (x, y, w, h) in bboxes], dtype=np.float32)
+    boxes = np.array(
+        [[x, y, x + w, y + h] for (x, y, w, h) in bboxes], dtype=np.float32
+    )
     scores_arr = np.array(scores, dtype=np.float32)
 
     x1, y1, x2, y2 = boxes[:, 0], boxes[:, 1], boxes[:, 2], boxes[:, 3]
@@ -115,8 +168,11 @@ def mask_to_bboxes(
 ) -> List[Tuple[int, int, int, int]]:
     """Convert probability mask to bounding boxes."""
     import cv2
+
     binary = (mask > threshold).astype(np.uint8) * 255
-    contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours, _ = cv2.findContours(
+        binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+    )
     bboxes = []
     for cnt in contours:
         area = cv2.contourArea(cnt)
@@ -129,6 +185,7 @@ def mask_to_bboxes(
 def clean_text(text: str) -> str:
     """Post-process recognized text: strip extra spaces, fix punctuation."""
     import re
+
     text = re.sub(r" {2,}", " ", text)
     text = text.strip()
     return text
@@ -149,11 +206,16 @@ def build_cell_metadata(
     cells = []
     for i, (bbox, idx, conf) in enumerate(zip(bboxes, indices, confidences)):
         x, y, w, h = bbox
-        cells.append({
-            "cell_id": i,
-            "x": x, "y": y, "w": w, "h": h,
-            "class_index": idx,
-            "character": IDX_TO_CHAR.get(idx, "?"),
-            "confidence": round(conf, 4),
-        })
+        cells.append(
+            {
+                "cell_id": i,
+                "x": x,
+                "y": y,
+                "w": w,
+                "h": h,
+                "class_index": idx,
+                "character": IDX_TO_CHAR.get(idx, "?"),
+                "confidence": round(conf, 4),
+            }
+        )
     return cells

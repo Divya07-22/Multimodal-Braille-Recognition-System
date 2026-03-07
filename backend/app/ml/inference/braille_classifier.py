@@ -4,9 +4,11 @@ import torch
 import torch.nn.functional as F
 import cv2
 from typing import List, Dict, Any
-import os
 
-from app.ml.inference.model_loader import load_pytorch_classifier, load_onnx_classifier
+from app.ml.inference.model_loader import (
+    load_pytorch_classifier,
+    load_onnx_classifier,
+)
 from app.ml.preprocessing.resize import resize_cell
 from app.core.config import settings
 from app.ml.inference.postprocess import PATTERN_TO_CHAR
@@ -22,7 +24,9 @@ class BrailleClassifier:
 
     def __init__(self, use_onnx: bool = False):
         self.use_onnx = use_onnx
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device(
+            "cuda" if torch.cuda.is_available() else "cpu"
+        )
         self.model = None
         self.onnx_session = None
         self._load()
@@ -32,7 +36,9 @@ class BrailleClassifier:
             try:
                 self.onnx_session = load_onnx_classifier()
             except Exception as e:
-                logger.warning(f"ONNX classifier not available: {e}, falling back to PyTorch.")
+                logger.warning(
+                    f"ONNX classifier not available: {e}, falling back to PyTorch."
+                )
                 self.model = load_pytorch_classifier(self.device)
         else:
             self.model = load_pytorch_classifier(self.device)
@@ -52,7 +58,9 @@ class BrailleClassifier:
             batch.append(img.transpose(2, 0, 1))
         return np.stack(batch, axis=0)
 
-    def classify_batch(self, cell_images: List[np.ndarray]) -> List[Dict[str, Any]]:
+    def classify_batch(
+        self, cell_images: List[np.ndarray]
+    ) -> List[Dict[str, Any]]:
         if not cell_images:
             return []
 
@@ -73,12 +81,14 @@ class BrailleClassifier:
             pattern = int(np.argmax(prob_row))
             confidence = float(prob_row[pattern])
             character = PATTERN_TO_CHAR.get(pattern, "?")
-            results.append({
-                "pattern": pattern,
-                "confidence": confidence,
-                "character": character,
-                "probabilities": prob_row.tolist(),
-            })
+            results.append(
+                {
+                    "pattern": pattern,
+                    "confidence": confidence,
+                    "character": character,
+                    "probabilities": prob_row.tolist(),
+                }
+            )
 
         return results
 

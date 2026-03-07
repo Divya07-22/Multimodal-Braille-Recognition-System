@@ -38,7 +38,20 @@ interface RegisterData {
   full_name?: string
 }
 
-type ApiError = { response?: { data?: { detail?: string }; status?: number } }
+type ApiError = {
+  response?: { data?: { detail?: string | any[] }; status?: number },
+  message?: string
+}
+
+const parseApiError = (err: unknown, defaultMsg: string): string => {
+  const apiErr = err as ApiError;
+  const detail = apiErr?.response?.data?.detail;
+  if (typeof detail === 'string') return detail;
+  if (Array.isArray(detail) && detail.length > 0) {
+    return detail[0].msg?.replace(/^Value error, /, '') || defaultMsg;
+  }
+  return apiErr?.message || defaultMsg;
+}
 
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -58,9 +71,7 @@ export const useAuthStore = create<AuthState>()(
           set({ token: access_token, isAuthenticated: true, isLoading: false })
           await get().fetchProfile()
         } catch (err: unknown) {
-          const message =
-            (err as ApiError)?.response?.data?.detail ||
-            'Login failed. Please try again.'
+          const message = parseApiError(err, 'Login failed. Please try again.')
           set({ error: message, isLoading: false })
           throw new Error(message)
         }
@@ -72,9 +83,7 @@ export const useAuthStore = create<AuthState>()(
           await api.post('/auth/register', data)
           await get().login(data.email, data.password)
         } catch (err: unknown) {
-          const message =
-            (err as ApiError)?.response?.data?.detail ||
-            'Registration failed. Please try again.'
+          const message = parseApiError(err, 'Registration failed. Please try again.')
           set({ error: message, isLoading: false })
           throw new Error(message)
         }
@@ -134,9 +143,7 @@ export const useAuthStore = create<AuthState>()(
           const response = await api.post('/auth/forgot-password', { email })
           return response.data?.message || 'Password reset email sent.'
         } catch (err: unknown) {
-          const message =
-            (err as ApiError)?.response?.data?.detail ||
-            'Failed to send reset email. Please try again.'
+          const message = parseApiError(err, 'Failed to send reset email. Please try again.')
           set({ error: message })
           throw new Error(message)
         } finally {
@@ -157,9 +164,7 @@ export const useAuthStore = create<AuthState>()(
           })
           return response.data?.message || 'Password reset successfully.'
         } catch (err: unknown) {
-          const message =
-            (err as ApiError)?.response?.data?.detail ||
-            'Failed to reset password. The link may have expired.'
+          const message = parseApiError(err, 'Failed to reset password. The link may have expired.')
           set({ error: message })
           throw new Error(message)
         } finally {
@@ -177,9 +182,7 @@ export const useAuthStore = create<AuthState>()(
           const response = await api.post('/auth/verify-email', { token })
           return response.data?.message || 'Email verified successfully.'
         } catch (err: unknown) {
-          const message =
-            (err as ApiError)?.response?.data?.detail ||
-            'Email verification failed. The link may have expired.'
+          const message = parseApiError(err, 'Email verification failed. The link may have expired.')
           set({ error: message })
           throw new Error(message)
         } finally {
@@ -197,9 +200,7 @@ export const useAuthStore = create<AuthState>()(
           const response = await api.post('/auth/resend-verification', { email })
           return response.data?.message || 'Verification email sent.'
         } catch (err: unknown) {
-          const message =
-            (err as ApiError)?.response?.data?.detail ||
-            'Failed to resend verification email.'
+          const message = parseApiError(err, 'Failed to resend verification email.')
           set({ error: message })
           throw new Error(message)
         } finally {

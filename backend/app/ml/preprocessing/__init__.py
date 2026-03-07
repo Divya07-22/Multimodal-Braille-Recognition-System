@@ -1,4 +1,5 @@
 """Preprocessing pipeline for braille images."""
+
 from app.ml.preprocessing.binarize import binarize_image
 from app.ml.preprocessing.denoise import denoise_image
 from app.ml.preprocessing.perspective import correct_perspective

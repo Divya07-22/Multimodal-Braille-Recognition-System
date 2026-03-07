@@ -69,7 +69,9 @@ async def translate_braille_unicode(
     current_user: User = Depends(get_current_user),
 ):
     try:
-        result = braille_service.translate_braille_to_text(payload.braille_text)
+        result = braille_service.translate_braille_to_text(
+            payload.braille_text
+        )
         return BrailleTranslateResponse(
             original=payload.braille_text,
             translated=result["text"],
@@ -85,7 +87,13 @@ async def translate_braille_unicode(
 async def get_supported_grades():
     return {
         "grades": [
-            {"grade": 1, "description": "Uncontracted Braille - letter by letter"},
-            {"grade": 2, "description": "Contracted Braille - uses contractions"},
+            {
+                "grade": 1,
+                "description": "Uncontracted Braille - letter by letter",
+            },
+            {
+                "grade": 2,
+                "description": "Contracted Braille - uses contractions",
+            },
         ]
     }

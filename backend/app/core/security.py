@@ -12,7 +12,8 @@ def create_access_token(
     expires_delta: Optional[timedelta] = None,
 ) -> str:
     expire = datetime.utcnow() + (
-        expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        expires_delta
+        or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     )
     payload = {
         "exp": expire,
@@ -20,18 +21,24 @@ def create_access_token(
         "sub": str(subject),
         "type": "access",
     }
-    return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+    return jwt.encode(
+        payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM
+    )
 
 
 def create_refresh_token(subject: Union[str, int]) -> str:
-    expire = datetime.utcnow() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    expire = datetime.utcnow() + timedelta(
+        days=settings.REFRESH_TOKEN_EXPIRE_DAYS
+    )
     payload = {
         "exp": expire,
         "iat": datetime.utcnow(),
         "sub": str(subject),
         "type": "refresh",
     }
-    return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+    return jwt.encode(
+        payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM
+    )
 
 
 def verify_token(token: str) -> Optional[dict]:

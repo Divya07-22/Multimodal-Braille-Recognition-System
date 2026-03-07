@@ -38,12 +38,14 @@ def binarize_image(image: np.ndarray, method: str = "adaptive") -> np.ndarray:
     return binary
 
 
-def _sauvola_threshold(gray: np.ndarray, window_size: int = 25, k: float = 0.2) -> np.ndarray:
+def _sauvola_threshold(
+    gray: np.ndarray, window_size: int = 25, k: float = 0.2
+) -> np.ndarray:
     """Sauvola local thresholding for uneven illumination."""
     gray_f = gray.astype(np.float64)
     mean = cv2.boxFilter(gray_f, -1, (window_size, window_size))
-    mean_sq = cv2.boxFilter(gray_f ** 2, -1, (window_size, window_size))
-    std = np.sqrt(np.maximum(mean_sq - mean ** 2, 0))
+    mean_sq = cv2.boxFilter(gray_f**2, -1, (window_size, window_size))
+    std = np.sqrt(np.maximum(mean_sq - mean**2, 0))
     threshold = mean * (1 + k * (std / 128.0 - 1))
     binary = np.where(gray_f < threshold, 255, 0).astype(np.uint8)
     return binary

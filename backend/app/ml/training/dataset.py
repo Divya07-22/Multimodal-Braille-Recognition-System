@@ -5,9 +5,11 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 from PIL import Image
 import albumentations as A
-from albumentations.pytorch import ToTensorV2
 from typing import Tuple, List, Dict, Optional
-from app.ml.training.augmentations import get_train_transforms, get_val_transforms
+from app.ml.training.augmentations import (
+    get_train_transforms,
+    get_val_transforms,
+)
 
 
 class BrailleCellDataset(Dataset):
@@ -40,10 +42,13 @@ class BrailleCellDataset(Dataset):
         self._load_samples(val_split, test_split, seed)
 
     def _load_samples(self, val_split: float, test_split: float, seed: int):
-        classes = sorted([
-            d for d in os.listdir(self.root_dir)
-            if os.path.isdir(os.path.join(self.root_dir, d))
-        ])
+        classes = sorted(
+            [
+                d
+                for d in os.listdir(self.root_dir)
+                if os.path.isdir(os.path.join(self.root_dir, d))
+            ]
+        )
         self.class_to_idx = {c: i for i, c in enumerate(classes)}
 
         all_samples = []
@@ -51,7 +56,9 @@ class BrailleCellDataset(Dataset):
             cls_dir = os.path.join(self.root_dir, cls)
             for fname in os.listdir(cls_dir):
                 if fname.lower().endswith((".png", ".jpg", ".jpeg", ".bmp")):
-                    all_samples.append((os.path.join(cls_dir, fname), self.class_to_idx[cls]))
+                    all_samples.append(
+                        (os.path.join(cls_dir, fname), self.class_to_idx[cls])
+                    )
 
         rng = np.random.RandomState(seed)
         indices = rng.permutation(len(all_samples))
@@ -61,9 +68,9 @@ class BrailleCellDataset(Dataset):
         if self.split == "test":
             selected = indices[:n_test]
         elif self.split == "val":
-            selected = indices[n_test: n_test + n_val]
+            selected = indices[n_test : n_test + n_val]
         else:
-            selected = indices[n_test + n_val:]
+            selected = indices[n_test + n_val :]
 
         self.samples = [all_samples[i] for i in selected]
 
@@ -102,10 +109,13 @@ class BrailleDotDetectorDataset(Dataset):
         self.targets_dir = targets_dir
         self.transform = transform
         self.image_size = image_size
-        self.image_files = sorted([
-            f for f in os.listdir(images_dir)
-            if f.lower().endswith((".png", ".jpg", ".jpeg"))
-        ])
+        self.image_files = sorted(
+            [
+                f
+                for f in os.listdir(images_dir)
+                if f.lower().endswith((".png", ".jpg", ".jpeg"))
+            ]
+        )
 
     def __len__(self) -> int:
         return len(self.image_files)
@@ -132,15 +142,26 @@ class BrailleDotDetectorDataset(Dataset):
                     class_labels=labels.tolist(),
                 )
                 image = transformed["image"]
-                boxes = np.array(transformed["bboxes"], dtype=np.float32) if transformed["bboxes"] else np.zeros((0, 4), dtype=np.float32)
+                boxes = (
+                    np.array(transformed["bboxes"], dtype=np.float32)
+                    if transformed["bboxes"]
+                    else np.zeros((0, 4), dtype=np.float32)
+                )
                 labels = np.array(transformed["class_labels"], dtype=np.int64)
             else:
-                transformed = self.transform(image=image, bboxes=[], class_labels=[])
+                transformed = self.transform(
+                    image=image, bboxes=[], class_labels=[]
+                )
                 image = transformed["image"]
 
         target = {
-            "boxes": torch.as_tensor(boxes if len(boxes) > 0 else np.zeros((0, 4)), dtype=torch.float32),
-            "labels": torch.as_tensor(labels if len(labels) > 0 else np.zeros(0), dtype=torch.int64),
+            "boxes": torch.as_tensor(
+                boxes if len(boxes) > 0 else np.zeros((0, 4)),
+                dtype=torch.float32,
+            ),
+            "labels": torch.as_tensor(
+                labels if len(labels) > 0 else np.zeros(0), dtype=torch.int64
+            ),
         }
         return image, target
 
@@ -154,15 +175,35 @@ def get_classification_dataloaders(
     train_transform = get_train_transforms(image_size)
     val_transform = get_val_transforms(image_size)
 
-    train_ds = BrailleCellDataset(root_dir, transform=train_transform, split="train")
+    train_ds = BrailleCellDataset(
+        root_dir, transform=train_transform, split="train"
+    )
     val_ds = BrailleCellDataset(root_dir, transform=val_transform, split="val")
-    test_ds = BrailleCellDataset(root_dir, transform=val_transform, split="test")
+    test_ds = BrailleCellDataset(
+        root_dir, transform=val_transform, split="test"
+    )
 
     return {
-        "train": DataLoader(train_ds, batch_size=batch_size, shuffle=True,
-                            num_workers=num_workers, pin_memory=True, drop_last=True),
-        "val": DataLoader(val_ds, batch_size=batch_size, shuffle=False,
-                          num_workers=num_workers, pin_memory=True),
-        "test": DataLoader(test_ds, batch_size=batch_size, shuffle=False,
-                           num_workers=num_workers, pin_memory=True),
+        "train": DataLoader(
+            train_ds,
+            batch_size=batch_size,
+            shuffle=True,
+            num_workers=num_workers,
+            pin_memory=True,
+            drop_last=True,
+        ),
+        "val": DataLoader(
+            val_ds,
+            batch_size=batch_size,
+            shuffle=False,
+            num_workers=num_workers,
+            pin_memory=True,
+        ),
+        "test": DataLoader(
+            test_ds,
+            batch_size=batch_size,
+            shuffle=False,
+            num_workers=num_workers,
+            pin_memory=True,
+        ),
     }

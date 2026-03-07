@@ -1,8 +1,11 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
+
+if TYPE_CHECKING:
+    from app.db.models.user import User
 
 
 class AuditLog(Base):
@@ -10,16 +13,29 @@ class AuditLog(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     user_id: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+        Integer,
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
     )
-    action: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
-    resource_type: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    action: Mapped[str] = mapped_column(
+        String(100), nullable=False, index=True
+    )
+    resource_type: Mapped[Optional[str]] = mapped_column(
+        String(100), nullable=True
+    )
     resource_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     details: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    ip_address: Mapped[Optional[str]] = mapped_column(String(45), nullable=True)
-    user_agent: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    ip_address: Mapped[Optional[str]] = mapped_column(
+        String(45), nullable=True
+    )
+    user_agent: Mapped[Optional[str]] = mapped_column(
+        String(500), nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
 
-    user: Mapped[Optional["User"]] = relationship("User", back_populates="audit_logs")
+    user: Mapped[Optional["User"]] = relationship(
+        "User", back_populates="audit_logs"
+    )

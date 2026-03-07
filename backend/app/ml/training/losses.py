@@ -3,19 +3,37 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
+class DiceLoss(nn.Module):
+    def __init__(self, smooth: float = 1.0):
+        super().__init__()
+        self.smooth = smooth
+
+    def forward(
+        self, probs: torch.Tensor, targets: torch.Tensor
+    ) -> torch.Tensor:
+        intersection = (probs * targets).sum()
+        union = probs.sum() + targets.sum()
+        dice = (2.0 * intersection + self.smooth) / (union + self.smooth)
+        return 1.0 - dice
+
+
 class FocalLoss(nn.Module):
     """
     Focal Loss for dealing with class imbalance in braille classification.
     FL(pt) = -alpha_t * (1 - pt)^gamma * log(pt)
     """
 
-    def __init__(self, alpha: float = 0.25, gamma: float = 2.0, reduction: str = "mean"):
+    def __init__(
+        self, alpha: float = 0.25, gamma: float = 2.0, reduction: str = "mean"
+    ):
         super().__init__()
         self.alpha = alpha
         self.gamma = gamma
         self.reduction = reduction
 
-    def forward(self, logits: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
+    def forward(
+        self, logits: torch.Tensor, targets: torch.Tensor
+    ) -> torch.Tensor:
         ce_loss = F.cross_entropy(logits, targets, reduction="none")
         pt = torch.exp(-ce_loss)
         focal_loss = self.alpha * (1 - pt) ** self.gamma * ce_loss
@@ -55,7 +73,12 @@ class DotDetectionLoss(nn.Module):
     = BCE loss for objectness + Smooth L1 for bbox regression + Focal for class
     """
 
-    def __init__(self, lambda_obj: float = 1.0, lambda_bbox: float = 5.0, lambda_cls: float = 1.0):
+    def __init__(
+        self,
+        lambda_obj: float = 1.0,
+        lambda_bbox: float = 5.0,
+        lambda_cls: float = 1.0,
+    ):
         super().__init__()
         self.lambda_obj = lambda_obj
         self.lambda_bbox = lambda_bbox
@@ -101,6 +124,6 @@ class ContrastiveLoss(nn.Module):
         label: torch.Tensor,
     ) -> torch.Tensor:
         dist = F.pairwise_distance(emb1, emb2)
-        pos_loss = label * dist ** 2
+        pos_loss = label * dist**2
         neg_loss = (1 - label) * F.relu(self.margin - dist) ** 2
         return (pos_loss + neg_loss).mean()

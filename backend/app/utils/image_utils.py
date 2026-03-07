@@ -1,10 +1,10 @@
 import io
 import logging
-from typing import Optional, Tuple
+from typing import Tuple
 
 import cv2
 import numpy as np
-from PIL import Image, ImageEnhance, ImageFilter
+from PIL import Image
 
 logger = logging.getLogger(__name__)
 
@@ -34,11 +34,13 @@ def resize_image(
         scale = min(tw / w, th / h)
         new_w = int(w * scale)
         new_h = int(h * scale)
-        resized = cv2.resize(image, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
+        resized = cv2.resize(
+            image, (new_w, new_h), interpolation=cv2.INTER_LINEAR
+        )
         canvas = np.full((th, tw, 3), 255, dtype=np.uint8)
         y_off = (th - new_h) // 2
         x_off = (tw - new_w) // 2
-        canvas[y_off:y_off + new_h, x_off:x_off + new_w] = resized
+        canvas[y_off : y_off + new_h, x_off : x_off + new_w] = resized
         return canvas
     else:
         return cv2.resize(image, (tw, th), interpolation=cv2.INTER_LINEAR)
@@ -74,13 +76,17 @@ def binarize(
     gray = to_grayscale(image) if len(image.shape) == 3 else image
 
     if method == "otsu":
-        _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        _, binary = cv2.threshold(
+            gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU
+        )
     elif method == "adaptive":
         binary = cv2.adaptiveThreshold(
-            gray, 255,
+            gray,
+            255,
             cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
             cv2.THRESH_BINARY,
-            block_size, C,
+            block_size,
+            C,
         )
     elif method == "fixed":
         _, binary = cv2.threshold(gray, 128, 255, cv2.THRESH_BINARY)
@@ -104,7 +110,9 @@ def deskew(image: np.ndarray) -> np.ndarray:
     h, w = image.shape[:2]
     M = cv2.getRotationMatrix2D((w // 2, h // 2), angle, 1.0)
     rotated = cv2.warpAffine(
-        image, M, (w, h),
+        image,
+        M,
+        (w, h),
         flags=cv2.INTER_CUBIC,
         borderMode=cv2.BORDER_REPLICATE,
     )
@@ -125,7 +133,9 @@ def enhance_contrast(image: np.ndarray, clip_limit: float = 2.0) -> np.ndarray:
     return clahe.apply(gray)
 
 
-def detect_edges(image: np.ndarray, low: int = 50, high: int = 150) -> np.ndarray:
+def detect_edges(
+    image: np.ndarray, low: int = 50, high: int = 150
+) -> np.ndarray:
     """Canny edge detection."""
     gray = to_grayscale(image) if len(image.shape) == 3 else image
     return cv2.Canny(gray, low, high)
@@ -133,10 +143,13 @@ def detect_edges(image: np.ndarray, low: int = 50, high: int = 150) -> np.ndarra
 
 def crop_region(
     image: np.ndarray,
-    x: int, y: int, w: int, h: int,
+    x: int,
+    y: int,
+    w: int,
+    h: int,
 ) -> np.ndarray:
     """Crop rectangular region from image."""
-    return image[y:y + h, x:x + w]
+    return image[y : y + h, x : x + w]
 
 
 def pad_image(
@@ -146,8 +159,18 @@ def pad_image(
 ) -> np.ndarray:
     """Add uniform padding around image."""
     if len(image.shape) == 3:
-        return cv2.copyMakeBorder(image, pad, pad, pad, pad, cv2.BORDER_CONSTANT, value=(value, value, value))
-    return cv2.copyMakeBorder(image, pad, pad, pad, pad, cv2.BORDER_CONSTANT, value=value)
+        return cv2.copyMakeBorder(
+            image,
+            pad,
+            pad,
+            pad,
+            pad,
+            cv2.BORDER_CONSTANT,
+            value=(value, value, value),
+        )
+    return cv2.copyMakeBorder(
+        image, pad, pad, pad, pad, cv2.BORDER_CONSTANT, value=value
+    )
 
 
 def image_to_pil(image: np.ndarray) -> Image.Image:

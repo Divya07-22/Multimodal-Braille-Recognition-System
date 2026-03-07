@@ -2,14 +2,12 @@ import time
 import logging
 import numpy as np
 import cv2
-import torch
-from typing import Dict, Any, List
-from PIL import Image
+from typing import Dict, Any
 
 from app.ml.preprocessing.binarize import binarize_image
 from app.ml.preprocessing.denoise import denoise_image, enhance_contrast
 from app.ml.preprocessing.perspective import correct_perspective
-from app.ml.preprocessing.resize import resize_image, resize_cell
+from app.ml.preprocessing.resize import resize_cell
 from app.ml.inference.braille_detector import BrailleDetector
 from app.ml.inference.braille_classifier import BrailleClassifier
 from app.ml.inference.postprocess import PostProcessor
@@ -70,12 +68,18 @@ class BrailleInferencePipeline:
         # Step 4: Post-process and decode to text
         cells_with_position = []
         for box, result in zip(cell_boxes, class_results):
-            cells_with_position.append({
-                "box": box[:4].tolist() if hasattr(box, "tolist") else list(box[:4]),
-                "pattern": result["pattern"],
-                "confidence": result["confidence"],
-                "character": result["character"],
-            })
+            cells_with_position.append(
+                {
+                    "box": (
+                        box[:4].tolist()
+                        if hasattr(box, "tolist")
+                        else list(box[:4])
+                    ),
+                    "pattern": result["pattern"],
+                    "confidence": result["confidence"],
+                    "character": result["character"],
+                }
+            )
 
         raw_text = self.postprocessor.decode(cells_with_position)
         corrected_text, nlp_confidence = self.nlp.correct(raw_text)

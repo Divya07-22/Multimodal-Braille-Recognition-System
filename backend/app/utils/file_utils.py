@@ -5,18 +5,28 @@ import os
 import shutil
 import uuid
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
 logger = logging.getLogger(__name__)
 
 ALLOWED_MIME_TYPES = {
-    "image/jpeg", "image/png", "image/tiff",
-    "image/bmp", "image/webp", "application/pdf",
+    "image/jpeg",
+    "image/png",
+    "image/tiff",
+    "image/bmp",
+    "image/webp",
+    "application/pdf",
 }
 
 ALLOWED_EXTENSIONS = {
-    ".jpg", ".jpeg", ".png", ".tiff", ".tif",
-    ".bmp", ".webp", ".pdf",
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".tiff",
+    ".tif",
+    ".bmp",
+    ".webp",
+    ".pdf",
 }
 
 
@@ -59,10 +69,7 @@ def compute_sha256(content: bytes) -> str:
 def safe_filename(filename: str) -> str:
     """Sanitize filename to remove unsafe characters."""
     name = Path(filename).name
-    safe = "".join(
-        c if (c.isalnum() or c in "._-") else "_"
-        for c in name
-    )
+    safe = "".join(c if (c.isalnum() or c in "._-") else "_" for c in name)
     return safe or "uploaded_file"
 
 

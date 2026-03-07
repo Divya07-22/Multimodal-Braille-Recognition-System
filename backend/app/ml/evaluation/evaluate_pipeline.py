@@ -3,12 +3,11 @@ End-to-end pipeline evaluation.
 Computes CER (Character Error Rate), WER (Word Error Rate),
 precision, recall, F1 for both cell detection and classification.
 """
-import os
+
 import json
 import logging
-from typing import List, Dict, Tuple
+from typing import List, Dict
 import numpy as np
-import cv2
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +26,9 @@ def character_error_rate(reference: str, hypothesis: str) -> float:
             if r[i - 1] == h[j - 1]:
                 dp[i][j] = dp[i - 1][j - 1]
             else:
-                dp[i][j] = 1 + min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1])
+                dp[i][j] = 1 + min(
+                    dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]
+                )
     return dp[n][m] / max(n, 1)
 
 
@@ -42,7 +43,11 @@ def word_error_rate(reference: str, hypothesis: str) -> float:
         dp[0][j] = j
     for i in range(1, n + 1):
         for j in range(1, m + 1):
-            dp[i][j] = dp[i - 1][j - 1] if r[i-1] == h[j-1] else 1 + min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1])
+            dp[i][j] = (
+                dp[i - 1][j - 1]
+                if r[i - 1] == h[j - 1]
+                else 1 + min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1])
+            )
     return dp[n][m] / max(n, 1)
 
 
@@ -71,7 +76,11 @@ def compute_detection_metrics(
     fn = len(gt_boxes) - tp
     precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
     recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
-    f1 = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0.0
+    f1 = (
+        2 * precision * recall / (precision + recall)
+        if (precision + recall) > 0
+        else 0.0
+    )
     return {"precision": precision, "recall": recall, "f1": f1}
 
 
@@ -110,5 +119,7 @@ def evaluate_full_pipeline(
     with open(output_path, "w") as f:
         json.dump(report, f, indent=2)
     logger.info(f"Evaluation report saved to {output_path}")
-    logger.info(f"Mean CER: {report['mean_cer']:.4f} | Mean WER: {report['mean_wer']:.4f}")
+    logger.info(
+        f"Mean CER: {report['mean_cer']:.4f} | Mean WER: {report['mean_wer']:.4f}"
+    )
     return report

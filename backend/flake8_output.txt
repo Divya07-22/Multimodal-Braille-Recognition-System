@@ -1,0 +1,473 @@
+﻿app/api\deps.py:1:1: F401 'typing.AsyncGenerator' imported but unused
+app/api\deps.py:71:80: E501 line too long (85 > 79 characters)
+app/api\deps.py:81:39: W292 no newline at end of file
+app/api\v1\endpoints\auth.py:2:1: F401 'datetime.timedelta' imported but unused
+app/api\v1\endpoints\auth.py:38:80: E501 line too long (81 > 79 characters)
+app/api\v1\endpoints\auth.py:46:80: E501 line too long (85 > 79 characters)
+app/api\v1\endpoints\auth.py:139:80: E501 line too long (83 > 79 characters)
+app/api\v1\endpoints\auth.py:159:80: E501 line too long (87 > 79 characters)
+app/api\v1\endpoints\auth.py:172:80: E501 line too long (103 > 79 characters)
+app/api\v1\endpoints\auth.py:190:80: E501 line too long (94 > 79 characters)
+app/api\v1\endpoints\auth.py:212:80: E501 line too long (94 > 79 characters)
+app/api\v1\endpoints\auth.py:218:80: E501 line too long (86 > 79 characters)
+app/api\v1\endpoints\auth.py:225:80: E501 line too long (89 > 79 characters)
+app/api\v1\endpoints\auth.py:234:80: E501 line too long (107 > 79 characters)
+app/api\v1\endpoints\braille.py:72:80: E501 line too long (80 > 79 characters)
+app/api\v1\endpoints\braille.py:88:80: E501 line too long (83 > 79 characters)
+app/api\v1\endpoints\braille.py:89:80: E501 line too long (82 > 79 characters)
+app/api\v1\endpoints\braille.py:91:6: W292 no newline at end of file
+app/api\v1\endpoints\documents.py:3:1: F401 'typing.List' imported but unused
+app/api\v1\endpoints\documents.py:26:80: E501 line too long (93 > 79 characters)
+app/api\v1\endpoints\documents.py:99:56: W292 no newline at end of file
+app/api\v1\endpoints\export.py:33:80: E501 line too long (81 > 79 characters)
+app/api\v1\endpoints\export.py:44:80: E501 line too long (85 > 79 characters)
+app/api\v1\endpoints\export.py:76:6: W292 no newline at end of file
+app/api\v1\endpoints\health.py:44:80: E501 line too long (87 > 79 characters)
+app/api\v1\endpoints\health.py:51:6: W292 no newline at end of file
+app/api\v1\endpoints\history.py:118:80: E501 line too long (83 > 79 characters)
+app/api\v1\endpoints\history.py:137:80: E501 line too long (93 > 79 characters)
+app/api\v1\endpoints\history.py:164:80: E501 line too long (82 > 79 characters)
+app/api\v1\endpoints\history.py:185:39: W292 no newline at end of file
+app/api\v1\endpoints\inference.py:12:80: E501 line too long (92 > 79 characters)
+app/api\v1\endpoints\inference.py:64:80: E501 line too long (82 > 79 characters)
+app/api\v1\endpoints\inference.py:81:80: E501 line too long (81 > 79 characters)
+app/api\v1\endpoints\inference.py:91:6: W292 no newline at end of file
+app/api\v1\endpoints\jobs.py:24:80: E501 line too long (81 > 79 characters)
+app/api\v1\endpoints\jobs.py:35:80: E501 line too long (81 > 79 characters)
+app/api\v1\endpoints\jobs.py:101:80: E501 line too long (83 > 79 characters)
+app/api\v1\endpoints\jobs.py:104:40: W292 no newline at end of file
+app/api\v1\endpoints\ocr.py:50:80: E501 line too long (87 > 79 characters)
+app/api\v1\endpoints\ocr.py:67:60: W292 no newline at end of file
+app/api\v1\endpoints\recognition.py:3:1: F401 'sqlalchemy.ext.asyncio.AsyncSession' imported but unused
+app/api\v1\endpoints\recognition.py:5:1: F401 'app.db.session.get_db' imported but unused
+app/api\v1\endpoints\recognition.py:39:6: W292 no newline at end of file
+app/api\v1\endpoints\upload.py:42:80: E501 line too long (85 > 79 characters)
+app/api\v1\endpoints\upload.py:71:6: W292 no newline at end of file
+app/api\v1\endpoints\users.py:2:1: F401 'typing.List' imported but unused
+app/api\v1\endpoints\users.py:39:80: E501 line too long (93 > 79 characters)
+app/api\v1\endpoints\users.py:102:50: W292 no newline at end of file
+app/api\v1\router.py:26:80: E501 line too long (84 > 79 characters)
+app/api\v1\router.py:27:80: E501 line too long (90 > 79 characters)
+app/api\v1\router.py:28:80: E501 line too long (84 > 79 characters)
+app/api\v1\router.py:31:79: W292 no newline at end of file
+app/core\__init__.py:1:52: W292 no newline at end of file
+app/core\config.py:2:1: F401 'typing.Optional' imported but unused
+app/core\config.py:24:80: E501 line too long (91 > 79 characters)
+app/core\config.py:64:80: E501 line too long (95 > 79 characters)
+app/core\config.py:72:80: E501 line too long (81 > 79 characters)
+app/core\config.py:95:80: E501 line too long (108 > 79 characters)
+app/core\config.py:110:1: E305 expected 2 blank lines after class or function definition, found 1
+app/core\config.py:110:22: W292 no newline at end of file
+app/core\dependencies.py:19:34: W292 no newline at end of file
+app/core\exceptions.py:5:80: E501 line too long (89 > 79 characters)
+app/core\exceptions.py:52:80: E501 line too long (80 > 79 characters)
+app/core\exceptions.py:52:81: W292 no newline at end of file
+app/core\logging.py:29:35: W292 no newline at end of file
+app/core\security.py:15:80: E501 line too long (80 > 79 characters)
+app/core\security.py:23:80: E501 line too long (81 > 79 characters)
+app/core\security.py:27:80: E501 line too long (83 > 79 characters)
+app/core\security.py:34:80: E501 line too long (81 > 79 characters)
+app/core\security.py:54:73: W292 no newline at end of file
+app/db\__init__.py:1:24: W292 no newline at end of file
+app/db\base.py:20:10: W292 no newline at end of file
+app/db\migrations\env.py:53:28: W292 no newline at end of file
+app/db\migrations\versions\001_initial_schema.py:26:80: E501 line too long (90 > 79 characters)
+app/db\migrations\versions\001_initial_schema.py:27:80: E501 line too long (90 > 79 characters)
+app/db\migrations\versions\001_initial_schema.py:32:80: E501 line too long (104 > 79 characters)
+app/db\migrations\versions\001_initial_schema.py:34:80: E501 line too long (82 > 79 characters)
+app/db\migrations\versions\001_initial_schema.py:39:80: E501 line too long (90 > 79 characters)
+app/db\migrations\versions\001_initial_schema.py:40:80: E501 line too long (90 > 79 characters)
+app/db\migrations\versions\001_initial_schema.py:45:80: E501 line too long (104 > 79 characters)
+app/db\migrations\versions\001_initial_schema.py:46:80: E501 line too long (112 > 79 characters)
+app/db\migrations\versions\001_initial_schema.py:47:80: E501 line too long (92 > 79 characters)
+app/db\migrations\versions\001_initial_schema.py:52:80: E501 line too long (90 > 79 characters)
+app/db\migrations\versions\001_initial_schema.py:58:80: E501 line too long (104 > 79 characters)
+app/db\migrations\versions\001_initial_schema.py:65:80: E501 line too long (90 > 79 characters)
+app/db\migrations\versions\001_initial_schema.py:73:27: W292 no newline at end of file
+app/db\migrations\versions\002_add_inference_tables.py:20:80: E501 line too long (112 > 79 characters)
+app/db\migrations\versions\002_add_inference_tables.py:21:80: E501 line too long (104 > 79 characters)
+app/db\migrations\versions\002_add_inference_tables.py:26:80: E501 line too long (83 > 79 characters)
+app/db\migrations\versions\002_add_inference_tables.py:27:80: E501 line too long (90 > 79 characters)
+app/db\migrations\versions\002_add_inference_tables.py:32:39: W292 no newline at end of file
+app/db\models\__init__.py:8:80: E501 line too long (103 > 79 characters)
+app/db\models\__init__.py:8:104: W292 no newline at end of file
+app/db\models\audit_log.py:16:80: E501 line too long (87 > 79 characters)
+app/db\models\audit_log.py:18:80: E501 line too long (80 > 79 characters)
+app/db\models\audit_log.py:19:80: E501 line too long (84 > 79 characters)
+app/db\models\audit_log.py:22:80: E501 line too long (80 > 79 characters)
+app/db\models\audit_log.py:23:80: E501 line too long (81 > 79 characters)
+app/db\models\audit_log.py:28:80: E501 line too long (86 > 79 characters)
+app/db\models\audit_log.py:28:87: W292 no newline at end of file
+app/db\models\conversion_history.py:3:80: E501 line too long (88 > 79 characters)
+app/db\models\conversion_history.py:13:1: E303 too many blank lines (3)
+app/db\models\conversion_history.py:18:80: E501 line too long (87 > 79 characters)
+app/db\models\conversion_history.py:23:1: W293 blank line contains whitespace
+app/db\models\conversion_history.py:27:1: W293 blank line contains whitespace
+app/db\models\conversion_history.py:30:80: E501 line too long (91 > 79 characters)
+app/db\models\conversion_history.py:33:80: E501 line too long (85 > 79 characters)
+app/db\models\conversion_history.py:34:80: E501 line too long (85 > 79 characters)
+app/db\models\conversion_history.py:40:80: E501 line too long (95 > 79 characters)
+app/db\models\conversion_history.py:43:80: E501 line too long (84 > 79 characters)
+app/db\models\conversion_job.py:17:80: E501 line too long (87 > 79 characters)
+app/db\models\conversion_job.py:20:80: E501 line too long (91 > 79 characters)
+app/db\models\conversion_job.py:22:80: E501 line too long (100 > 79 characters)
+app/db\models\conversion_job.py:36:80: E501 line too long (81 > 79 characters)
+app/db\models\conversion_job.py:37:80: E501 line too long (93 > 79 characters)
+app/db\models\conversion_job.py:37:94: W292 no newline at end of file
+app/db\models\document.py:18:80: E501 line too long (87 > 79 characters)
+app/db\models\document.py:21:80: E501 line too long (90 > 79 characters)
+app/db\models\document.py:32:80: E501 line too long (95 > 79 characters)
+app/db\models\document.py:37:80: E501 line too long (80 > 79 characters)
+app/db\models\document.py:40:80: E501 line too long (82 > 79 characters)
+app/db\models\document.py:41:6: W292 no newline at end of file
+app/db\models\inference_result.py:17:80: E501 line too long (91 > 79 characters)
+app/db\models\inference_result.py:20:80: E501 line too long (87 > 79 characters)
+app/db\models\inference_result.py:23:80: E501 line too long (83 > 79 characters)
+app/db\models\inference_result.py:24:80: E501 line too long (87 > 79 characters)
+app/db\models\inference_result.py:25:80: E501 line too long (89 > 79 characters)
+app/db\models\inference_result.py:26:80: E501 line too long (91 > 79 characters)
+app/db\models\inference_result.py:31:80: E501 line too long (95 > 79 characters)
+app/db\models\inference_result.py:32:80: E501 line too long (83 > 79 characters)
+app/db\models\inference_result.py:32:84: W292 no newline at end of file
+app/db\models\user.py:22:80: E501 line too long (95 > 79 characters)
+app/db\models\user.py:25:80: E501 line too long (82 > 79 characters)
+app/db\models\user.py:26:80: E501 line too long (82 > 79 characters)
+app/db\models\user.py:50:80: E501 line too long (84 > 79 characters)
+app/db\models\user.py:51:6: W292 no newline at end of file
+app/db\session.py:36:34: W292 no newline at end of file
+app/main.py:88:53: W292 no newline at end of file
+app/ml\__init__.py:1:56: W292 no newline at end of file
+app/ml\evaluation\__init__.py:1:50: W292 no newline at end of file
+app/ml\evaluation\evaluate_pipeline.py:6:1: F401 'os' imported but unused
+app/ml\evaluation\evaluate_pipeline.py:9:1: F401 'typing.Tuple' imported but unused
+app/ml\evaluation\evaluate_pipeline.py:11:1: F401 'cv2' imported but unused
+app/ml\evaluation\evaluate_pipeline.py:17:80: E501 line too long (81 > 79 characters)
+app/ml\evaluation\evaluate_pipeline.py:30:80: E501 line too long (80 > 79 characters)
+app/ml\evaluation\evaluate_pipeline.py:45:80: E501 line too long (110 > 79 characters)
+app/ml\evaluation\evaluate_pipeline.py:74:80: E501 line too long (91 > 79 characters)
+app/ml\evaluation\evaluate_pipeline.py:113:80: E501 line too long (91 > 79 characters)
+app/ml\evaluation\evaluate_pipeline.py:114:18: W292 no newline at end of file
+app/ml\evaluation\metrics_report.py:3:1: F401 'numpy as np' imported but unused
+app/ml\evaluation\metrics_report.py:19:80: E501 line too long (94 > 79 characters)
+app/ml\evaluation\metrics_report.py:50:20: W292 no newline at end of file
+app/ml\evaluation\tesseract_baseline.py:3:1: F401 'cv2' imported but unused
+app/ml\evaluation\tesseract_baseline.py:6:80: E501 line too long (85 > 79 characters)
+app/ml\evaluation\tesseract_baseline.py:17:80: E501 line too long (82 > 79 characters)
+app/ml\evaluation\tesseract_baseline.py:18:80: E501 line too long (88 > 79 characters)
+app/ml\evaluation\tesseract_baseline.py:62:22: W292 no newline at end of file
+app/ml\export\__init__.py:1:30: W292 no newline at end of file
+app/ml\export\benchmark_latency.py:11:1: F401 'typing.Tuple' imported but unused
+app/ml\export\benchmark_latency.py:16:1: F401 'PIL.Image' imported but unused
+app/ml\export\benchmark_latency.py:33:80: E501 line too long (115 > 79 characters)
+app/ml\export\benchmark_latency.py:37:80: E501 line too long (112 > 79 characters)
+app/ml\export\benchmark_latency.py:41:80: E501 line too long (106 > 79 characters)
+app/ml\export\benchmark_latency.py:45:80: E501 line too long (109 > 79 characters)
+app/ml\export\benchmark_latency.py:129:80: E501 line too long (82 > 79 characters)
+app/ml\export\benchmark_latency.py:146:80: E501 line too long (89 > 79 characters)
+app/ml\export\benchmark_latency.py:177:80: E501 line too long (95 > 79 characters)
+app/ml\export\benchmark_latency.py:299:80: E501 line too long (86 > 79 characters)
+app/ml\export\benchmark_latency.py:301:80: E501 line too long (88 > 79 characters)
+app/ml\export\benchmark_latency.py:342:80: E501 line too long (85 > 79 characters)
+app/ml\export\benchmark_latency.py:343:80: E501 line too long (89 > 79 characters)
+app/ml\export\benchmark_latency.py:406:20: W292 no newline at end of file
+app/ml\export\export_to_onnx.py:5:1: F401 'torch.nn' imported but unused
+app/ml\export\export_to_onnx.py:52:80: E501 line too long (80 > 79 characters)
+app/ml\export\export_to_onnx.py:99:30: W292 no newline at end of file
+app/ml\export\quantize_dynamic.py:32:80: E501 line too long (90 > 79 characters)
+app/ml\export\quantize_dynamic.py:34:80: E501 line too long (81 > 79 characters)
+app/ml\export\quantize_dynamic.py:40:26: W292 no newline at end of file
+app/ml\inference\__init__.py:1:50: W292 no newline at end of file
+app/ml\inference\braille_classifier.py:7:1: F401 'os' imported but unused
+app/ml\inference\braille_classifier.py:9:80: E501 line too long (87 > 79 characters)
+app/ml\inference\braille_classifier.py:25:80: E501 line too long (82 > 79 characters)
+app/ml\inference\braille_classifier.py:35:80: E501 line too long (95 > 79 characters)
+app/ml\inference\braille_classifier.py:55:80: E501 line too long (84 > 79 characters)
+app/ml\inference\braille_classifier.py:88:49: W292 no newline at end of file
+app/ml\inference\braille_detector.py:6:1: F401 'torchvision.models.detection.FasterRCNN_ResNet50_FPN_Weights' imported but unused
+app/ml\inference\braille_detector.py:6:80: E501 line too long (97 > 79 characters)
+app/ml\inference\braille_detector.py:23:80: E501 line too long (82 > 79 characters)
+app/ml\inference\braille_detector.py:35:80: E501 line too long (84 > 79 characters)
+app/ml\inference\braille_detector.py:39:80: E501 line too long (81 > 79 characters)
+app/ml\inference\braille_detector.py:40:80: E501 line too long (81 > 79 characters)
+app/ml\inference\braille_detector.py:43:80: E501 line too long (85 > 79 characters)
+app/ml\inference\braille_detector.py:46:80: E501 line too long (89 > 79 characters)
+app/ml\inference\braille_detector.py:55:80: E501 line too long (96 > 79 characters)
+app/ml\inference\braille_detector.py:56:80: E501 line too long (82 > 79 characters)
+app/ml\inference\braille_detector.py:65:80: E501 line too long (87 > 79 characters)
+app/ml\inference\braille_detector.py:66:80: E501 line too long (88 > 79 characters)
+app/ml\inference\braille_detector.py:78:80: E501 line too long (84 > 79 characters)
+app/ml\inference\braille_detector.py:93:80: E501 line too long (90 > 79 characters)
+app/ml\inference\braille_detector.py:94:80: E501 line too long (88 > 79 characters)
+app/ml\inference\braille_detector.py:95:80: E501 line too long (105 > 79 characters)
+app/ml\inference\braille_detector.py:98:80: E501 line too long (96 > 79 characters)
+app/ml\inference\braille_detector.py:111:21: W292 no newline at end of file
+app/ml\inference\cell_classifier_cnn.py:37:80: E501 line too long (82 > 79 characters)
+app/ml\inference\cell_classifier_cnn.py:41:80: E501 line too long (88 > 79 characters)
+app/ml\inference\cell_classifier_cnn.py:44:80: E501 line too long (80 > 79 characters)
+app/ml\inference\cell_classifier_cnn.py:77:23: W292 no newline at end of file
+app/ml\inference\dot_detector_cnn.py:16:80: E501 line too long (86 > 79 characters)
+app/ml\inference\dot_detector_cnn.py:17:80: E501 line too long (87 > 79 characters)
+app/ml\inference\dot_detector_cnn.py:19:80: E501 line too long (87 > 79 characters)
+app/ml\inference\dot_detector_cnn.py:20:80: E501 line too long (87 > 79 characters)
+app/ml\inference\dot_detector_cnn.py:22:80: E501 line too long (89 > 79 characters)
+app/ml\inference\dot_detector_cnn.py:41:80: E501 line too long (82 > 79 characters)
+app/ml\inference\dot_detector_cnn.py:42:80: E501 line too long (82 > 79 characters)
+app/ml\inference\dot_detector_cnn.py:45:80: E501 line too long (88 > 79 characters)
+app/ml\inference\dot_detector_cnn.py:51:80: E501 line too long (109 > 79 characters)
+app/ml\inference\dot_detector_cnn.py:74:23: W292 no newline at end of file
+app/ml\inference\model_loader.py:41:80: E501 line too long (88 > 79 characters)
+app/ml\inference\model_loader.py:88:40: W292 no newline at end of file
+app/ml\inference\pipeline.py:5:1: F401 'torch' imported but unused
+app/ml\inference\pipeline.py:6:1: F401 'typing.List' imported but unused
+app/ml\inference\pipeline.py:7:1: F401 'PIL.Image' imported but unused
+app/ml\inference\pipeline.py:12:1: F401 'app.ml.preprocessing.resize.resize_image' imported but unused
+app/ml\inference\pipeline.py:25:80: E501 line too long (86 > 79 characters)
+app/ml\inference\pipeline.py:43:9: F841 local variable 'binary' is assigned to but never used
+app/ml\inference\pipeline.py:74:80: E501 line too long (85 > 79 characters)
+app/ml\inference\pipeline.py:113:80: E501 line too long (85 > 79 characters)
+app/ml\inference\pipeline.py:114:35: W292 no newline at end of file
+app/ml\inference\postprocess.py:20:5: F601 dictionary key 26 repeated with different values
+app/ml\inference\postprocess.py:56:5: F601 dictionary key 26 repeated with different values
+app/ml\inference\postprocess.py:135:70: W292 no newline at end of file
+app/ml\nlp\__init__.py:1:55: W292 no newline at end of file
+app/ml\nlp\nlp_postprocess.py:23:80: E501 line too long (85 > 79 characters)
+app/ml\nlp\nlp_postprocess.py:28:80: E501 line too long (81 > 79 characters)
+app/ml\nlp\nlp_postprocess.py:32:80: E501 line too long (86 > 79 characters)
+app/ml\nlp\nlp_postprocess.py:38:80: E501 line too long (82 > 79 characters)
+app/ml\nlp\nlp_postprocess.py:58:80: E501 line too long (98 > 79 characters)
+app/ml\nlp\nlp_postprocess.py:73:80: E501 line too long (96 > 79 characters)
+app/ml\nlp\nlp_postprocess.py:90:37: W292 no newline at end of file
+app/ml\preprocessing\__init__.py:14:2: W292 no newline at end of file
+app/ml\preprocessing\binarize.py:41:80: E501 line too long (94 > 79 characters)
+app/ml\preprocessing\binarize.py:49:18: W292 no newline at end of file
+app/ml\preprocessing\denoise.py:12:80: E501 line too long (82 > 79 characters)
+app/ml\preprocessing\denoise.py:47:34: W292 no newline at end of file
+app/ml\preprocessing\perspective.py:10:80: E501 line too long (86 > 79 characters)
+app/ml\preprocessing\perspective.py:17:80: E501 line too long (85 > 79 characters)
+app/ml\preprocessing\perspective.py:64:16: W292 no newline at end of file
+app/ml\preprocessing\resize.py:19:80: E501 line too long (82 > 79 characters)
+app/ml\preprocessing\resize.py:28:80: E501 line too long (85 > 79 characters)
+app/ml\preprocessing\resize.py:42:73: W292 no newline at end of file
+app/ml\preprocessing\unwarp.py:10:80: E501 line too long (86 > 79 characters)
+app/ml\preprocessing\unwarp.py:14:80: E501 line too long (80 > 79 characters)
+app/ml\preprocessing\unwarp.py:17:80: E501 line too long (80 > 79 characters)
+app/ml\preprocessing\unwarp.py:19:80: E501 line too long (94 > 79 characters)
+app/ml\preprocessing\unwarp.py:54:80: E501 line too long (96 > 79 characters)
+app/ml\preprocessing\unwarp.py:55:20: W292 no newline at end of file
+app/ml\training\__init__.py:1:73: W292 no newline at end of file
+app/ml\training\augmentations.py:28:80: E501 line too long (88 > 79 characters)
+app/ml\training\augmentations.py:59:80: E501 line too long (96 > 79 characters)
+app/ml\training\augmentations.py:63:80: E501 line too long (84 > 79 characters)
+app/ml\training\augmentations.py:72:80: E501 line too long (84 > 79 characters)
+app/ml\training\augmentations.py:72:85: W292 no newline at end of file
+app/ml\training\callbacks.py:14:80: E501 line too long (87 > 79 characters)
+app/ml\training\callbacks.py:35:80: E501 line too long (106 > 79 characters)
+app/ml\training\callbacks.py:60:80: E501 line too long (86 > 79 characters)
+app/ml\training\callbacks.py:64:80: E501 line too long (81 > 79 characters)
+app/ml\training\callbacks.py:66:80: E501 line too long (103 > 79 characters)
+app/ml\training\callbacks.py:69:80: E501 line too long (81 > 79 characters)
+app/ml\training\callbacks.py:84:80: E501 line too long (122 > 79 characters)
+app/ml\training\callbacks.py:95:61: W292 no newline at end of file
+app/ml\training\dataset.py:8:1: F401 'albumentations.pytorch.ToTensorV2' imported but unused
+app/ml\training\dataset.py:10:80: E501 line too long (82 > 79 characters)
+app/ml\training\dataset.py:54:80: E501 line too long (94 > 79 characters)
+app/ml\training\dataset.py:91:80: E501 line too long (96 > 79 characters)
+app/ml\training\dataset.py:135:80: E501 line too long (138 > 79 characters)
+app/ml\training\dataset.py:138:80: E501 line too long (85 > 79 characters)
+app/ml\training\dataset.py:142:80: E501 line too long (105 > 79 characters)
+app/ml\training\dataset.py:143:80: E501 line too long (101 > 79 characters)
+app/ml\training\dataset.py:157:80: E501 line too long (85 > 79 characters)
+app/ml\training\dataset.py:159:80: E501 line too long (81 > 79 characters)
+app/ml\training\dataset.py:163:80: E501 line too long (86 > 79 characters)
+app/ml\training\dataset.py:168:6: W292 no newline at end of file
+app/ml\training\generate_synthetic_data.py:11:1: F401 'itertools.product' imported but unused
+app/ml\training\generate_synthetic_data.py:12:1: F401 'typing.Tuple' imported but unused
+app/ml\training\generate_synthetic_data.py:76:80: E501 line too long (82 > 79 characters)
+app/ml\training\generate_synthetic_data.py:107:23: W292 no newline at end of file
+app/ml\training\losses.py:12:80: E501 line too long (89 > 79 characters)
+app/ml\training\losses.py:18:80: E501 line too long (83 > 79 characters)
+app/ml\training\losses.py:58:80: E501 line too long (99 > 79 characters)
+app/ml\training\losses.py:106:44: W292 no newline at end of file
+app/ml\training\train_cell_classifier.py:2:80: E501 line too long (80 > 79 characters)
+app/ml\training\train_cell_classifier.py:15:80: E501 line too long (84 > 79 characters)
+app/ml\training\train_cell_classifier.py:24:80: E501 line too long (88 > 79 characters)
+app/ml\training\train_cell_classifier.py:82:80: E501 line too long (95 > 79 characters)
+app/ml\training\train_cell_classifier.py:86:80: E501 line too long (96 > 79 characters)
+app/ml\training\train_cell_classifier.py:90:80: E501 line too long (98 > 79 characters)
+app/ml\training\train_cell_classifier.py:91:80: E501 line too long (89 > 79 characters)
+app/ml\training\train_cell_classifier.py:131:80: E501 line too long (123 > 79 characters)
+app/ml\training\train_cell_classifier.py:140:46: W292 no newline at end of file
+app/ml\training\train_classifier.py:15:1: F401 'sklearn.metrics.confusion_matrix' imported but unused
+app/ml\training\train_classifier.py:19:1: F401 'app.ml.training.losses.FocalLoss' imported but unused
+app/ml\training\train_classifier.py:20:80: E501 line too long (84 > 79 characters)
+app/ml\training\train_classifier.py:21:1: F401 'app.core.config.settings' imported but unused
+app/ml\training\train_classifier.py:27:80: E501 line too long (82 > 79 characters)
+app/ml\training\train_classifier.py:29:80: E501 line too long (92 > 79 characters)
+app/ml\training\train_classifier.py:76:80: E501 line too long (93 > 79 characters)
+app/ml\training\train_classifier.py:143:80: E501 line too long (81 > 79 characters)
+app/ml\training\train_classifier.py:144:80: E501 line too long (95 > 79 characters)
+app/ml\training\train_classifier.py:154:80: E501 line too long (84 > 79 characters)
+app/ml\training\train_classifier.py:156:80: E501 line too long (101 > 79 characters)
+app/ml\training\train_classifier.py:160:80: E501 line too long (84 > 79 characters)
+app/ml\training\train_classifier.py:177:80: E501 line too long (94 > 79 characters)
+app/ml\training\train_classifier.py:178:80: E501 line too long (85 > 79 characters)
+app/ml\training\train_classifier.py:187:80: E501 line too long (99 > 79 characters)
+app/ml\training\train_classifier.py:188:80: E501 line too long (84 > 79 characters)
+app/ml\training\train_classifier.py:208:6: W292 no newline at end of file
+app/ml\training\train_detector.py:6:1: F401 'json' imported but unused
+app/ml\training\train_detector.py:11:80: E501 line too long (97 > 79 characters)
+app/ml\training\train_detector.py:15:80: E501 line too long (102 > 79 characters)
+app/ml\training\train_detector.py:16:80: E501 line too long (84 > 79 characters)
+app/ml\training\train_detector.py:26:80: E501 line too long (84 > 79 characters)
+app/ml\training\train_detector.py:52:80: E501 line too long (88 > 79 characters)
+app/ml\training\train_detector.py:79:80: E501 line too long (115 > 79 characters)
+app/ml\training\train_detector.py:80:80: E501 line too long (111 > 79 characters)
+app/ml\training\train_detector.py:83:80: E501 line too long (94 > 79 characters)
+app/ml\training\train_detector.py:84:5: F841 local variable 'val_loader' is assigned to but never used
+app/ml\training\train_detector.py:85:80: E501 line too long (92 > 79 characters)
+app/ml\training\train_detector.py:88:80: E501 line too long (81 > 79 characters)
+app/ml\training\train_detector.py:92:80: E501 line too long (91 > 79 characters)
+app/ml\training\train_detector.py:93:80: E501 line too long (82 > 79 characters)
+app/ml\training\train_detector.py:96:80: E501 line too long (95 > 79 characters)
+app/ml\training\train_detector.py:106:80: E501 line too long (92 > 79 characters)
+app/ml\training\train_detector.py:115:21: W292 no newline at end of file
+app/ml\training\train_dot_detector.py:16:1: F401 'PIL.Image' imported but unused
+app/ml\training\train_dot_detector.py:18:80: E501 line too long (84 > 79 characters)
+app/ml\training\train_dot_detector.py:59:80: E501 line too long (86 > 79 characters)
+app/ml\training\train_dot_detector.py:60:80: E501 line too long (87 > 79 characters)
+app/ml\training\train_dot_detector.py:62:80: E501 line too long (87 > 79 characters)
+app/ml\training\train_dot_detector.py:63:80: E501 line too long (87 > 79 characters)
+app/ml\training\train_dot_detector.py:65:80: E501 line too long (89 > 79 characters)
+app/ml\training\train_dot_detector.py:97:80: E501 line too long (88 > 79 characters)
+app/ml\training\train_dot_detector.py:99:80: E501 line too long (118 > 79 characters)
+app/ml\training\train_dot_detector.py:100:80: E501 line too long (115 > 79 characters)
+app/ml\training\train_dot_detector.py:101:5: F841 local variable 'test_loader' is assigned to but never used
+app/ml\training\train_dot_detector.py:101:80: E501 line too long (117 > 79 characters)
+app/ml\training\train_dot_detector.py:107:80: E501 line too long (82 > 79 characters)
+app/ml\training\train_dot_detector.py:112:80: E501 line too long (95 > 79 characters)
+app/ml\training\train_dot_detector.py:113:80: E501 line too long (86 > 79 characters)
+app/ml\training\train_dot_detector.py:150:80: E501 line too long (82 > 79 characters)
+app/ml\training\train_dot_detector.py:163:80: E501 line too long (159 > 79 characters)
+app/ml\training\train_dot_detector.py:172:25: W292 no newline at end of file
+app/schemas\auth.py:34:80: E501 line too long (83 > 79 characters)
+app/schemas\auth.py:102:17: W292 no newline at end of file
+app/schemas\braille.py:41:30: W292 no newline at end of file
+app/schemas\document.py:2:1: F401 'typing.Optional' imported but unused
+app/schemas\document.py:22:15: W292 no newline at end of file
+app/schemas\export.py:20:22: W292 no newline at end of file
+app/schemas\inference.py:32:31: W292 no newline at end of file
+app/schemas\job.py:24:15: W292 no newline at end of file
+app/schemas\recognition.py:9:20: W292 no newline at end of file
+app/schemas\upload.py:10:17: W292 no newline at end of file
+app/schemas\user.py:3:1: F401 'pydantic.EmailStr' imported but unused
+app/schemas\user.py:28:15: W292 no newline at end of file
+app/services\analytics_service.py:16:80: E501 line too long (81 > 79 characters)
+app/services\analytics_service.py:17:80: E501 line too long (86 > 79 characters)
+app/services\analytics_service.py:18:80: E501 line too long (87 > 79 characters)
+app/services\analytics_service.py:19:80: E501 line too long (87 > 79 characters)
+app/services\analytics_service.py:20:80: E501 line too long (89 > 79 characters)
+app/services\analytics_service.py:27:80: E501 line too long (82 > 79 characters)
+app/services\analytics_service.py:30:80: E501 line too long (85 > 79 characters)
+app/services\analytics_service.py:32:80: E501 line too long (89 > 79 characters)
+app/services\analytics_service.py:48:10: W292 no newline at end of file
+app/services\auth_service.py:45:20: W292 no newline at end of file
+app/services\braille_service.py:5:1: F401 'app.core.config.settings' imported but unused
+app/services\braille_service.py:110:30: W292 no newline at end of file
+app/services\document_service.py:29:80: E501 line too long (89 > 79 characters)
+app/services\document_service.py:70:19: W292 no newline at end of file
+app/services\email_service.py:16:58: W292 no newline at end of file
+app/services\export_service.py:4:1: F401 'typing.Literal' imported but unused
+app/services\export_service.py:82:20: W292 no newline at end of file
+app/services\inference_service.py:35:18: W292 no newline at end of file
+app/services\job_service.py:43:80: E501 line too long (85 > 79 characters)
+app/services\job_service.py:69:19: W292 no newline at end of file
+app/services\ocr_service.py:72:80: E501 line too long (84 > 79 characters)
+app/services\ocr_service.py:88:80: E501 line too long (84 > 79 characters)
+app/services\ocr_service.py:90:41: W292 no newline at end of file
+app/services\recognition_service.py:27:22: W292 no newline at end of file
+app/services\rectification_service.py:4:1: F401 'PIL.Image' imported but unused
+app/services\rectification_service.py:47:53: W292 no newline at end of file
+app/services\storage_service.py:3:1: F401 'shutil' imported but unused
+app/services\storage_service.py:16:80: E501 line too long (83 > 79 characters)
+app/services\storage_service.py:18:80: E501 line too long (97 > 79 characters)
+app/services\storage_service.py:37:78: W292 no newline at end of file
+app/services\user_service.py:13:80: E501 line too long (80 > 79 characters)
+app/services\user_service.py:17:80: E501 line too long (81 > 79 characters)
+app/services\user_service.py:29:80: E501 line too long (81 > 79 characters)
+app/services\user_service.py:36:20: W292 no newline at end of file
+app/tests\__init__.py:1:26: W292 no newline at end of file
+app/tests\test_auth.py:5:1: E302 expected 2 blank lines, found 1
+app/tests\test_auth.py:28:1: E302 expected 2 blank lines, found 1
+app/tests\test_auth.py:37:1: E302 expected 2 blank lines, found 1
+app/tests\test_auth.py:46:9: F841 local variable 'r1' is assigned to but never used
+app/tests\test_auth.py:50:1: E302 expected 2 blank lines, found 1
+app/tests\test_auth.py:64:45: W292 no newline at end of file
+app/tests\test_braille.py:2:1: F401 'app.services.braille_service.DOT_PATTERN_TO_CHAR' imported but unused
+app/tests\test_braille.py:44:58: W292 no newline at end of file
+app/tests\test_braille_translation.py:49:38: W292 no newline at end of file
+app/tests\test_export.py:39:63: W292 no newline at end of file
+app/tests\test_losses.py:1:1: F401 'pytest' imported but unused
+app/tests\test_losses.py:3:80: E501 line too long (82 > 79 characters)
+app/tests\test_losses.py:44:33: W292 no newline at end of file
+app/tests\test_metrics.py:52:36: W292 no newline at end of file
+app/tests\test_ml_models.py:3:1: F401 'numpy as np' imported but unused
+app/tests\test_ml_models.py:66:52: W292 no newline at end of file
+app/tests\test_ocr.py:41:46: W292 no newline at end of file
+app/tests\test_recognition_pipeline.py:2:1: F401 'numpy as np' imported but unused
+app/tests\test_recognition_pipeline.py:3:1: F401 'unittest.mock.MagicMock' imported but unused
+app/tests\test_recognition_pipeline.py:8:80: E501 line too long (85 > 79 characters)
+app/tests\test_recognition_pipeline.py:25:80: E501 line too long (85 > 79 characters)
+app/tests\test_recognition_pipeline.py:36:36: W292 no newline at end of file
+app/utils\__init__.py:1:31: W292 no newline at end of file
+app/utils\file_utils.py:8:1: F401 'typing.Tuple' imported but unused
+app/utils\file_utils.py:150:6: W292 no newline at end of file
+app/utils\helpers.py:286:80: E501 line too long (85 > 79 characters)
+app/utils\helpers.py:385:19: W292 no newline at end of file
+app/utils\image_utils.py:3:1: F401 'typing.Optional' imported but unused
+app/utils\image_utils.py:7:1: F401 'PIL.ImageEnhance' imported but unused
+app/utils\image_utils.py:7:1: F401 'PIL.ImageFilter' imported but unused
+app/utils\image_utils.py:37:80: E501 line too long (83 > 79 characters)
+app/utils\image_utils.py:77:80: E501 line too long (84 > 79 characters)
+app/utils\image_utils.py:128:80: E501 line too long (82 > 79 characters)
+app/utils\image_utils.py:149:80: E501 line too long (110 > 79 characters)
+app/utils\image_utils.py:150:80: E501 line too long (90 > 79 characters)
+app/utils\image_utils.py:186:6: W292 no newline at end of file
+app/utils\logger.py:27:36: W292 no newline at end of file
+app/utils\metrics.py:42:80: E501 line too long (81 > 79 characters)
+app/utils\metrics.py:51:80: E501 line too long (80 > 79 characters)
+app/utils\metrics.py:68:80: E501 line too long (86 > 79 characters)
+app/utils\metrics.py:144:10: E221 multiple spaces before operator
+app/utils\metrics.py:161:80: E501 line too long (90 > 79 characters)
+app/utils\metrics.py:174:12: E221 multiple spaces before operator
+app/utils\metrics.py:183:15: E221 multiple spaces before operator
+app/utils\metrics.py:185:14: E221 multiple spaces before operator
+app/utils\metrics.py:186:14: E221 multiple spaces before operator
+app/utils\metrics.py:190:12: E221 multiple spaces before operator
+app/utils\metrics.py:192:12: E221 multiple spaces before operator
+app/utils\metrics.py:261:12: E221 multiple spaces before operator
+app/utils\metrics.py:261:80: E501 line too long (87 > 79 characters)
+app/utils\metrics.py:262:11: E221 multiple spaces before operator
+app/utils\metrics.py:263:11: E221 multiple spaces before operator
+app/utils\metrics.py:264:11: E221 multiple spaces before operator
+app/utils\metrics.py:266:12: E221 multiple spaces before operator
+app/utils\metrics.py:267:11: E221 multiple spaces before operator
+app/utils\metrics.py:284:80: E501 line too long (88 > 79 characters)
+app/utils\metrics.py:361:80: E501 line too long (95 > 79 characters)
+app/utils\metrics.py:364:19: E221 multiple spaces before operator
+app/utils\metrics.py:365:19: E221 multiple spaces before operator
+app/utils\metrics.py:367:18: E221 multiple spaces before operator
+app/utils\metrics.py:367:80: E501 line too long (89 > 79 characters)
+app/utils\metrics.py:382:19: W292 no newline at end of file
+app/utils\postprocessing.py:2:1: F401 'typing.Optional' imported but unused
+app/utils\postprocessing.py:84:80: E501 line too long (89 > 79 characters)
+app/utils\postprocessing.py:119:80: E501 line too long (86 > 79 characters)
+app/utils\postprocessing.py:159:17: W292 no newline at end of file
+app/utils\preprocessing.py:14:10: E221 multiple spaces before operator
+app/utils\preprocessing.py:178:50: W292 no newline at end of file
+app/utils\response_utils.py:49:6: W292 no newline at end of file
+app/utils\text_utils.py:81:71: W292 no newline at end of file
+app/utils\timing.py:42:19: W292 no newline at end of file
+app/utils\validators.py:34:80: E501 line too long (89 > 79 characters)
+app/utils\validators.py:43:80: E501 line too long (80 > 79 characters)
+app/utils\validators.py:45:80: E501 line too long (80 > 79 characters)
+app/utils\validators.py:77:22: W292 no newline at end of file

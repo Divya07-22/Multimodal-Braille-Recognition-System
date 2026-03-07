@@ -37,12 +37,12 @@ def word_count(text: str) -> int:
 def truncate_text(text: str, max_chars: int = 500, suffix: str = "...") -> str:
     if len(text) <= max_chars:
         return text
-    return text[:max_chars - len(suffix)] + suffix
+    return text[: max_chars - len(suffix)] + suffix
 
 
 def is_braille_unicode(char: str) -> bool:
     """Check if character is in the Unicode Braille block (U+2800–U+28FF)."""
-    return "\u2800" <= char <= "\u28FF"
+    return "\u2800" <= char <= "\u28ff"
 
 
 def extract_braille_chars(text: str) -> str:

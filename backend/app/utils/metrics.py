@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 # Text Recognition Metrics
 # ---------------------------------------------------------------------------
 
+
 def levenshtein_distance(s1: Any, s2: Any) -> int:
     if isinstance(s1, str):
         s1, s2 = list(s1), list(s2)
@@ -39,7 +40,9 @@ def compute_cer(reference: str, hypothesis: str) -> float:
     """Character Error Rate = edit_distance / len(reference)."""
     if len(reference) == 0:
         return 0.0 if len(hypothesis) == 0 else 1.0
-    return round(levenshtein_distance(reference, hypothesis) / len(reference), 6)
+    return round(
+        levenshtein_distance(reference, hypothesis) / len(reference), 6
+    )
 
 
 def compute_wer(reference: str, hypothesis: str) -> float:
@@ -48,7 +51,9 @@ def compute_wer(reference: str, hypothesis: str) -> float:
     hyp_words = hypothesis.strip().split()
     if len(ref_words) == 0:
         return 0.0 if len(hyp_words) == 0 else 1.0
-    return round(levenshtein_distance(ref_words, hyp_words) / len(ref_words), 6)
+    return round(
+        levenshtein_distance(ref_words, hyp_words) / len(ref_words), 6
+    )
 
 
 def compute_exact_match(reference: str, hypothesis: str) -> float:
@@ -62,10 +67,13 @@ def compute_bleu_score(
 ) -> float:
     try:
         from nltk.translate.bleu_score import corpus_bleu, SmoothingFunction
+
         smoothie = SmoothingFunction().method4
         ref_tokenized = [[ref.split()] for ref in references]
         hyp_tokenized = [hyp.split() for hyp in hypotheses]
-        score = corpus_bleu(ref_tokenized, hyp_tokenized, smoothing_function=smoothie)
+        score = corpus_bleu(
+            ref_tokenized, hyp_tokenized, smoothing_function=smoothie
+        )
         return round(float(score), 6)
     except ImportError:
         logger.warning("nltk not installed — BLEU score unavailable")
@@ -82,9 +90,9 @@ def compute_batch_cer(
     cers = [compute_cer(r, h) for r, h in zip(references, hypotheses)]
     return {
         "mean_cer": round(float(np.mean(cers)), 6),
-        "min_cer":  round(float(np.min(cers)), 6),
-        "max_cer":  round(float(np.max(cers)), 6),
-        "std_cer":  round(float(np.std(cers)), 6),
+        "min_cer": round(float(np.min(cers)), 6),
+        "max_cer": round(float(np.max(cers)), 6),
+        "std_cer": round(float(np.std(cers)), 6),
         "num_samples": len(cers),
     }
 
@@ -96,9 +104,9 @@ def compute_batch_wer(
     wers = [compute_wer(r, h) for r, h in zip(references, hypotheses)]
     return {
         "mean_wer": round(float(np.mean(wers)), 6),
-        "min_wer":  round(float(np.min(wers)), 6),
-        "max_wer":  round(float(np.max(wers)), 6),
-        "std_wer":  round(float(np.std(wers)), 6),
+        "min_wer": round(float(np.min(wers)), 6),
+        "max_wer": round(float(np.max(wers)), 6),
+        "std_wer": round(float(np.std(wers)), 6),
         "num_samples": len(wers),
     }
 
@@ -106,6 +114,7 @@ def compute_batch_wer(
 # ---------------------------------------------------------------------------
 # Detection Metrics
 # ---------------------------------------------------------------------------
+
 
 def compute_iou(
     box_a: Tuple[int, int, int, int],
@@ -141,7 +150,7 @@ def compute_mask_iou(
     pred_bin = (pred_mask > threshold).astype(np.uint8)
     true_bin = (true_mask > threshold).astype(np.uint8)
     intersection = np.logical_and(pred_bin, true_bin).sum()
-    union        = np.logical_or(pred_bin, true_bin).sum()
+    union = np.logical_or(pred_bin, true_bin).sum()
     if union == 0:
         return 1.0
     return round(float(intersection / union), 6)
@@ -158,7 +167,10 @@ def compute_dice_coefficient(
     true_bin = (true_mask > threshold).astype(np.float32)
     intersection = (pred_bin * true_bin).sum()
     return round(
-        float((2.0 * intersection + smooth) / (pred_bin.sum() + true_bin.sum() + smooth)),
+        float(
+            (2.0 * intersection + smooth)
+            / (pred_bin.sum() + true_bin.sum() + smooth)
+        ),
         6,
     )
 
@@ -171,7 +183,7 @@ def compute_pixel_accuracy(
     """Pixel-level accuracy for segmentation masks."""
     pred_bin = (pred_mask > threshold).astype(np.uint8)
     true_bin = (true_mask > threshold).astype(np.uint8)
-    correct  = (pred_bin == true_bin).sum()
+    correct = (pred_bin == true_bin).sum()
     return round(float(correct / true_bin.size), 6)
 
 
@@ -180,16 +192,16 @@ def compute_average_precision(
     y_scores: np.ndarray,
 ) -> float:
     """Average Precision (AP) via precision-recall curve area."""
-    sorted_idx    = np.argsort(-y_scores)
+    sorted_idx = np.argsort(-y_scores)
     y_true_sorted = y_true[sorted_idx]
-    tp_cumsum     = np.cumsum(y_true_sorted)
-    total_pos     = y_true.sum()
+    tp_cumsum = np.cumsum(y_true_sorted)
+    total_pos = y_true.sum()
     if total_pos == 0:
         return 0.0
     precisions = tp_cumsum / (np.arange(len(y_true)) + 1)
-    recalls    = tp_cumsum / total_pos
+    recalls = tp_cumsum / total_pos
     precisions = np.concatenate([[1.0], precisions])
-    recalls    = np.concatenate([[0.0], recalls])
+    recalls = np.concatenate([[0.0], recalls])
     return round(abs(float(np.trapz(precisions, recalls))), 6)
 
 
@@ -209,6 +221,7 @@ def compute_map(
 # Classification Metrics
 # ---------------------------------------------------------------------------
 
+
 def compute_precision_recall_f1(
     y_true: np.ndarray,
     y_pred: np.ndarray,
@@ -217,13 +230,40 @@ def compute_precision_recall_f1(
 ) -> Dict[str, float]:
     """Precision, Recall, F1, Accuracy for classification."""
     return {
-        "precision": round(float(precision_score(
-            y_true, y_pred, average=average, zero_division=zero_division)), 6),
-        "recall":    round(float(recall_score(
-            y_true, y_pred, average=average, zero_division=zero_division)), 6),
-        "f1":        round(float(f1_score(
-            y_true, y_pred, average=average, zero_division=zero_division)), 6),
-        "accuracy":  round(float(accuracy_score(y_true, y_pred)), 6),
+        "precision": round(
+            float(
+                precision_score(
+                    y_true,
+                    y_pred,
+                    average=average,
+                    zero_division=zero_division,
+                )
+            ),
+            6,
+        ),
+        "recall": round(
+            float(
+                recall_score(
+                    y_true,
+                    y_pred,
+                    average=average,
+                    zero_division=zero_division,
+                )
+            ),
+            6,
+        ),
+        "f1": round(
+            float(
+                f1_score(
+                    y_true,
+                    y_pred,
+                    average=average,
+                    zero_division=zero_division,
+                )
+            ),
+            6,
+        ),
+        "accuracy": round(float(accuracy_score(y_true, y_pred)), 6),
     }
 
 
@@ -258,18 +298,22 @@ def compute_per_class_metrics(
     classes = np.unique(np.concatenate([y_true, y_pred]))
     result: Dict[str, Dict[str, float]] = {}
     for cls in classes:
-        key  = class_names[cls] if class_names and cls < len(class_names) else str(cls)
-        tp   = int(((y_pred == cls) & (y_true == cls)).sum())
-        fp   = int(((y_pred == cls) & (y_true != cls)).sum())
-        fn   = int(((y_pred != cls) & (y_true == cls)).sum())
+        key = (
+            class_names[cls]
+            if class_names and cls < len(class_names)
+            else str(cls)
+        )
+        tp = int(((y_pred == cls) & (y_true == cls)).sum())
+        fp = int(((y_pred == cls) & (y_true != cls)).sum())
+        fn = int(((y_pred != cls) & (y_true == cls)).sum())
         prec = tp / (tp + fp) if (tp + fp) > 0 else 0.0
-        rec  = tp / (tp + fn) if (tp + fn) > 0 else 0.0
-        f1   = (2 * prec * rec / (prec + rec)) if (prec + rec) > 0 else 0.0
+        rec = tp / (tp + fn) if (tp + fn) > 0 else 0.0
+        f1 = (2 * prec * rec / (prec + rec)) if (prec + rec) > 0 else 0.0
         result[key] = {
             "precision": round(prec, 6),
-            "recall":    round(rec,  6),
-            "f1":        round(f1,   6),
-            "support":   int((y_true == cls).sum()),
+            "recall": round(rec, 6),
+            "f1": round(f1, 6),
+            "support": int((y_true == cls).sum()),
         }
     return result
 
@@ -281,7 +325,9 @@ def compute_roc_auc(
 ) -> float:
     """ROC-AUC score for binary or multiclass."""
     try:
-        return round(float(roc_auc_score(y_true, y_scores, multi_class=multi_class)), 6)
+        return round(
+            float(roc_auc_score(y_true, y_scores, multi_class=multi_class)), 6
+        )
     except Exception as e:
         logger.warning(f"ROC-AUC failed: {e}")
         return 0.0
@@ -290,6 +336,7 @@ def compute_roc_auc(
 # ---------------------------------------------------------------------------
 # Regression / Confidence Metrics
 # ---------------------------------------------------------------------------
+
 
 def compute_mae(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     return round(float(np.mean(np.abs(y_true - y_pred))), 6)
@@ -315,21 +362,22 @@ def compute_r2(y_true: np.ndarray, y_pred: np.ndarray) -> float:
 # Latency / Throughput Metrics
 # ---------------------------------------------------------------------------
 
+
 def compute_latency_stats(latencies_ms: List[float]) -> Dict[str, float]:
     """Full latency statistics from list of ms timings."""
     arr = np.array(latencies_ms, dtype=np.float32)
     return {
-        "mean_ms":        round(float(np.mean(arr)), 4),
-        "median_ms":      round(float(np.median(arr)), 4),
-        "std_ms":         round(float(np.std(arr)), 4),
-        "min_ms":         round(float(np.min(arr)), 4),
-        "max_ms":         round(float(np.max(arr)), 4),
-        "p50_ms":         round(float(np.percentile(arr, 50)), 4),
-        "p90_ms":         round(float(np.percentile(arr, 90)), 4),
-        "p95_ms":         round(float(np.percentile(arr, 95)), 4),
-        "p99_ms":         round(float(np.percentile(arr, 99)), 4),
+        "mean_ms": round(float(np.mean(arr)), 4),
+        "median_ms": round(float(np.median(arr)), 4),
+        "std_ms": round(float(np.std(arr)), 4),
+        "min_ms": round(float(np.min(arr)), 4),
+        "max_ms": round(float(np.max(arr)), 4),
+        "p50_ms": round(float(np.percentile(arr, 50)), 4),
+        "p90_ms": round(float(np.percentile(arr, 90)), 4),
+        "p95_ms": round(float(np.percentile(arr, 95)), 4),
+        "p99_ms": round(float(np.percentile(arr, 99)), 4),
         "throughput_fps": round(float(1000.0 / np.mean(arr)), 4),
-        "num_runs":       len(latencies_ms),
+        "num_runs": len(latencies_ms),
     }
 
 
@@ -351,6 +399,7 @@ def compute_memory_reduction(baseline_mb: float, optimized_mb: float) -> float:
 # End-to-End Evaluation Summary
 # ---------------------------------------------------------------------------
 
+
 def build_evaluation_summary(
     references: List[str],
     hypotheses: List[str],
@@ -361,10 +410,12 @@ def build_evaluation_summary(
     """Build complete evaluation summary combining text, classification and latency metrics."""
     summary: Dict[str, Any] = {}
 
-    summary["cer"]  = compute_batch_cer(references, hypotheses)
-    summary["wer"]  = compute_batch_wer(references, hypotheses)
+    summary["cer"] = compute_batch_cer(references, hypotheses)
+    summary["wer"] = compute_batch_wer(references, hypotheses)
     summary["bleu"] = compute_bleu_score(references, hypotheses)
-    exact_matches   = [compute_exact_match(r, h) for r, h in zip(references, hypotheses)]
+    exact_matches = [
+        compute_exact_match(r, h) for r, h in zip(references, hypotheses)
+    ]
     summary["exact_match_accuracy"] = round(float(np.mean(exact_matches)), 6)
 
     if y_true is not None and y_pred is not None:

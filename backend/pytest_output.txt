@@ -1,0 +1,583 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.12.6, pytest-8.3.5, pluggy-1.5.0
+rootdir: D:\Hacknight\braille-conversion-tool\backend
+configfile: pytest.ini
+plugins: anyio-4.12.1
+collected 65 items
+
+app\tests\test_auth.py ssss                                              [  6%]
+app\tests\test_braille.py ......                                         [ 15%]
+app\tests\test_braille_translation.py ..........................F.       [ 58%]
+app\tests\test_export.py sss                                             [ 63%]
+app\tests\test_losses.py FF...                                           [ 70%]
+app\tests\test_metrics.py ........                                       [ 83%]
+app\tests\test_ml_models.py ..EE.E                                       [ 92%]
+app\tests\test_ocr.py sss                                                [ 96%]
+app\tests\test_recognition_pipeline.py ss                                [100%]
+
+=================================== ERRORS ====================================
+_______________ ERROR at setup of test_classifier_forward_shape _______________
+
+    @pytest.fixture
+    def classifier():
+>       model = CellClassifierCNN(num_classes=settings.NUM_BRAILLE_CLASSES)
+
+app\tests\test_ml_models.py:18: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\ml\inference\cell_classifier_cnn.py:41: in __init__
+    self.model.load_state_dict(torch.load(model_path, map_location=self.device))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = MobileNetV3(
+  (features): Sequential(
+    (0): Conv2dNormActivation(
+      (0): Conv2d(3, 16, kernel_size=(3, 3), str...: Hardswish()
+    (2): Dropout(p=0.2, inplace=True)
+    (3): Linear(in_features=1024, out_features=64, bias=True)
+  )
+)
+state_dict = OrderedDict({'features.0.0.weight': tensor([[[[ 8.8977e-01,  1.1482e+00,  1.1419e+00],
+          [ 1.0341e+00,  1.3260...6823e-03, -9.1951e-04,
+         2.8077e-03, -4.3553e-03, -3.5649e-03, -2.9252e-03, -3.3519e-03,
+        -2.9206e-03])})
+strict = True, assign = False
+
+    def load_state_dict(
+        self, state_dict: Mapping[str, Any], strict: bool = True, assign: bool = False
+    ):
+        r"""Copy parameters and buffers from :attr:`state_dict` into this module and its descendants.
+    
+        If :attr:`strict` is ``True``, then
+        the keys of :attr:`state_dict` must exactly match the keys returned
+        by this module's :meth:`~torch.nn.Module.state_dict` function.
+    
+        .. warning::
+            If :attr:`assign` is ``True`` the optimizer must be created after
+            the call to :attr:`load_state_dict` unless
+            :func:`~torch.__future__.get_swap_module_params_on_conversion` is ``True``.
+    
+        Args:
+            state_dict (dict): a dict containing parameters and
+                persistent buffers.
+            strict (bool, optional): whether to strictly enforce that the keys
+                in :attr:`state_dict` match the keys returned by this module's
+                :meth:`~torch.nn.Module.state_dict` function. Default: ``True``
+            assign (bool, optional): When set to ``False``, the properties of the tensors
+                in the current module are preserved whereas setting it to ``True`` preserves
+                properties of the Tensors in the state dict. The only
+                exception is the ``requires_grad`` field of :class:`~torch.nn.Parameter`s
+                for which the value from the module is preserved.
+                Default: ``False``
+    
+        Returns:
+            ``NamedTuple`` with ``missing_keys`` and ``unexpected_keys`` fields:
+                * **missing_keys** is a list of str containing any keys that are expected
+                    by this module but missing from the provided ``state_dict``.
+                * **unexpected_keys** is a list of str containing the keys that are not
+                    expected by this module but present in the provided ``state_dict``.
+    
+        Note:
+            If a parameter or buffer is registered as ``None`` and its corresponding key
+            exists in :attr:`state_dict`, :meth:`load_state_dict` will raise a
+            ``RuntimeError``.
+        """
+        if not isinstance(state_dict, Mapping):
+            raise TypeError(
+                f"Expected state_dict to be dict-like, got {type(state_dict)}."
+            )
+    
+        missing_keys: list[str] = []
+        unexpected_keys: list[str] = []
+        error_msgs: list[str] = []
+    
+        # copy state_dict so _load_from_state_dict can modify it
+        metadata = getattr(state_dict, "_metadata", None)
+        state_dict = OrderedDict(state_dict)
+        if metadata is not None:
+            # mypy isn't aware that "_metadata" exists in state_dict
+            state_dict._metadata = metadata  # type: ignore[attr-defined]
+    
+        def load(module, local_state_dict, prefix=""):
+            local_metadata = {} if metadata is None else metadata.get(prefix[:-1], {})
+            if assign:
+                local_metadata["assign_to_params_buffers"] = assign
+            module._load_from_state_dict(
+                local_state_dict,
+                prefix,
+                local_metadata,
+                True,
+                missing_keys,
+                unexpected_keys,
+                error_msgs,
+            )
+            for name, child in module._modules.items():
+                if child is not None:
+                    child_prefix = prefix + name + "."
+                    child_state_dict = {
+                        k: v
+                        for k, v in local_state_dict.items()
+                        if k.startswith(child_prefix)
+                    }
+                    load(child, child_state_dict, child_prefix)  # noqa: F821
+    
+            # Note that the hook can modify missing_keys and unexpected_keys.
+            incompatible_keys = _IncompatibleKeys(missing_keys, unexpected_keys)
+            for hook in module._load_state_dict_post_hooks.values():
+                out = hook(module, incompatible_keys)
+                assert out is None, (
+                    "Hooks registered with ``register_load_state_dict_post_hook`` are not"
+                    "expected to return new values, if incompatible_keys need to be modified,"
+                    "it should be done inplace."
+                )
+    
+        load(self, state_dict)
+        del load
+    
+        if strict:
+            if len(unexpected_keys) > 0:
+                error_msgs.insert(
+                    0,
+                    "Unexpected key(s) in state_dict: {}. ".format(
+                        ", ".join(f'"{k}"' for k in unexpected_keys)
+                    ),
+                )
+            if len(missing_keys) > 0:
+                error_msgs.insert(
+                    0,
+                    "Missing key(s) in state_dict: {}. ".format(
+                        ", ".join(f'"{k}"' for k in missing_keys)
+                    ),
+                )
+    
+        if len(error_msgs) > 0:
+>           raise RuntimeError(
+                "Error(s) in loading state_dict for {}:\n\t{}".format(
+                    self.__class__.__name__, "\n\t".join(error_msgs)
+                )
+            )
+E           RuntimeError: Error(s) in loading state_dict for MobileNetV3:
+E           	size mismatch for classifier.3.weight: copying a param with shape torch.Size([256, 1024]) from checkpoint, the shape in current model is torch.Size([64, 1024]).
+E           	size mismatch for classifier.3.bias: copying a param with shape torch.Size([256]) from checkpoint, the shape in current model is torch.Size([64]).
+
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\torch\nn\modules\module.py:2593: RuntimeError
+________________ ERROR at setup of test_classifier_softmax_sum ________________
+
+    @pytest.fixture
+    def classifier():
+>       model = CellClassifierCNN(num_classes=settings.NUM_BRAILLE_CLASSES)
+
+app\tests\test_ml_models.py:18: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\ml\inference\cell_classifier_cnn.py:41: in __init__
+    self.model.load_state_dict(torch.load(model_path, map_location=self.device))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = MobileNetV3(
+  (features): Sequential(
+    (0): Conv2dNormActivation(
+      (0): Conv2d(3, 16, kernel_size=(3, 3), str...: Hardswish()
+    (2): Dropout(p=0.2, inplace=True)
+    (3): Linear(in_features=1024, out_features=64, bias=True)
+  )
+)
+state_dict = OrderedDict({'features.0.0.weight': tensor([[[[ 8.8977e-01,  1.1482e+00,  1.1419e+00],
+          [ 1.0341e+00,  1.3260...6823e-03, -9.1951e-04,
+         2.8077e-03, -4.3553e-03, -3.5649e-03, -2.9252e-03, -3.3519e-03,
+        -2.9206e-03])})
+strict = True, assign = False
+
+    def load_state_dict(
+        self, state_dict: Mapping[str, Any], strict: bool = True, assign: bool = False
+    ):
+        r"""Copy parameters and buffers from :attr:`state_dict` into this module and its descendants.
+    
+        If :attr:`strict` is ``True``, then
+        the keys of :attr:`state_dict` must exactly match the keys returned
+        by this module's :meth:`~torch.nn.Module.state_dict` function.
+    
+        .. warning::
+            If :attr:`assign` is ``True`` the optimizer must be created after
+            the call to :attr:`load_state_dict` unless
+            :func:`~torch.__future__.get_swap_module_params_on_conversion` is ``True``.
+    
+        Args:
+            state_dict (dict): a dict containing parameters and
+                persistent buffers.
+            strict (bool, optional): whether to strictly enforce that the keys
+                in :attr:`state_dict` match the keys returned by this module's
+                :meth:`~torch.nn.Module.state_dict` function. Default: ``True``
+            assign (bool, optional): When set to ``False``, the properties of the tensors
+                in the current module are preserved whereas setting it to ``True`` preserves
+                properties of the Tensors in the state dict. The only
+                exception is the ``requires_grad`` field of :class:`~torch.nn.Parameter`s
+                for which the value from the module is preserved.
+                Default: ``False``
+    
+        Returns:
+            ``NamedTuple`` with ``missing_keys`` and ``unexpected_keys`` fields:
+                * **missing_keys** is a list of str containing any keys that are expected
+                    by this module but missing from the provided ``state_dict``.
+                * **unexpected_keys** is a list of str containing the keys that are not
+                    expected by this module but present in the provided ``state_dict``.
+    
+        Note:
+            If a parameter or buffer is registered as ``None`` and its corresponding key
+            exists in :attr:`state_dict`, :meth:`load_state_dict` will raise a
+            ``RuntimeError``.
+        """
+        if not isinstance(state_dict, Mapping):
+            raise TypeError(
+                f"Expected state_dict to be dict-like, got {type(state_dict)}."
+            )
+    
+        missing_keys: list[str] = []
+        unexpected_keys: list[str] = []
+        error_msgs: list[str] = []
+    
+        # copy state_dict so _load_from_state_dict can modify it
+        metadata = getattr(state_dict, "_metadata", None)
+        state_dict = OrderedDict(state_dict)
+        if metadata is not None:
+            # mypy isn't aware that "_metadata" exists in state_dict
+            state_dict._metadata = metadata  # type: ignore[attr-defined]
+    
+        def load(module, local_state_dict, prefix=""):
+            local_metadata = {} if metadata is None else metadata.get(prefix[:-1], {})
+            if assign:
+                local_metadata["assign_to_params_buffers"] = assign
+            module._load_from_state_dict(
+                local_state_dict,
+                prefix,
+                local_metadata,
+                True,
+                missing_keys,
+                unexpected_keys,
+                error_msgs,
+            )
+            for name, child in module._modules.items():
+                if child is not None:
+                    child_prefix = prefix + name + "."
+                    child_state_dict = {
+                        k: v
+                        for k, v in local_state_dict.items()
+                        if k.startswith(child_prefix)
+                    }
+                    load(child, child_state_dict, child_prefix)  # noqa: F821
+    
+            # Note that the hook can modify missing_keys and unexpected_keys.
+            incompatible_keys = _IncompatibleKeys(missing_keys, unexpected_keys)
+            for hook in module._load_state_dict_post_hooks.values():
+                out = hook(module, incompatible_keys)
+                assert out is None, (
+                    "Hooks registered with ``register_load_state_dict_post_hook`` are not"
+                    "expected to return new values, if incompatible_keys need to be modified,"
+                    "it should be done inplace."
+                )
+    
+        load(self, state_dict)
+        del load
+    
+        if strict:
+            if len(unexpected_keys) > 0:
+                error_msgs.insert(
+                    0,
+                    "Unexpected key(s) in state_dict: {}. ".format(
+                        ", ".join(f'"{k}"' for k in unexpected_keys)
+                    ),
+                )
+            if len(missing_keys) > 0:
+                error_msgs.insert(
+                    0,
+                    "Missing key(s) in state_dict: {}. ".format(
+                        ", ".join(f'"{k}"' for k in missing_keys)
+                    ),
+                )
+    
+        if len(error_msgs) > 0:
+>           raise RuntimeError(
+                "Error(s) in loading state_dict for {}:\n\t{}".format(
+                    self.__class__.__name__, "\n\t".join(error_msgs)
+                )
+            )
+E           RuntimeError: Error(s) in loading state_dict for MobileNetV3:
+E           	size mismatch for classifier.3.weight: copying a param with shape torch.Size([256, 1024]) from checkpoint, the shape in current model is torch.Size([64, 1024]).
+E           	size mismatch for classifier.3.bias: copying a param with shape torch.Size([256]) from checkpoint, the shape in current model is torch.Size([64]).
+
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\torch\nn\modules\module.py:2593: RuntimeError
+________________ ERROR at setup of test_classifier_top1_valid _________________
+
+    @pytest.fixture
+    def classifier():
+>       model = CellClassifierCNN(num_classes=settings.NUM_BRAILLE_CLASSES)
+
+app\tests\test_ml_models.py:18: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\ml\inference\cell_classifier_cnn.py:41: in __init__
+    self.model.load_state_dict(torch.load(model_path, map_location=self.device))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = MobileNetV3(
+  (features): Sequential(
+    (0): Conv2dNormActivation(
+      (0): Conv2d(3, 16, kernel_size=(3, 3), str...: Hardswish()
+    (2): Dropout(p=0.2, inplace=True)
+    (3): Linear(in_features=1024, out_features=64, bias=True)
+  )
+)
+state_dict = OrderedDict({'features.0.0.weight': tensor([[[[ 8.8977e-01,  1.1482e+00,  1.1419e+00],
+          [ 1.0341e+00,  1.3260...6823e-03, -9.1951e-04,
+         2.8077e-03, -4.3553e-03, -3.5649e-03, -2.9252e-03, -3.3519e-03,
+        -2.9206e-03])})
+strict = True, assign = False
+
+    def load_state_dict(
+        self, state_dict: Mapping[str, Any], strict: bool = True, assign: bool = False
+    ):
+        r"""Copy parameters and buffers from :attr:`state_dict` into this module and its descendants.
+    
+        If :attr:`strict` is ``True``, then
+        the keys of :attr:`state_dict` must exactly match the keys returned
+        by this module's :meth:`~torch.nn.Module.state_dict` function.
+    
+        .. warning::
+            If :attr:`assign` is ``True`` the optimizer must be created after
+            the call to :attr:`load_state_dict` unless
+            :func:`~torch.__future__.get_swap_module_params_on_conversion` is ``True``.
+    
+        Args:
+            state_dict (dict): a dict containing parameters and
+                persistent buffers.
+            strict (bool, optional): whether to strictly enforce that the keys
+                in :attr:`state_dict` match the keys returned by this module's
+                :meth:`~torch.nn.Module.state_dict` function. Default: ``True``
+            assign (bool, optional): When set to ``False``, the properties of the tensors
+                in the current module are preserved whereas setting it to ``True`` preserves
+                properties of the Tensors in the state dict. The only
+                exception is the ``requires_grad`` field of :class:`~torch.nn.Parameter`s
+                for which the value from the module is preserved.
+                Default: ``False``
+    
+        Returns:
+            ``NamedTuple`` with ``missing_keys`` and ``unexpected_keys`` fields:
+                * **missing_keys** is a list of str containing any keys that are expected
+                    by this module but missing from the provided ``state_dict``.
+                * **unexpected_keys** is a list of str containing the keys that are not
+                    expected by this module but present in the provided ``state_dict``.
+    
+        Note:
+            If a parameter or buffer is registered as ``None`` and its corresponding key
+            exists in :attr:`state_dict`, :meth:`load_state_dict` will raise a
+            ``RuntimeError``.
+        """
+        if not isinstance(state_dict, Mapping):
+            raise TypeError(
+                f"Expected state_dict to be dict-like, got {type(state_dict)}."
+            )
+    
+        missing_keys: list[str] = []
+        unexpected_keys: list[str] = []
+        error_msgs: list[str] = []
+    
+        # copy state_dict so _load_from_state_dict can modify it
+        metadata = getattr(state_dict, "_metadata", None)
+        state_dict = OrderedDict(state_dict)
+        if metadata is not None:
+            # mypy isn't aware that "_metadata" exists in state_dict
+            state_dict._metadata = metadata  # type: ignore[attr-defined]
+    
+        def load(module, local_state_dict, prefix=""):
+            local_metadata = {} if metadata is None else metadata.get(prefix[:-1], {})
+            if assign:
+                local_metadata["assign_to_params_buffers"] = assign
+            module._load_from_state_dict(
+                local_state_dict,
+                prefix,
+                local_metadata,
+                True,
+                missing_keys,
+                unexpected_keys,
+                error_msgs,
+            )
+            for name, child in module._modules.items():
+                if child is not None:
+                    child_prefix = prefix + name + "."
+                    child_state_dict = {
+                        k: v
+                        for k, v in local_state_dict.items()
+                        if k.startswith(child_prefix)
+                    }
+                    load(child, child_state_dict, child_prefix)  # noqa: F821
+    
+            # Note that the hook can modify missing_keys and unexpected_keys.
+            incompatible_keys = _IncompatibleKeys(missing_keys, unexpected_keys)
+            for hook in module._load_state_dict_post_hooks.values():
+                out = hook(module, incompatible_keys)
+                assert out is None, (
+                    "Hooks registered with ``register_load_state_dict_post_hook`` are not"
+                    "expected to return new values, if incompatible_keys need to be modified,"
+                    "it should be done inplace."
+                )
+    
+        load(self, state_dict)
+        del load
+    
+        if strict:
+            if len(unexpected_keys) > 0:
+                error_msgs.insert(
+                    0,
+                    "Unexpected key(s) in state_dict: {}. ".format(
+                        ", ".join(f'"{k}"' for k in unexpected_keys)
+                    ),
+                )
+            if len(missing_keys) > 0:
+                error_msgs.insert(
+                    0,
+                    "Missing key(s) in state_dict: {}. ".format(
+                        ", ".join(f'"{k}"' for k in missing_keys)
+                    ),
+                )
+    
+        if len(error_msgs) > 0:
+>           raise RuntimeError(
+                "Error(s) in loading state_dict for {}:\n\t{}".format(
+                    self.__class__.__name__, "\n\t".join(error_msgs)
+                )
+            )
+E           RuntimeError: Error(s) in loading state_dict for MobileNetV3:
+E           	size mismatch for classifier.3.weight: copying a param with shape torch.Size([256, 1024]) from checkpoint, the shape in current model is torch.Size([64, 1024]).
+E           	size mismatch for classifier.3.bias: copying a param with shape torch.Size([256]) from checkpoint, the shape in current model is torch.Size([64]).
+
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\torch\nn\modules\module.py:2593: RuntimeError
+================================== FAILURES ===================================
+______________________________ test_empty_string ______________________________
+
+    def test_empty_string():
+        result = service.translate_braille_to_text("")
+        assert result["text"] == ""
+>       assert result["confidence"] == 1.0
+E       assert 0.0 == 1.0
+
+app\tests\test_braille_translation.py:44: AssertionError
+_____________________________ test_dice_loss_zero _____________________________
+
+    def test_dice_loss_zero():
+        loss_fn = DiceLoss()
+        pred = torch.ones(2, 1, 64, 64)
+        target = torch.ones(2, 1, 64, 64)
+        loss = loss_fn(pred, target)
+>       assert loss.item() < 0.01
+E       assert 0.15535151958465576 < 0.01
+E        +  where 0.15535151958465576 = <built-in method item of Tensor object at 0x000002490E3107D0>()
+E        +    where <built-in method item of Tensor object at 0x000002490E3107D0> = tensor(0.1554).item
+
+app\tests\test_losses.py:11: AssertionError
+_____________________________ test_dice_loss_max ______________________________
+
+    def test_dice_loss_max():
+        loss_fn = DiceLoss()
+        pred = torch.zeros(2, 1, 64, 64)
+        target = torch.ones(2, 1, 64, 64)
+        loss = loss_fn(pred, target)
+>       assert loss.item() > 0.5
+E       assert 0.3333061933517456 > 0.5
+E        +  where 0.3333061933517456 = <built-in method item of Tensor object at 0x000002490E311040>()
+E        +    where <built-in method item of Tensor object at 0x000002490E311040> = tensor(0.3333).item
+
+app\tests\test_losses.py:19: AssertionError
+============================== warnings summary ===============================
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\_pytest\config\__init__.py:1441
+  C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\_pytest\config\__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_default_fixture_loop_scope
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\_pytest\config\__init__.py:1441
+  C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\_pytest\config\__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_mode
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+app\schemas\document.py:6
+  D:\Hacknight\braille-conversion-tool\backend\app\schemas\document.py:6: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class DocumentResponse(BaseModel):
+
+app\schemas\inference.py:21
+  D:\Hacknight\braille-conversion-tool\backend\app\schemas\inference.py:21: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class InferenceResultDetail(BaseModel):
+
+app\schemas\job.py:6
+  D:\Hacknight\braille-conversion-tool\backend\app\schemas\job.py:6: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class JobResponse(BaseModel):
+
+app\schemas\user.py:6
+  D:\Hacknight\braille-conversion-tool\backend\app\schemas\user.py:6: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class UserProfile(BaseModel):
+
+app\tests\test_auth.py:5
+  D:\Hacknight\braille-conversion-tool\backend\app\tests\test_auth.py:5: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+app\tests\test_auth.py:28
+  D:\Hacknight\braille-conversion-tool\backend\app\tests\test_auth.py:28: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+app\tests\test_auth.py:37
+  D:\Hacknight\braille-conversion-tool\backend\app\tests\test_auth.py:37: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+app\tests\test_auth.py:50
+  D:\Hacknight\braille-conversion-tool\backend\app\tests\test_auth.py:50: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+app\tests\test_export.py:11
+  D:\Hacknight\braille-conversion-tool\backend\app\tests\test_export.py:11: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+app\tests\test_export.py:22
+  D:\Hacknight\braille-conversion-tool\backend\app\tests\test_export.py:22: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+app\tests\test_export.py:36
+  D:\Hacknight\braille-conversion-tool\backend\app\tests\test_export.py:36: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+app\tests\test_ocr.py:20
+  D:\Hacknight\braille-conversion-tool\backend\app\tests\test_ocr.py:20: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+app\tests\test_ocr.py:29
+  D:\Hacknight\braille-conversion-tool\backend\app\tests\test_ocr.py:29: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+app\tests\test_ocr.py:37
+  D:\Hacknight\braille-conversion-tool\backend\app\tests\test_ocr.py:37: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+app\tests\test_recognition_pipeline.py:6
+  D:\Hacknight\braille-conversion-tool\backend\app\tests\test_recognition_pipeline.py:6: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+app\tests\test_recognition_pipeline.py:23
+  D:\Hacknight\braille-conversion-tool\backend\app\tests\test_recognition_pipeline.py:23: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+app/tests/test_auth.py: 4 warnings
+app/tests/test_export.py: 3 warnings
+app/tests/test_ocr.py: 3 warnings
+app/tests/test_recognition_pipeline.py: 2 warnings
+  C:\Users\HP\AppData\Roaming\Python\Python312\site-packages\_pytest\python.py:148: PytestUnhandledCoroutineWarning: async def functions are not natively supported and have been skipped.
+  You need to install a suitable plugin for your async framework, for example:
+    - anyio
+    - pytest-asyncio
+    - pytest-tornasync
+    - pytest-trio
+    - pytest-twisted
+    warnings.warn(PytestUnhandledCoroutineWarning(msg.format(nodeid)))
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED app/tests/test_braille_translation.py::test_empty_string - assert 0.0 ...
+FAILED app/tests/test_losses.py::test_dice_loss_zero - assert 0.1553515195846...
+FAILED app/tests/test_losses.py::test_dice_loss_max - assert 0.33330619335174...
+ERROR app/tests/test_ml_models.py::test_classifier_forward_shape - RuntimeErr...
+ERROR app/tests/test_ml_models.py::test_classifier_softmax_sum - RuntimeError...
+ERROR app/tests/test_ml_models.py::test_classifier_top1_valid - RuntimeError:...
+====== 3 failed, 47 passed, 12 skipped, 30 warnings, 3 errors in 20.44s =======

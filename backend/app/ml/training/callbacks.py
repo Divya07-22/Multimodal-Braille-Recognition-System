@@ -11,7 +11,9 @@ logger = logging.getLogger(__name__)
 class EarlyStopping:
     """Stop training when monitored metric stops improving."""
 
-    def __init__(self, patience: int = 10, min_delta: float = 1e-4, mode: str = "min"):
+    def __init__(
+        self, patience: int = 10, min_delta: float = 1e-4, mode: str = "min"
+    ):
         self.patience = patience
         self.min_delta = min_delta
         self.mode = mode
@@ -32,7 +34,9 @@ class EarlyStopping:
             self.counter += 1
             if self.counter >= self.patience:
                 self.should_stop = True
-                logger.info(f"Early stopping triggered after {self.patience} epochs without improvement.")
+                logger.info(
+                    f"Early stopping triggered after {self.patience} epochs without improvement."
+                )
         return self.should_stop
 
 
@@ -57,16 +61,24 @@ class ModelCheckpoint:
 
     def __call__(self, model: torch.nn.Module, value: float, epoch: int):
         improved = (
-            value < self.best_value if self.mode == "min" else value > self.best_value
+            value < self.best_value
+            if self.mode == "min"
+            else value > self.best_value
         )
         if improved:
             self.best_value = value
-            best_path = os.path.join(self.save_dir, f"{self.model_name}_best.pt")
+            best_path = os.path.join(
+                self.save_dir, f"{self.model_name}_best.pt"
+            )
             torch.save(model.state_dict(), best_path)
-            logger.info(f"Epoch {epoch}: Saved best model ({self.monitor}={value:.6f}) -> {best_path}")
+            logger.info(
+                f"Epoch {epoch}: Saved best model ({self.monitor}={value:.6f}) -> {best_path}"
+            )
 
         if self.save_last:
-            last_path = os.path.join(self.save_dir, f"{self.model_name}_last.pt")
+            last_path = os.path.join(
+                self.save_dir, f"{self.model_name}_last.pt"
+            )
             torch.save(model.state_dict(), last_path)
 
 
@@ -81,7 +93,16 @@ class MetricsTracker:
         for k, v in metrics.items():
             if k not in self.history:
                 self.history[k] = []
-            self.history[k].append({"epoch": epoch, "value": float(v) if isinstance(v, (int, float, np.floating)) else v})
+            self.history[k].append(
+                {
+                    "epoch": epoch,
+                    "value": (
+                        float(v)
+                        if isinstance(v, (int, float, np.floating))
+                        else v
+                    ),
+                }
+            )
         self._save()
 
     def _save(self):

@@ -16,7 +16,9 @@ def resize_image(
     h, w = image.shape[:2]
 
     if not keep_aspect:
-        return cv2.resize(image, (target, target), interpolation=cv2.INTER_LINEAR)
+        return cv2.resize(
+            image, (target, target), interpolation=cv2.INTER_LINEAR
+        )
 
     scale = target / max(h, w)
     new_w = int(w * scale)
@@ -25,13 +27,15 @@ def resize_image(
 
     # Letterbox padding
     if len(image.shape) == 3:
-        canvas = np.full((target, target, image.shape[2]), pad_value, dtype=np.uint8)
+        canvas = np.full(
+            (target, target, image.shape[2]), pad_value, dtype=np.uint8
+        )
     else:
         canvas = np.full((target, target), pad_value, dtype=np.uint8)
 
     pad_top = (target - new_h) // 2
     pad_left = (target - new_w) // 2
-    canvas[pad_top:pad_top + new_h, pad_left:pad_left + new_w] = resized
+    canvas[pad_top : pad_top + new_h, pad_left : pad_left + new_w] = resized
 
     return canvas
 

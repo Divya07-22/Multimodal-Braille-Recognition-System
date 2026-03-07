@@ -10,11 +10,15 @@ logger = logging.getLogger(__name__)
 
 
 class UserService:
-    async def get_by_id(self, db: AsyncSession, user_id: int) -> Optional[User]:
+    async def get_by_id(
+        self, db: AsyncSession, user_id: int
+    ) -> Optional[User]:
         result = await db.execute(select(User).where(User.id == user_id))
         return result.scalar_one_or_none()
 
-    async def get_by_email(self, db: AsyncSession, email: str) -> Optional[User]:
+    async def get_by_email(
+        self, db: AsyncSession, email: str
+    ) -> Optional[User]:
         result = await db.execute(select(User).where(User.email == email))
         return result.scalar_one_or_none()
 
@@ -26,7 +30,9 @@ class UserService:
         result = await db.execute(select(User).offset(skip).limit(limit))
         return result.scalars().all(), total
 
-    async def deactivate(self, db: AsyncSession, user_id: int) -> Optional[User]:
+    async def deactivate(
+        self, db: AsyncSession, user_id: int
+    ) -> Optional[User]:
         result = await db.execute(select(User).where(User.id == user_id))
         user = result.scalar_one_or_none()
         if user:

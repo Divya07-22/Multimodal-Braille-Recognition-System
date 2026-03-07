@@ -45,13 +45,11 @@ class OCRService:
                 output_type=pytesseract.Output.DICT,
             )
             text_parts = [
-                w for w, c in zip(data["text"], data["conf"])
+                w
+                for w, c in zip(data["text"], data["conf"])
                 if int(c) > 0 and w.strip()
             ]
-            confs = [
-                int(c) for c in data["conf"]
-                if int(c) > 0
-            ]
+            confs = [int(c) for c in data["conf"] if int(c) > 0]
             text = " ".join(text_parts)
             avg_conf = sum(confs) / max(len(confs), 1) / 100.0
             elapsed = (time.perf_counter() - t0) * 1000
@@ -69,7 +67,9 @@ class OCRService:
     async def process_bytes(self, content: bytes) -> Dict[str, Any]:
         image = Image.open(io.BytesIO(content)).convert("RGB")
         text = pytesseract.image_to_string(image)
-        data = pytesseract.image_to_data(image, output_type=pytesseract.Output.DICT)
+        data = pytesseract.image_to_data(
+            image, output_type=pytesseract.Output.DICT
+        )
         confs = [int(c) for c in data["conf"] if int(c) > 0]
         words = [w for w in text.split() if w.strip()]
         return {
@@ -85,6 +85,8 @@ class OCRService:
 
         arr = np.array(image)
         gray = cv2.cvtColor(arr, cv2.COLOR_RGB2GRAY)
-        _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        _, binary = cv2.threshold(
+            gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU
+        )
         denoised = cv2.fastNlMeansDenoising(binary, h=10)
         return Image.fromarray(denoised)
